@@ -1,15 +1,7 @@
-# core/display.py
+# ./display.py
 from .core.bitmap import Bitmap
-import time
 
-def timeit(func):
-    def new_func(*args, **kwargs):
-        t = time.ticks_ms()
-        result = func(*args, **kwargs)
-        diff=time.ticks_diff(time.ticks_ms(), t)
-        print("\033[32m"+func.__name__+"\033[0m"+" "*(20-len(func.__name__))+" executed in"+" "*(10-len(str(diff)))+"\033[31m"+str(diff)+" ms"+"\033[0m")
-        return result
-    return new_func
+from .utils.decorator import timeit
 
 class Display:
     def __init__(self, width, height, driver=None,threaded=True):
@@ -30,7 +22,9 @@ class Display:
         
     def set_root(self, widget):
         self.root = widget
-        self.root.layout(0, 0, self.width, self.height)
+        self.root.layout(x=0, y=0, width=self.width, height=self.height)
+        self.root.width_resizable = False
+        self.root.height_resizable = False
     
     @timeit
     def check_dirty(self):
@@ -58,8 +52,6 @@ class Display:
                     
             render_widget(self.root)
             
-            # Here you would add display hardware update logic
-            # self.driver.refresh(self._bitmap)
     def run(self):
         while True:
             self.check_dirty()

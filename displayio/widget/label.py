@@ -1,9 +1,10 @@
-# widget/label.py
+# ./widget/label.py
 
 from ..core.widget import Widget
 from ..core.bitmap import Bitmap
 
 from ..utils.font_utils import hex_font_to_bitmap
+from ..utils.decorator import timeit
 
 class Label(Widget):
     """
@@ -45,11 +46,6 @@ class Label(Widget):
         self.background = background
         self.align = align
         self.padding = padding
-        # 测试label类能否正常生成bitmap的接口，可直接用driver flash到屏幕
-        # self.cache = None
-
-
-
     
     def _create_bitmap(self):
         """
@@ -82,12 +78,12 @@ class Label(Widget):
             for i, char in enumerate(self.text):
                 if char in self.font:
                     char_bitmap = hex_font_to_bitmap(
-                        self.font[char],self.font['WIDTH'],self.font['HEIGHT'],
-                        foreground=self.text_color)
+                        self.font[char], self.font['WIDTH'], self.font['HEIGHT'],
+                        foreground=self.text_color, rle=self.font['rle'])
                 else:
                     char_bitmap = hex_font_to_bitmap(
-                        self.font["DEFAULT"],self.font['WIDTH'],self.font['HEIGHT'],
-                        foreground=self.text_color)
+                        self.font["DEFAULT"], self.font['WIDTH'], self.font['HEIGHT'],
+                        foreground=self.text_color, rle=self.font['rle'])
                 # 将字符位图复制到主位图
                 x = text_x + i * self.font["WIDTH"]
                     
@@ -95,6 +91,7 @@ class Label(Widget):
         
         return bitmap
     
+    @timeit
     def get_bitmap(self):
         """
         获取控件的位图

@@ -1,4 +1,6 @@
+# ./core/container.py
 from .widget import Widget
+
 class Container(Widget):
     def __init__(self,x = 0, y = 0, width = None, height = None, hidden = False):
         super().__init__(x = x, y = y, width = width, height = height, hidden = hidden)
