@@ -4,7 +4,7 @@ class Widget:
     RED   = 0xf800
     GREEN = 0x07e0
     BLUE  = 0x001f
-    PINK  = 0xf18f
+    PINK  = 0xf81f
 
     def __init__(self,x = 0, y = 0, width = None, height = None, visibility = True):
         self.x = x

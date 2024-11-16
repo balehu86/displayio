@@ -16,6 +16,8 @@ class Label(Widget):
     ALIGN_LEFT = 'left'
     ALIGN_CENTER = 'center'
     ALIGN_RIGHT = 'right'
+    ALIGH_TOP = 'top'
+    ALIGN_BOTTOM = 'bottom'
     
     def __init__(self, 
                  text="",
@@ -43,6 +45,7 @@ class Label(Widget):
         if font is not None:
             self.font_width = font['WIDTH']
             self.font_height = font['HEIGHT']
+            self.font_default = font['DEFAULT']
         self.text_color = text_color
         self.background = background
         self.align = align
@@ -56,43 +59,51 @@ class Label(Widget):
         
         # 创建新的位图
         bitmap = Bitmap(self.width, self.height)
+        # cache字体的 大小 数据
+        font_width = self.font_width
+        font_height = self.font_height
         
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, self.background)
         
         if self.text and self.font:
             # 计算文本总宽度
-            text_width = len(self.text) * self.font["WIDTH"]
+            text_total_width = len(self.text) * font_width
+            text_total_height = font_height
             
-            # 根据对齐方式计算起始x坐标
+            # 根据水平方向对齐方式计算起始x坐标
             if self.align == self.ALIGN_LEFT:
                 text_x = self.padding[0]
             elif self.align == self.ALIGN_CENTER:
-                text_x = (self.width - text_width) // 2
+                text_x = (self.width - text_total_width) // 2
             else:  # ALIGN_RIGHT
-                text_x = self.width - text_width - self.padding[2]
+                text_x = self.width - text_total_width - self.padding[2]
             
-            # 垂直居中
-            text_y = (self.height - self.font["HEIGHT"]) // 2
+            # 根据垂直方向对齐方式计算起始y坐标
+            if self.align == self.ALIGH_TOP:
+                text_y = self.padding[1]
+            elif self.align == self.ALIGN_BOTTOM:
+                text_y = self.height - text_total_height - self.padding[3]
+            else:  # ALIGN_CENTER
+                text_y = (self.height - font_height) // 2
             
             # 渲染每个字符
             for i, char in enumerate(self.text):
                 if char in self.font:
                     char_bitmap = hex_font_to_bitmap(
-                        self.font[char], self.font['WIDTH'], self.font['HEIGHT'],
+                        self.font[char], font_width, font_height,
                         foreground=self.text_color, rle=self.font['rle'])
                 else:
                     char_bitmap = hex_font_to_bitmap(
-                        self.font["DEFAULT"], self.font['WIDTH'], self.font['HEIGHT'],
+                        self.font_default, font_width, font_height,
                         foreground=self.text_color, rle=self.font['rle'])
                 # 将字符位图复制到主位图
-                x = text_x + i * self.font["WIDTH"]
-                    
+                x = text_x + i * font_width
                 bitmap.blit(char_bitmap, dx=x, dy=text_y)
         
         return bitmap
     
-    @timeit
+    # @timeit
     def get_bitmap(self):
         """
         获取控件的位图
@@ -100,10 +111,12 @@ class Label(Widget):
         """
         if self.visibility:
             self._bitmap = self._create_bitmap()
+            self._dirty = False  # 绘制完成后清除脏标记
             return self._bitmap
         else:
             bitmap=Bitmap(self.width,self.height)
             bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
+            self._dirty = False  # 绘制完成后清除脏标记
             return bitmap          
 
     
@@ -126,6 +139,7 @@ class Label(Widget):
         self.font = font
         self.font_width = font['WIDTH']
         self.font_height = font['HEIGHT']
+        self.font_default = font['DEFAULT']
         self.register_dirty()
     def set_align(self,align):
         """设置文本对齐"""

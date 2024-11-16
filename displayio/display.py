@@ -45,8 +45,7 @@ class Display:
                         else:
                             bitmap = widget.get_bitmap()
                             self.driver.refresh(bitmap,x=widget.x,y=widget.y)
-                    widget._dirty = False  # 绘制完成后清除脏标记
-
+            
                 for child in widget.children:
                     render_widget(child)  # 递归处理子组件
                     
