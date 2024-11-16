@@ -1,8 +1,12 @@
 # ./core/widget.py
 
 class Widget:
-    def __init__(self,x = 0, y = 0, 
-                 width = None, height = None, hidden = False):
+    RED   = 0xf800
+    GREEN = 0x07e0
+    BLUE  = 0x001f
+    PINK  = 0xf18f
+
+    def __init__(self,x = 0, y = 0, width = None, height = None, visibility = True):
         self.x = x
         self.y = y
         self.width = width
@@ -17,8 +21,8 @@ class Widget:
         self._dirty = True
         self.parent = None
         self.children = []
-        # widget 是否可见,_hidden是widget自己hide，hidden是parent让隐藏的
-        self._hidden = hidden
+        # widget 是否可见
+        self.visibility = visibility
         # 支持同一个widget对象同时显示到不同区域bytearray(x,y)
         self.area = [[x,y]]
 
@@ -58,7 +62,7 @@ class Widget:
             if len(widget.children) != 0:
                 for child in widget.children:
                     set_hide(child)
-            widget._hidden = True
+            widget.visibility = False
         set_hide(self)
         self.register_dirty()
         self.mark_dirty()
@@ -68,10 +72,11 @@ class Widget:
             if len(widget.children) != 0:
                 for child in widget.children:
                     set_unhide(child)
-            self._hidden = False
+            self.visibility = True
         set_unhide(self)
         self.register_dirty()
         self.mark_dirty()
+
     def _get_min_size(self):
         min_width = self.width if not self.width_resizable else 0
         min_height = self.height if not self.height_resizable else 0

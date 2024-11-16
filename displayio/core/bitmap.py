@@ -14,6 +14,7 @@ class Bitmap:
     def __init__(self, width=0, height=0, format=framebuf.RGB565):
         self.width = width
         self.height = height
+        self.format=format
         buffer_size = width * height
         if format == framebuf.RGB565:
             buffer_size *= 2
@@ -25,8 +26,12 @@ class Bitmap:
         # 缓存常用的掩码值
         self._bit_masks = [1 << i for i in range(8)]
 
-    def _swap_bytes(self, color):
-        """交换颜色值的高低字节"""
+    def _swap_rgb565(self, color):
+        """交换颜色值的高低字节
+            因为framebuf.FrameBuffer的序列为小端序,
+            而驱动一般采用大端序
+            所以在这里先做个交换第一第二字节的处理，
+            可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
         return ((color >> 8) | (color << 8)) & 0xFFFF
         
     def _get_mask_index(self, x, y):
@@ -45,10 +50,15 @@ class Bitmap:
         
         if color is None:
             if self._mask[byte_idx] & bit_mask:  # 不透明
-                return self._swap_bytes(self.fb.pixel(x, y))
-            return None
-            
-        self.fb.pixel(x, y, self._swap_bytes(color))
+                value = self.fb.pixel(x, y)
+                return self._swap_rgb565(value) if self.format == framebuf.RGB565 else value
+            return None   
+             
+        # 设置像素时转换颜色 
+        if self.format == framebuf.RGB565:
+            color = self._swap_rgb565(color)    
+        self.fb.pixel(x, y, color)
+
         if transparent:
             self._mask[byte_idx] &= ~bit_mask
         else:
@@ -57,7 +67,9 @@ class Bitmap:
     def fill_rect(self, x, y, width, height, color, transparent=False):
         """填充矩形区域"""
         # 使用FrameBuffer的原生fill_rect进行填充
-        self.fb.fill_rect(x, y, width, height, self._swap_bytes(color))
+        if self.format == framebuf.RGB565:
+            color = self._swap_rgb565(color)
+        self.fb.fill_rect(x, y, width, height, color)
         
         # 批量设置透明度
         start_x = max(0, x)
@@ -145,7 +157,12 @@ class Bitmap:
                 if source._mask[src_byte_idx] & source._bit_masks[src_bit_idx]:
                     # 如果源像素不透明，则复制
                     color = source.fb.pixel(src_x, src_y)
-                    self.fb.pixel(dst_x, dst_y, self._swap_bytes(self._swap_bytes(color)))
+                     # 如果源和目标的格式都是RGB565，不需要转换
+                    if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
+                        color = self._swap_rgb565(color)
+                    elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
+                        color = source._swap_rgb565(color)
+                    self.fb.pixel(dst_x, dst_y, color)
                     
                     # 设置目标像素为不透明
                     dst_byte_idx, dst_bit_idx = self._get_mask_index(dst_x, dst_y)

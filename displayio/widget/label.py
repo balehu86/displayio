@@ -24,7 +24,7 @@ class Label(Widget):
                  background=0x7f34,  # 背景色（默认绿色）
                  align=ALIGN_LEFT,  # 文本对齐方式
                  padding=(2, 2, 2, 2),
-                 x=0,y=0,width=None,height=None,hidden=False):  # 内边距 (左,上,右,下)
+                 x=0,y=0,width=None,height=None,visibility=True):  # 内边距 (左,上,右,下)
         """
         初始化标签控件
         
@@ -35,8 +35,9 @@ class Label(Widget):
             background: 背景颜色（16位RGB颜色）
             align: 文本对齐方式
             padding: 内边距，格式为(左,上,右,下)
+            visibility: 是否可见
         """
-        super().__init__(x = x, y = y, width = width, height = height, hidden = hidden)
+        super().__init__(x = x, y = y, width = width, height = height, visibility = visibility)
         self.text = text
         self.font = font
         if font is not None:
@@ -97,13 +98,13 @@ class Label(Widget):
         获取控件的位图
         如果需要重绘，先创建新的位图
         """
-        if self._hidden:
-            bitmap=Bitmap(self.width,self.height)
-            bitmap.fill_rect(0,0,self.width,self.height,0xf18f)
-            return bitmap 
-        else:
+        if self.visibility:
             self._bitmap = self._create_bitmap()
-            return self._bitmap           
+            return self._bitmap
+        else:
+            bitmap=Bitmap(self.width,self.height)
+            bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
+            return bitmap          
 
     
     def set_text(self, text):

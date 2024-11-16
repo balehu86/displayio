@@ -23,19 +23,20 @@ ST77XX_RAMWR = const(0x2C)      # 写入显示内存, 向指定的显示内存�
 ST77XX_RAMRD = const(0x2E)      # 读取显示内存, 从显示内存中读取数据。通常用于调试或校验显示内容。
 
 ST77XX_PTLAR = const(0x30)
-ST77XX_COLMOD = const(0x3A)     # 设置颜色模式, 设置像素格式（颜色深度）。可以选择 RGB 16 位（RGB565）、18 位（RGB666）等模式。
+ST7789_VSCRDEF = const(0x33)
 ST7789_MADCTL = const(0x36)     # 设置屏幕显示方向, 控制图像的旋转和镜像，定义显示方向。包括水平、垂直、RGB 顺序等参数。
-                                
+ST7789_VSCSAD = const(0x37)
+ST77XX_COLMOD = const(0x3A)     # 设置颜色模式, 设置像素格式（颜色深度）。可以选择 RGB 16 位（RGB565）、18 位（RGB666）等模式。
+
 ST7789_MADCTL_MY = const(0x80)  # MADCTL_MY：垂直镜像（上下翻转）                         
 ST7789_MADCTL_MX = const(0x40)  # MADCTL_MX：水平镜像（左右翻转）          
 ST7789_MADCTL_MV = const(0x20)  # MADCTL_MV：旋转显示（90 度旋转）
-ST7789_MADCTL_ML = const(0x10)
+ST7789_MADCTL_ML = const(0x10)  # 
 ST7789_MADCTL_MH = const(0x04)          
 ST7789_MADCTL_RGB = const(0x00)
 ST7789_MADCTL_BGR = const(0x08) # MADCTL_RGB：RGB 顺序（默认，RGB 顺序不变）
 
-RGB = 0x00
-BGR = 0x08
+ST7789_RAMCTL = const(0xb0)
 
 ST7789_RDID1 = const(0xDA)
 ST7789_RDID2 = const(0xDB)
@@ -59,12 +60,12 @@ MAGENTA = const(0xF81F)
 YELLOW = const(0xFFE0)
 WHITE = const(0xFFFF)
 
-_ENCODE_PIXEL = ">H"
-_ENCODE_PIXEL_SWAPPED = const("<H")
+_ENCODE_PIXEL = ">H"     # 大端模式
+_ENCODE_PIXEL_SWAPPED = const("<H")# 小端模式
 _ENCODE_POS = ">HH"
-_ENCODE_POS_16 = const("<HH")
+_ENCODE_POS_SWAPPED = "<HH"
+# _DECODE_PIXEL = ">BBB"
 
-_DECODE_PIXEL = ">BBB"
 # must be at least 128 for 8 bit wide fonts
 # must be at least 256 for 16 bit wide fonts
 _BUFFER_SIZE = const(256)
@@ -83,20 +84,10 @@ def color565(r, g=0, b=0):
     return (r & 0xf8) << 8 | (g & 0xfc) << 3 | b >> 3
 
 class ST7789:
-    def __init__(self, spi, width, height, reset, dc, cs=None, backlight=None, xstart=0, ystart=0):
-        """
-        display = st7789.ST7789(
-            SPI(1, baudrate=40000000, phase=1, polarity=1),
-            240, 240,
-            reset=machine.Pin(5, machine.Pin.OUT),
-            dc=machine.Pin(2, machine.Pin.OUT),
-        )
-
-        """
-        self.width = width
-        self.height = height
-
-        self.color_order = RGB
+    RGB = const(0x00)
+    BGR = const(0x08)
+    def __init__(self, spi, reset, dc, cs=None, backlight=None,
+                 width=240, height=240, is_bgr=False, xstart=0, ystart=0):
 
         self.spi = spi
         self.reset = reset
@@ -104,6 +95,10 @@ class ST7789:
         self.cs = cs
         self.backlight = backlight
 
+        self.width = width
+        self.height = height
+
+        self.is_bgr = is_bgr
         self.xstart = xstart
         self.ystart = ystart
 
@@ -165,63 +160,24 @@ class ST7789:
         self.cs_high()
 
     def soft_reset(self):
-        self.write(ST77XX_SWRESET)
+        self.write_cmd(ST77XX_SWRESET)
         delay_ms(150)
 
     def set_sleep_mode(self, value):
         if value:
-            self.write(ST77XX_SLPIN)
+            self.write_cmd(ST77XX_SLPIN)
         else:
-            self.write(ST77XX_SLPOUT)
+            self.write_cmd(ST77XX_SLPOUT)
 
     def set_inversion_mode(self, value):
         if value:
-            self.write(ST77XX_INVON)
+            self.write_cmd(ST77XX_INVON)
         else:
-            self.write(ST77XX_INVOFF)
+            self.write_cmd(ST77XX_INVOFF)
 
     def set_color_mode(self, mode):
         self.write(ST77XX_COLMOD, bytes([mode & 0x77]))
-
-    def init(self,color_mode=ColorMode_65K | ColorMode_16bit): # ,*args, **kwargs):
-
-        delay_ms(10)
-        self.write(ST77XX_NORON)
-        delay_ms(10)
-        self.fill(0)
-        self.write(ST77XX_DISPON)
-        delay_ms(500)
-
-        self.hard_reset()
-        self.soft_reset()
-        # 退出睡眠模式
-        self.set_sleep_mode(False)
-        time.sleep_ms(120)
-        # 设置颜色模式
-        self.set_color_mode(color_mode)
-        delay_ms(50)
-
-        # 设置显示方向和颜色顺序
-        # 使用RGB顺序，不进行镜像
-        rotation = 4  # 正常方向
-        vert_mirror = True
-        horz_mirror = True
-        is_bgr = (self.color_order == BGR)
-        self.set_mem_access_mode(rotation, vert_mirror, horz_mirror, is_bgr)
-
-        # 设置颜色反转
-        self.set_inversion_mode(True)
-        delay_ms(10)
-
-        # 进入正常显示模式
-        self.write(ST77XX_NORON)
-        delay_ms(10)
-
-        self.fill(0)
-        # 打开显示
-        self.write(ST77XX_DISPON)
-        delay_ms(500)
-
+    
     def set_mem_access_mode(self, rotation, vert_mirror, horz_mirror, is_bgr):
         rotation &= 7
         value = {
@@ -243,6 +199,37 @@ class ST7789:
         if is_bgr:
             value |= ST7789_MADCTL_BGR
         self.write(ST7789_MADCTL, bytes([value]))
+
+    def init(self,color_mode=ColorMode_65K | ColorMode_16bit):
+        self.hard_reset()
+        self.soft_reset()
+        # 退出睡眠模式
+        self.set_sleep_mode(False)
+        time.sleep_ms(120)
+        # 设置颜色模式
+        self.set_color_mode(color_mode)
+        delay_ms(50)
+
+        # 设置显示方向和颜色顺序
+        # 使用RGB顺序，不进行镜像
+        rotation = 0  # 正常方向
+        vert_mirror = False
+        horz_mirror = False
+        is_bgr = self.is_bgr
+        self.set_mem_access_mode(rotation, vert_mirror, horz_mirror, is_bgr)
+
+        # 设置颜色反转
+        self.set_inversion_mode(True)
+        delay_ms(10)
+
+        # 进入正常显示模式
+        self.write(ST77XX_NORON)
+        delay_ms(10)
+
+        self.fill(0)
+        # 打开显示
+        self.write(ST77XX_DISPON)
+        delay_ms(500)
 
     def _encode_pos(self, x, y):
         """Encode a postion into bytes."""
@@ -269,11 +256,11 @@ class ST7789:
     def set_window(self, x0, y0, x1, y1):
         self._set_columns(x0, x1)
         self._set_rows(y0, y1)
-        self.write(ST77XX_RAMWR)
+        self.write_cmd(ST77XX_RAMWR)
 
     def blit_buffer(self, buffer, x, y, width, height):
         self.set_window(x, y, x + width - 1, y + height - 1)
-        self.write(None, buffer)
+        self.write_data(buffer)
 
 
     def fill_rect(self, x, y, width, height, color):
@@ -282,11 +269,9 @@ class ST7789:
         pixel = self._encode_pixel(color)
         self.dc_high()
         if chunks:
-            data = pixel * _BUFFER_SIZE
-            for _ in range(chunks):
-                self.write(None, data)
+            self.write_data(pixel * width*height)
         if rest:
-            self.write(None, pixel * rest)
+            self.write_data(self._encode_pixel(0xf18f) * rest)
 
     def fill(self, color):
         self.fill_rect(0, 0, self.width, self.height, color)
@@ -298,20 +283,10 @@ class ST7789:
         if height is None:
             height = bitmap.height
             
-        # 设置刷新窗口
         self.set_window(x, y, x + width - 1, y + height - 1)
-        
-        # 写入位图数据
-        self.dc_high()  # 数据模式
-        self.cs_low()  # 选中芯片
-        
-        buffer_size = width * 2  # 16位色，每像素2字节
-        for row in range(height):
-            start_pos = row * bitmap.width * 2
-            row_data = bitmap.buffer[start_pos:start_pos + buffer_size]
-            self.spi.write(row_data)
-            
-        self.cs_high()  # 取消片选
+        self.write_data(bitmap.buffer)
+
+
     def thread_refresh(self, bitmap, x=0, y=0, width=None, height=None,
                        lock=None):
         while True:
@@ -323,19 +298,8 @@ class ST7789:
                 if height is None:
                     height = bitmap.height if height is not None else 0
                     
-                # 设置刷新窗口
                 self.set_window(x, y, x + width - 1, y + height - 1)
-                
-                # 写入位图数据
-                self.dc_high()  # 数据模式
-                self.cs_low()  # 选中芯片
-                
-                buffer_size = width * 2  # 16位色，每像素2字节
-                for row in range(height):
-                    start_pos = row * bitmap.width * 2
-                    row_data = bitmap.buffer[start_pos:start_pos + buffer_size]
-                    self.spi.write(row_data)
-                    
-                self.cs_high()  # 取消片选
+                self.write_data(bitmap.buffer)
+
             finally:
                 lock.release()
