@@ -57,7 +57,7 @@ def rle_encode(data):
 
 def to_file():
     resault= {}
-    resault.update({'WIDTH':setting['width'],'HEIGHT':setting['height'],'DEFAULT':[],'rle': 1 if setting['rle'] else 0})
+    resault.update({'WIDTH':setting['width'],'HEIGHT':setting['height'],'DEFAULT':[],'RLE': 1 if setting['rle'] else 0})
 
     for num,char in enumerate(string):
         cache = []

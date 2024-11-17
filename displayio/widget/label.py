@@ -93,11 +93,11 @@ class Label(Widget):
                 if char in self.font:
                     char_bitmap = hex_font_to_bitmap(
                         self.font[char], font_width, font_height,
-                        foreground=self.text_color, rle=self.font['rle'])
+                        foreground=self.text_color, rle=self.font['RLE'])
                 else:
                     char_bitmap = hex_font_to_bitmap(
                         self.font_default, font_width, font_height,
-                        foreground=self.text_color, rle=self.font['rle'])
+                        foreground=self.text_color, rle=self.font['RLE'])
                 # 将字符位图复制到主位图
                 x = text_x + i * font_width
                 bitmap.blit(char_bitmap, dx=x, dy=text_y)
