@@ -1,5 +1,5 @@
 # ./core/bitmap.py
-import framebuf
+import framebuf # type: ignore
 
 class Bitmap:
     # 支持的颜色格式

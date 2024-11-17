@@ -1,6 +1,6 @@
 import time
-from micropython import const
-import ustruct as struct
+from micropython import const # type: ignore
+import ustruct as struct # type: ignore
 
 # commands
 ST77XX_NOP = const(0x00)        # 无操作指令,通常用于测试或占位。
@@ -267,11 +267,12 @@ class ST7789:
         self.set_window(x, y, x + width - 1, y + height - 1)
         chunks, rest = divmod(width * height, _BUFFER_SIZE)
         pixel = self._encode_pixel(color)
-        self.dc_high()
         if chunks:
-            self.write_data(pixel * width*height)
+            data = pixel * _BUFFER_SIZE
+            for _ in range(chunks):
+                self.write_data(data)
         if rest:
-            self.write_data(self._encode_pixel(0xf18f) * rest)
+            self.write_data(pixel * rest)
 
     def fill(self, color):
         self.fill_rect(0, 0, self.width, self.height, color)

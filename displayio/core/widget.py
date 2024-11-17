@@ -6,7 +6,11 @@ class Widget:
     BLUE  = 0x001f
     PINK  = 0xf81f
 
-    def __init__(self,x = 0, y = 0, width = None, height = None, visibility = True):
+    def __init__(self,
+                 abs_x=0,abs_y=0,
+                 x = 0, y = 0, width = None, height = None, visibility = True):
+        self.abs_x = abs_x
+        self.abs_y = abs_y
         self.x = x
         self.y = y
         self.width = width
@@ -23,8 +27,6 @@ class Widget:
         self.children = []
         # widget 是否可见
         self.visibility = visibility
-        # 支持同一个widget对象同时显示到不同区域bytearray(x,y)
-        self.area = [[x,y]]
 
 
     # 从子层，向上层一层层标脏
@@ -36,8 +38,7 @@ class Widget:
     def mark_dirty(self):
         for child in self.children:
             child.mark_dirty()
-        self._dirty = True
-   
+        self._dirty = True 
             
     def layout(self, x = 0, y = 0, 
                width = None, height = None):

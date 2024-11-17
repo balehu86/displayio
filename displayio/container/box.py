@@ -3,7 +3,7 @@ from ..core.container import Container
 
 class Box(Container):
     def __init__(self, direction='h', spacing=0, align='start', flex = 0,
-                 x = 0, y = 0, width = None, height = None, visibility = True):
+                 abs_x=0,abs_y=0,x = 0, y = 0, width = None, height = None, visibility = True):
         """
         初始化Box容器
         :param direction: 布局方向，'h'为水平，'v'为垂直
@@ -11,7 +11,7 @@ class Box(Container):
         :param align: 对齐方式，'start'/'center'/'end'
         :param flex: 分配空间的比例
         """
-        super().__init__(x = x, y = y, width = width, height = height, visibility = visibility)
+        super().__init__(abs_x=abs_x,abs_y=abs_y,x = x, y = y, width = width, height = height, visibility = visibility)
 
         self.direction = direction
         self.spacing = spacing

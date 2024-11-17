@@ -26,6 +26,7 @@ class Label(Widget):
                  background=0x7f34,  # 背景色（默认绿色）
                  align=ALIGN_LEFT,  # 文本对齐方式
                  padding=(2, 2, 2, 2),
+                 abs_x=0,abs_y=0,
                  x=0,y=0,width=None,height=None,visibility=True):  # 内边距 (左,上,右,下)
         """
         初始化标签控件
@@ -39,7 +40,7 @@ class Label(Widget):
             padding: 内边距，格式为(左,上,右,下)
             visibility: 是否可见
         """
-        super().__init__(x = x, y = y, width = width, height = height, visibility = visibility)
+        super().__init__(abs_x=abs_x,abs_y=abs_y,x = x, y = y, width = width, height = height, visibility = visibility)
         self.text = text
         self.font = font
         if font is not None:
