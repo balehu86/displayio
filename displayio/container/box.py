@@ -160,10 +160,10 @@ class Box(Container):
             else:  # end
                 dy = self.dy + self.height - actual_height
 
-            # 应用布局
+            # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)
-            child._layout_dirty = False
+
             if self.order == 'normal':
                 dx += actual_width + self.spacing
             else:
@@ -211,10 +211,9 @@ class Box(Container):
             else:  # end
                 dx = self.dx + self.width - actual_width
 
-            # 应用布局
+            # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)
-            child._layout_dirty = False
             if self.order == 'normal':
                 dy += actual_height + self.spacing
             else:

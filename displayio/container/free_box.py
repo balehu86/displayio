@@ -71,4 +71,3 @@ class FreeBox(Container):
             dx = child.abs_x if child.rel_x is None else (self.dx + child.rel_x)
             dy = child.abs_y if child.rel_y is None else (self.dy + child.rel_y)
             child.layout(dx = dx, dy = dy)
-            child._layout_dirty = False

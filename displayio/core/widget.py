@@ -56,6 +56,7 @@ class Widget:
         self.width = width if self.width_resizable and self.width != width and width !=None else self.width
         self.height = height if self.height_resizable and self.height != height and height != None else self.height
         self._dirty = True
+        self._layout_dirty = False
     
     def move_to(self,abs_x = 0, abs_y = 0):
         self.dx = abs_x if self.dx !=abs_x else self.dx
