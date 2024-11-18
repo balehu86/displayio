@@ -31,7 +31,7 @@ class Box(Container):
                dx = 0, dy = 0,
                width = None, height = None):
         """
-        重写布局方法，确保先更新自身位置和大小
+        重写布局方法,确保先更新自身位置和大小
         """
         super().layout(dx = dx, dy = dy,
                        width = width, height = height)
@@ -121,10 +121,10 @@ class Box(Container):
     def _layout_horizontal(self):
         """
         水平方向的布局处理
-        处理None值的情况，计算并分配空间
+        处理None值的情况,计算并分配空间
         """
 
-        dx = self.dx if self.order == 'normal' else (self.dx + self.width)
+        dx = self.dx if self.order == 'normal' else (self.dx + self.width + self.spacing -1)
         fixed_width_sum = 0
         flexible_count = 0
 
@@ -160,22 +160,23 @@ class Box(Container):
             else:  # end
                 dy = self.dy + self.height - actual_height
 
+            if self.order != 'normal':
+                dx -= (actual_width + self.spacing)
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
-                         width = actual_width, height = actual_height)
-
+                         width = actual_width, height = actual_height)           
             if self.order == 'normal':
                 dx += actual_width + self.spacing
-            else:
-                dx -= (actual_width + self.spacing)
+
+            
 
 
     def _layout_vertical(self):
         """
         垂直方向的布局处理
-        处理None值的情况，计算并分配空间
+        处理None值的情况,计算并分配空间
         """
-        dy = self.dy if self.order == 'normal' else (self.dy + self.height)
+        dy = self.dy if self.order == 'normal' else (self.dy + self.height + self.spacing -1)
         fixed_height_sum = 0
         flexible_count = 0
 
@@ -211,11 +212,12 @@ class Box(Container):
             else:  # end
                 dx = self.dx + self.width - actual_width
 
+            if self.order != 'normal':
+                dy -= (actual_height + self.spacing)
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)
             if self.order == 'normal':
                 dy += actual_height + self.spacing
-            else:
-                dy -= (actual_height + self.spacing)
+            
                 

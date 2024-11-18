@@ -10,7 +10,8 @@ class Widget:
                  abs_x = 0, abs_y = 0,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
-                 visibility = True):
+                 visibility = True,
+                 background_color = None):
         # 初始化时坐标，分绝对坐标和相对坐标
         self.abs_x = abs_x
         self.abs_y = abs_y
@@ -29,6 +30,7 @@ class Widget:
         self.height_resizable = True if height is None else False
         # 缓存的位图对象
         self._bitmap = None
+        self._text_bitmap = None
         # 绘制系统脏标记,分别用来触发刷新和重绘
         self._dirty = True
         self._content_dirty = True
@@ -39,20 +41,21 @@ class Widget:
 
         self.parent = None
         self.children = []
+        # 背景色
+        self.background_color = background_color
             
             
     def layout(self,
                dx = 0, dy = 0,
                width = None, height = None):
         """
-        布局函数，设置控件的位置和大小
-        此函数由root开始调用
-        在容器中次函数会被重写，用来迭代布局容器中的子元素
+        布局函数,设置控件的位置和大小,由父容器调用
+        此函数从root开始,一层层调用
+        在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
         """
         self.dx = dx if self.dx !=dx else self.dx
         self.dy = dy if self.dy !=dy else self.dy
-
         self.width = width if self.width_resizable and self.width != width and width !=None else self.width
         self.height = height if self.height_resizable and self.height != height and height != None else self.height
         self._dirty = True

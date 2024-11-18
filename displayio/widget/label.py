@@ -27,6 +27,10 @@ class Label(Widget):
                  align=ALIGN_LEFT,  # 文本对齐方式
                  padding=(2, 2, 2, 2),  # 文字边距
 
+                #  corner_radius=0,  # 圆角半径
+                #  corner_color=None,  # 圆角颜色，None表示使用背景色
+                #  corner_transparent=False,  # 圆角是否透明
+
                  abs_x=0,abs_y=0,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
@@ -41,6 +45,9 @@ class Label(Widget):
             background: 背景颜色（16位RGB颜色）
             align: 文本对齐方式
             padding: 内边距，格式为(左,上,右,下)
+            corner_radius: 圆角半径
+            corner_color: 圆角颜色，None表示使用背景色
+            corner_transparent: 圆角是否透明
             visibility: 是否可见
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
@@ -54,61 +61,100 @@ class Label(Widget):
             self.font_height = font['HEIGHT']
             self.font_default = font['DEFAULT']
             self.font_rle = font['RLE']
+            # 计算文本 总宽度 总高度
+            self.text_width = self.font_width * len(text)
+            self.text_height = self.font_height
         self.text_color = text_color
         self.background = background
         self.align = align
         self.padding = padding
-    
+        # self.corner_radius = corner_radius
+        # self.corner_color = corner_color if corner_color is not None else background
+        # self.corner_transparent = corner_transparent
+
+    # def _draw_rounded_corners(self, bitmap):
+    #     """绘制圆角"""
+    #     if self.corner_radius <= 0:
+    #         return
+            
+    #     r = self.corner_radius
+    #     w = self.width
+    #     h = self.height
+        
+    #     # 遍历四个角落的区域
+    #     for corner_x, corner_y in [(0, 0), (w-r, 0), (0, h-r), (w-r, h-r)]:
+    #         for x in range(r):
+    #             for y in range(r):
+    #                 # 检查点是否在圆角外
+    #                 if (x - (r-1))**2 + (y - (r-1))**2 > r**2:
+    #                     # 根据当前处理的是哪个角落，计算实际坐标
+    #                     actual_x = corner_x + (x if corner_x == 0 else r-1-x)
+    #                     actual_y = corner_y + (y if corner_y == 0 else r-1-y)
+                        
+    #                     if self.corner_transparent:
+    #                         self.bitmap.pixel(actual_x, actual_y, None, True)
+    #                     else:
+    #                         self.bitmap.pixel(actual_x, actual_y, self.corner_color, False)
+    def _create_text_bitmap(self):
+        """
+        创建控件文本渲染的位图
+        """              
+        if self.font:
+            # 创建新的位图
+            bitmap = Bitmap(self.text_width, self.text_height)
+            # 渲染每个字符
+            text_dx = 0
+            for i, char in enumerate(self.text):
+                if char in self.font:
+                    char_bitmap = hex_font_to_bitmap(
+                        self.font[char], self.font_width, self.font_height,
+                        foreground=self.text_color, rle=self.font_rle)
+                else:
+                    char_bitmap = hex_font_to_bitmap(
+                        self.font_default, self.font_width, self.font_height,
+                        foreground=self.text_color, rle=self.font_rle)
+                # 将字符位图复制到主位图
+                x = text_dx + i * self.font_width
+                bitmap.blit(char_bitmap, dx=x, dy=0)
+            return bitmap
+        # 能到这步，说明没有给self.font，直接报错
+        raise ValueError("未知的字体库")
+    def _calculate_text_position(self):
+        """
+        根据文本对齐方式计算文本位图位置
+        """ 
+        text_x = self.padding[0]  # 默认左对齐
+        text_y = (self.height - self.font_height) // 2  # 默认垂直居中
+        
+        if self.align == self.ALIGN_CENTER:
+            text_x = (self.width - self.text_width) // 2
+        elif self.align == self.ALIGN_RIGHT:
+            text_x = self.width - self.text_width - self.padding[2]
+            
+        if self.align == self.ALIGH_TOP:
+            text_y = self.padding[1]
+        elif self.align == self.ALIGN_BOTTOM:
+            text_y = self.height - self.text_height - self.padding[3]
+        return text_x, text_y
     def _create_bitmap(self):
         """
         创建控件的位图
         包含背景和文本渲染
         """
-        
         # 创建新的位图
-        bitmap = Bitmap(self.width, self.height)
-        # cache字体的 大小 数据
-        font_width = self.font_width
-        font_height = self.font_height
-        
+        bitmap = Bitmap(self.width, self.height)      
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, self.background)
+        # 绘制圆角
+        # bitmap = self._draw_rounded_corners(bitmap)
+        # 绘制文字
+        text_bitmap = self._create_text_bitmap()   
+        self._text_bitmap = text_bitmap
         
-        if self.text and self.font:
-            # 计算文本总宽度
-            text_total_width = len(self.text) * font_width
-            text_total_height = font_height
-            
-            # 根据水平方向对齐方式计算起始x坐标
-            if self.align == self.ALIGN_LEFT:
-                text_x = self.padding[0]
-            elif self.align == self.ALIGN_CENTER:
-                text_x = (self.width - text_total_width) // 2
-            else:  # ALIGN_RIGHT
-                text_x = self.width - text_total_width - self.padding[2]
-            
-            # 根据垂直方向对齐方式计算起始y坐标
-            if self.align == self.ALIGH_TOP:
-                text_y = self.padding[1]
-            elif self.align == self.ALIGN_BOTTOM:
-                text_y = self.height - text_total_height - self.padding[3]
-            else:  # ALIGN_CENTER
-                text_y = (self.height - font_height) // 2
-            
-            # 渲染每个字符
-            for i, char in enumerate(self.text):
-                if char in self.font:
-                    char_bitmap = hex_font_to_bitmap(
-                        self.font[char], font_width, font_height,
-                        foreground=self.text_color, rle=self.font_rle)
-                else:
-                    char_bitmap = hex_font_to_bitmap(
-                        self.font_default, font_width, font_height,
-                        foreground=self.text_color, rle=self.font_rle)
-                # 将字符位图复制到主位图
-                x = text_x + i * font_width
-                bitmap.blit(char_bitmap, dx=x, dy=text_y)
-        
+        text_x, text_y = self._calculate_text_position()
+        # 将文本bitmap绘制到背景
+        bitmap.blit(text_bitmap, dx=text_x, dy=text_y)
+
         return bitmap
     
     # @timeit
@@ -124,7 +170,7 @@ class Label(Widget):
                 self._dirty = False
             return self._bitmap
         else:
-            bitmap=Bitmap(self.width,self.height)
+            bitmap = Bitmap(self.width,self.height)
             bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
             self._dirty = False
             return bitmap
@@ -134,6 +180,7 @@ class Label(Widget):
         """设置文本内容"""
         if self.text != text:
             self.text = text
+            self.text_width = self.font_width * len(text)
             self.register_dirty()
             self.register_content_dirty()
     
@@ -152,6 +199,7 @@ class Label(Widget):
         self.font_height = font['HEIGHT']
         self.font_default = font['DEFAULT']
         self.font_rle = font['RLE']
+        self.text_width = self.font_width * len(self.text)
         self.register_dirty()
         self.register_content_dirty()
     def set_align(self,align):
@@ -164,3 +212,14 @@ class Label(Widget):
         self.padding = padding
         self.register_dirty()
         self.register_content_dirty()
+
+    # def set_corner(self, radius=None, color=None, transparent=None):
+    #     """设置圆角属性"""
+    #     if radius is not None:
+    #         self.corner_radius = radius
+    #     if color is not None:
+    #         self.corner_color = color
+    #     if transparent is not None:
+    #         self.corner_transparent = transparent
+    #     self.register_dirty()
+    #     self.register_content_dirty()

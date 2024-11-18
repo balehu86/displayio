@@ -1,6 +1,5 @@
 # ./display.py
 from .core.bitmap import Bitmap
-
 from .utils.decorator import timeit
 
 class Display:
@@ -61,7 +60,7 @@ class Display:
     def check_layout_dirty(self):
         if self.root._layout_dirty:
             self.root.layout(dx=0, dy=0,width=self.width, height=self.height)
-            
+
     def run(self):
         while True:
             self.check_layout_dirty()
