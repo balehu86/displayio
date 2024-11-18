@@ -2,44 +2,39 @@
 from ..core.container import Container
 
 class Box(Container):
-    def __init__(self, direction='h', spacing=0, align='start', flex = 0,
-                 abs_x=0,abs_y=0,x = 0, y = 0, width = None, height = None, visibility = True):
+    def __init__(self,
+                 abs_x = 0, abs_y = 0,
+                 rel_x = None, rel_y = None,
+                 width = None, height = None,
+                 visibility = True,
+                 direction='h', spacing=0, align='start', flex = 0, order = 'normal'):
         """
         初始化Box容器
         :param direction: 布局方向，'h'为水平，'v'为垂直
         :param spacing: 子元素间距
         :param align: 对齐方式，'start'/'center'/'end'
         :param flex: 分配空间的比例
+        :param order: 元素排列顺序，'normal' 为顺序排列，'reverse'为倒序
         """
-        super().__init__(abs_x=abs_x,abs_y=abs_y,x = x, y = y, width = width, height = height, visibility = visibility)
-
+        super().__init__(abs_x = abs_x, abs_y = abs_y,
+                         rel_x = rel_x, rel_y = rel_y,
+                         width = width, height = height,
+                         visibility = visibility)
+        
         self.direction = direction
         self.spacing = spacing
         self.align = align
         self.flex = flex
-
-    def add(self, child):
-        """
-        添加子元素并更新布局
-        :param child: 要添加的子元素(可以是容器或widget)
-        """
-        super().add(child)
-        self.update_layout()
-    def remove(self, child):
-        """
-        移除子元素并更新布局
-        :param child: 要移除的子元素
-        """
-        # 获取子元素在children中的索引
-        if child in self.children:
-            super().remove(child)
-            self.update_layout()
-
-    def layout(self, x, y, width, height):
+        self.order = order
+        
+    def layout(self,
+               dx = 0, dy = 0,
+               width = None, height = None):
         """
         重写布局方法，确保先更新自身位置和大小
         """
-        super().layout(x, y, width, height)
+        super().layout(dx = dx, dy = dy,
+                       width = width, height = height)
         self.update_layout()
     
     def _get_min_size(self):
@@ -50,13 +45,6 @@ class Box(Container):
         """
         min_width = 0
         min_height = 0
-
-        # 容器没有children，则返回（0，0）.
-        # 普通widget没有children，则返回初始化时的值 或者强制resize()的值
-        # if not self.children:
-        #     min_width = self.width if self.width is not None else 0
-        #     min_height = self.height if self.height is not None else 0
-        #     return (min_width, min_height)
         
         if self.direction == 'h':
             # 水平布局：宽度累加，高度取最大值
@@ -84,9 +72,9 @@ class Box(Container):
                     min_height += self.spacing
 
         # 如果容器本身设置了固定的width或height，使用较大的值
-        if self.width is not None and not self.width_resizable:
+        if not self.width_resizable:
             min_width = max(min_width, self.width)
-        if self.height is not None and not self.height_resizable:
+        if not self.height_resizable:
             min_height = max(min_height, self.height)          
         
         return (min_width, min_height)
@@ -135,18 +123,19 @@ class Box(Container):
         水平方向的布局处理
         处理None值的情况，计算并分配空间
         """
-        x = self.x
+
+        dx = self.dx if self.order == 'normal' else (self.dx + self.width)
         fixed_width_sum = 0
         flexible_count = 0
 
         # 第一遍遍历：计算固定宽度和可伸缩元素数量
         for child in self.children:
-            width = child.width
-            width_resizable = child.width_resizable
-            if width_resizable:
+            child_width = child.width
+            child_width_resizable = child.width_resizable
+            if child_width_resizable:
                 flexible_count += 1
             else:
-                fixed_width_sum += width
+                fixed_width_sum += child_width
 
         # 计算可伸缩元素的宽度
         flexible_width = self._calculate_flexible_size(
@@ -154,44 +143,50 @@ class Box(Container):
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
-            width=child.width
-            height=child.height
-            width_resizable=child.width_resizable
-            height_resizable=child.height_resizable
+            child_width=child.width
+            child_height=child.height
+            child_width_resizable=child.width_resizable
+            child_height_resizable=child.height_resizable
             # 确定实际使用的宽度
-            actual_width = flexible_width if width_resizable else width
+            actual_width = flexible_width if child_width_resizable else child_width
             # 确定实际使用的高度
-            actual_height = self.height if height_resizable else height
+            actual_height = self.height if child_height_resizable else child_height
 
             # 根据对齐方式计算y坐标
             if self.align == 'start':
-                y = self.y
+                dy = self.dy
             elif self.align == 'center':
-                y = self.y + (self.height - actual_height) // 2
+                dy = self.dy + (self.height - actual_height) // 2
             else:  # end
-                y = self.y + self.height - actual_height
+                dy = self.dy + self.height - actual_height
 
             # 应用布局
-            child.layout(x, y, actual_width, actual_height)
-            x += actual_width + self.spacing
+            child.layout(dx = dx, dy = dy,
+                         width = actual_width, height = actual_height)
+            child._layout_dirty = False
+            if self.order == 'normal':
+                dx += actual_width + self.spacing
+            else:
+                dx -= (actual_width + self.spacing)
+
 
     def _layout_vertical(self):
         """
         垂直方向的布局处理
         处理None值的情况，计算并分配空间
         """
-        y = self.y
+        dy = self.dy if self.order == 'normal' else (self.dy + self.height)
         fixed_height_sum = 0
         flexible_count = 0
 
         # 第一遍遍历：计算固定高度和可伸缩元素数量
         for child in self.children:
-            height = child.height
-            height_resizable = child.height_resizable
-            if height_resizable:
+            child_height = child.height
+            child_height_resizable = child.height_resizable
+            if child_height_resizable:
                 flexible_count += 1
             else:
-                fixed_height_sum += height
+                fixed_height_sum += child_height
 
         # 计算可伸缩元素的高度
         flexible_height = self._calculate_flexible_size(
@@ -199,23 +194,29 @@ class Box(Container):
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
-            width=child.width
-            height=child.height
-            width_resizable=child.width_resizable
-            height_resizable=child.height_resizable
+            child_width=child.width
+            child_height=child.height
+            child_width_resizable=child.width_resizable
+            child_height_resizable=child.height_resizable
             # 确定实际使用的宽度
-            actual_width = self.width if width_resizable else width
+            actual_width = self.width if child_width_resizable else child_width
             # 确定实际使用的高度
-            actual_height = flexible_height if height_resizable else height
+            actual_height = flexible_height if child_height_resizable else child_height
 
             # 根据对齐方式计算x坐标
             if self.align == 'start':
-                x = self.x
+                dx = self.dx
             elif self.align == 'center':
-                x = self.x + (self.width - actual_width) // 2
+                dx = self.dx + (self.width - actual_width) // 2
             else:  # end
-                x = self.x + self.width - actual_width
+                dx = self.dx + self.width - actual_width
 
             # 应用布局
-            child.layout(x, y, actual_width, actual_height)
-            y += actual_height + self.spacing
+            child.layout(dx = dx, dy = dy,
+                         width = actual_width, height = actual_height)
+            child._layout_dirty = False
+            if self.order == 'normal':
+                dy += actual_height + self.spacing
+            else:
+                dy -= (actual_height + self.spacing)
+                
