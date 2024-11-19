@@ -68,33 +68,6 @@ class Label(Widget):
         self.background = background
         self.align = align
         self.padding = padding
-        # self.corner_radius = corner_radius
-        # self.corner_color = corner_color if corner_color is not None else background
-        # self.corner_transparent = corner_transparent
-
-    # def _draw_rounded_corners(self, bitmap):
-    #     """绘制圆角"""
-    #     if self.corner_radius <= 0:
-    #         return
-            
-    #     r = self.corner_radius
-    #     w = self.width
-    #     h = self.height
-        
-    #     # 遍历四个角落的区域
-    #     for corner_x, corner_y in [(0, 0), (w-r, 0), (0, h-r), (w-r, h-r)]:
-    #         for x in range(r):
-    #             for y in range(r):
-    #                 # 检查点是否在圆角外
-    #                 if (x - (r-1))**2 + (y - (r-1))**2 > r**2:
-    #                     # 根据当前处理的是哪个角落，计算实际坐标
-    #                     actual_x = corner_x + (x if corner_x == 0 else r-1-x)
-    #                     actual_y = corner_y + (y if corner_y == 0 else r-1-y)
-                        
-    #                     if self.corner_transparent:
-    #                         self.bitmap.pixel(actual_x, actual_y, None, True)
-    #                     else:
-    #                         self.bitmap.pixel(actual_x, actual_y, self.corner_color, False)
     def _create_text_bitmap(self):
         """
         创建控件文本渲染的位图
@@ -145,8 +118,6 @@ class Label(Widget):
         bitmap = Bitmap(self.width, self.height)      
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, self.background)
-        # 绘制圆角
-        # bitmap = self._draw_rounded_corners(bitmap)
         # 绘制文字
         text_bitmap = self._create_text_bitmap()   
         self._text_bitmap = text_bitmap
@@ -212,14 +183,3 @@ class Label(Widget):
         self.padding = padding
         self.register_dirty()
         self.register_content_dirty()
-
-    # def set_corner(self, radius=None, color=None, transparent=None):
-    #     """设置圆角属性"""
-    #     if radius is not None:
-    #         self.corner_radius = radius
-    #     if color is not None:
-    #         self.corner_color = color
-    #     if transparent is not None:
-    #         self.corner_transparent = transparent
-    #     self.register_dirty()
-    #     self.register_content_dirty()
