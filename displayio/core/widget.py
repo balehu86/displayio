@@ -1,4 +1,5 @@
 # ./core/widget.py
+from .event import Event
 
 class Widget:
     RED   = 0xf800
@@ -43,6 +44,9 @@ class Widget:
         self.children = []
         # 背景色
         self.background_color = background_color
+
+        # event注册
+        self.event = []
             
             
     def layout(self,
@@ -53,6 +57,12 @@ class Widget:
         此函数从root开始,一层层调用
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
+
+        Args:
+            dx (int, optional): _description_. Defaults to 0.
+            dy (int, optional): _description_. Defaults to 0.
+            width (_type_, optional): _description_. Defaults to None.
+            height (_type_, optional): _description_. Defaults to None.
         """
         self.dx = dx if self.dx !=dx else self.dx
         self.dy = dy if self.dy !=dy else self.dy
@@ -62,18 +72,30 @@ class Widget:
         self._layout_dirty = False
     
     def move_to(self,abs_x = 0, abs_y = 0):
+        """重新设置位置
+
+        Args:
+            abs_x (int, optional): _description_. Defaults to 0.
+            abs_y (int, optional): _description_. Defaults to 0.
+        """
         self.dx = abs_x if self.dx !=abs_x else self.dx
         self.dy = abs_y if self.dy !=abs_y else self.dy
         self.register_layout_dirty()
 
-    # 强制重新设置大小
     def resize(self, width = None, height = None):
+        """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
+
+        Args:
+            width (_type_, optional): _description_. Defaults to None.
+            height (_type_, optional): _description_. Defaults to None.
+        """
         self.width = width if self.width_resizable and self.width != width and width !=None else self.width
         self.height = height if self.height_resizable and self.height != height and height != None else self.height
         self.register_layout_dirty()
 
     def hide(self):
-        # 隐藏不算内容发生改变
+        """隐藏部件
+        """
         self.visibility = False
         self.register_dirty()
         self._dirty = True
@@ -81,6 +103,8 @@ class Widget:
             child.hide()
         
     def unhide(self):
+        """取消隐藏部件
+        """
         self.visibility = True
         self.register_dirty()
         for child in self.children:
@@ -110,13 +134,16 @@ class Widget:
         pass
 
 
-    # 从子层，向上层一层层标脏
     def register_dirty(self):
+        """向上汇报 脏
+        """
         self._dirty = True
         if self.parent:
             self.parent.register_dirty()
-    # 从父层，向下层一层层标脏
+
     def mark_dirty(self):
+        """向下通知 脏
+        """
         self._dirty = True
         for child in self.children:
             child.mark_dirty()
@@ -140,6 +167,8 @@ class Widget:
     #         child.mark_size_dirty()
 
     def register_content_dirty(self):
+        """向上汇报 内容脏
+        """
         self._content_dirty = True
         if self.parent:
             self.parent.register_content_dirty()
@@ -150,6 +179,22 @@ class Widget:
 
 
     def register_layout_dirty(self):
+        """向上汇报 布局脏
+        """
         self._layout_dirty = True
         if self.parent:
             self.parent.register_layout_dirty()
+
+    def event_handler(self, event: Event):
+        """处理event,决定是自己处理还是向下传递. 然后向上汇报处理结果
+
+        Args:
+            event (_type_): _description_
+        """
+        if event in self.event:
+            # do something
+            Event.done()
+
+        else:
+            for child in self.children:
+                child.event_handler(event)

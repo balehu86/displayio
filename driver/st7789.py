@@ -283,9 +283,11 @@ class ST7789:
             width = bitmap.width
         if height is None:
             height = bitmap.height
-            
+        
         self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-        self.write_data(bitmap.buffer)
+        
+        mv = memoryview(bitmap.buffer)
+        self.write_data(mv)
 
 
     def thread_refresh(self, bitmap, dx, dy, width, height,
