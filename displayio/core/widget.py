@@ -46,7 +46,7 @@ class Widget:
         self.background_color = background_color
 
         # event注册
-        self.event = []
+        self.registed_event = []
             
             
     def layout(self,
@@ -191,10 +191,10 @@ class Widget:
         Args:
             event (_type_): _description_
         """
-        if event in self.event:
+        if event.type in self.registed_event:
             # do something
-            Event.done()
-
+            event.done()
+            return
         else:
             for child in self.children:
                 child.event_handler(event)

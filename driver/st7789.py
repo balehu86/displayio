@@ -277,17 +277,17 @@ class ST7789:
     def fill(self, color):
         self.fill_rect(0, 0, self.width, self.height, color)
 
-    def refresh(self, bitmap, dx=0, dy=0, width=None, height=None):
+    def refresh(self, bitmap_memview, dx=0, dy=0, width=None, height=None):
         """将位图数据刷新到显示屏"""
-        if width is None:
-            width = bitmap.width
-        if height is None:
-            height = bitmap.height
+        # if width is None:
+        #     width = bitmap.width
+        # if height is None:
+        #     height = bitmap.height
         
         self.set_window(dx, dy, dx + width - 1, dy + height - 1)
         
-        mv = memoryview(bitmap.buffer)
-        self.write_data(mv)
+        # mv = memoryview(bitmap.buffer)
+        self.write_data(bitmap_memview)
 
 
     def thread_refresh(self, bitmap, dx, dy, width, height,

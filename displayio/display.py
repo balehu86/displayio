@@ -1,6 +1,8 @@
 # ./display.py
 from .core.bitmap import Bitmap
+from .core.widget import Widget
 from .utils.decorator import timeit
+import micropython # type: ignore
 
 class Display:
     def __init__(self, width, height, driver=None,threaded=True):
@@ -8,6 +10,7 @@ class Display:
         self.height = height
         self.root = None
         self.driver = driver
+        self.event_queue = []
         self.threaded = threaded
         if threaded and driver is not None:
             import _thread
@@ -29,6 +32,9 @@ class Display:
         self.root.width_resizable = False
         self.root.height_resizable = False
     
+    def add_event(self,event):
+        self.event_queue.append(event)
+    
     @timeit
     def check_dirty(self):
         if self.root._dirty:
@@ -48,7 +54,8 @@ class Display:
                             finally:self.bitmap_lock.release()
                         else:
                             bitmap = widget.get_bitmap()
-                            self.driver.refresh(bitmap,dx=widget.dx,dy=widget.dy)
+                            bitmap_memview = memoryview(bitmap.buffer)
+                            self.driver.refresh(bitmap_memview,dx=widget.dx,dy=widget.dy,width=widget.width,height=widget.height)
                           
                 for child in widget.children:
                     render_widget(child)  # 递归处理子组件
@@ -56,10 +63,14 @@ class Display:
             render_widget(self.root)
     
 
-    @timeit
+    # @timeit
     def check_layout_dirty(self):
         if self.root._layout_dirty:
             self.root.layout(dx=0, dy=0,width=self.width, height=self.height)
+    
+    @timeit
+    def handle_event(self):
+        self.root.event_handler(event)
 
     def run(self):
         while True:

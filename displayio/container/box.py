@@ -1,6 +1,8 @@
 # ./container/box.py
 from ..core.container import Container
 
+import micropython # type: ignore
+
 class Box(Container):
     def __init__(self,
                  abs_x = 0, abs_y = 0,
@@ -36,7 +38,7 @@ class Box(Container):
         super().layout(dx = dx, dy = dy,
                        width = width, height = height)
         self.update_layout()
-    
+    @micropython.native
     def _get_min_size(self):
         """
         重写方法
@@ -79,7 +81,9 @@ class Box(Container):
         
         return (min_width, min_height)
 
-    def _calculate_flexible_size(self, total_size, fixed_size_sum, flexible_count):
+    @micropython.viper
+    @staticmethod
+    def _calculate_flexible_size(total_size: int, fixed_size_sum: int, flexible_count: int, spacing: int, children_num: int) -> int:
         """
         计算可伸缩元素的尺寸
         :param total_size: 总可用空间
@@ -89,7 +93,7 @@ class Box(Container):
         """
 
         # 计算剩余空间
-        remaining = total_size - fixed_size_sum - self.spacing * (len(self.children) - 1)
+        remaining = total_size - fixed_size_sum - spacing * (children_num - 1)
 
         if remaining < 0:
             raise ValueError(f'计算可伸缩元素尺寸时，剩余空间不够。\n    总可用{total_size},固定尺寸实际占用{fixed_size_sum}')
@@ -97,7 +101,8 @@ class Box(Container):
         # 平均分配给每个可伸缩元素
         if flexible_count == 0:
             return 0
-        return max(0, remaining // flexible_count)
+        # resault = int(max(0, remaining // flexible_count))
+        return int(max(0, remaining // flexible_count))
 
     def update_layout(self):
         """
@@ -118,6 +123,7 @@ class Box(Container):
         else:
             self._layout_vertical()
 
+    @micropython.native
     def _layout_horizontal(self):
         """
         水平方向的布局处理
@@ -139,7 +145,7 @@ class Box(Container):
 
         # 计算可伸缩元素的宽度
         flexible_width = self._calculate_flexible_size(
-            self.width, fixed_width_sum, flexible_count)
+            self.width, fixed_width_sum, flexible_count, self.spacing, len(self.children))
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
@@ -171,6 +177,7 @@ class Box(Container):
             
 
 
+    @micropython.native
     def _layout_vertical(self):
         """
         垂直方向的布局处理
@@ -191,7 +198,7 @@ class Box(Container):
 
         # 计算可伸缩元素的高度
         flexible_height = self._calculate_flexible_size(
-            self.height, fixed_height_sum, flexible_count)
+            self.height, fixed_height_sum, flexible_count, self.spacing, len(self.children))
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
