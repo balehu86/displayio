@@ -57,13 +57,14 @@ class Label(Widget):
         self.text = text
         self.font = font
         if font is not None:
-            self.font_width = font['WIDTH']
-            self.font_height = font['HEIGHT']
-            self.font_default = font['DEFAULT']
-            self.font_rle = font['RLE']
+            self.font_width = font[b'WIDTH'][0]
+            self.font_height = font[b'HEIGHT'][0]
+            self.font_default = font[b'DEFAULT']
+            self.font_rle = font[b'RLE'][0]
             # 计算文本 总宽度 总高度
             self.text_width = self.font_width * len(text)
             self.text_height = self.font_height
+            
         self.text_color = text_color
         self.background = background
         self.align = align
@@ -80,7 +81,7 @@ class Label(Widget):
             for i, char in enumerate(self.text):
                 if char in self.font:
                     char_bitmap = hex_font_to_bitmap(
-                        self.font[char], self.font_width, self.font_height,
+                        self.font[bytes(char,'ascii')], self.font_width, self.font_height,
                         foreground=self.text_color, rle=self.font_rle)
                 else:
                     char_bitmap = hex_font_to_bitmap(
@@ -166,11 +167,12 @@ class Label(Widget):
     def set_font(self,font):
         """设置字体"""
         self.font = font
-        self.font_width = font['WIDTH']
-        self.font_height = font['HEIGHT']
-        self.font_default = font['DEFAULT']
-        self.font_rle = font['RLE']
+        self.font_width = font[b'WIDTH'][0]
+        self.font_height = font[b'HEIGHT'][0]
+        self.font_default = font[b'DEFAULT']
+        self.font_rle = font[b'RLE'][0]
         self.text_width = self.font_width * len(self.text)
+        self.text_height = self.font_height
         self.register_dirty()
         self.register_content_dirty()
     def set_align(self,align):

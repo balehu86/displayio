@@ -277,7 +277,7 @@ class ST7789:
     def fill(self, color):
         self.fill_rect(0, 0, self.width, self.height, color)
 
-    def refresh(self, bitmap_memview, dx=0, dy=0, width=None, height=None):
+    def refresh(self, bitmap_memview, dx=0, dy=0, width=0, height=0):
         """将位图数据刷新到显示屏"""
         # if width is None:
         #     width = bitmap.width

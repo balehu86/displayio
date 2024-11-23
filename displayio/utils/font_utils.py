@@ -24,8 +24,8 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
     
     if not rle:
         # 原始数据模式
-        if not isinstance(hex_data, (list, tuple)) or len(hex_data) != expected_data_length:
-            raise ValueError(f"hex_data必须是长度为{expected_data_length}的一维列表，每行需要{bytes_per_row}个字节表示{width}个像素")
+        if len(hex_data) != expected_data_length:
+            raise ValueError(f"hex_data必须是长度为{expected_data_length}的bytearray，每行需要{bytes_per_row}个字节表示{width}个像素")
             
         for y in range(height):
             row_start = y * bytes_per_row
@@ -43,38 +43,49 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
         # RLE压缩数据模式
         current_row = 0
         row_byte = 0
+        i = 0
         
-        for item in hex_data:
-            if isinstance(item, list):  # 压缩的连续0: [count, 0]
-                # 计算跳过的行数和位置
-                count = item[0]
-                rows_to_skip = count // bytes_per_row
-                current_row += rows_to_skip
-                remaining_bytes = count % bytes_per_row
-                row_byte = (row_byte + remaining_bytes) % bytes_per_row
-                if row_byte == 0 and remaining_bytes > 0:
-                    current_row += 1
-            else:  # 直接存储的值（0或非0）
-                if current_row < height:
-                    if item:  # 只处理非零值
-                        base_x = row_byte * 8
-                        byte_value = item
-                        # 一次性处理一个字节的所有位
-                        for bit_pos in range(8):
-                            if byte_value & (0x80 >> bit_pos):
-                                x = base_x + bit_pos
-                                if x < width:
-                                    bitmap.pixel(x, current_row, foreground, transparent=False)
+        while i < len(hex_data) and current_row < height:
+            byte_value = hex_data[i]
+            
+            if byte_value == 0:
+                # 读取下一个字节作为连续0的数量
+                zero_count = hex_data[i + 1]
+                i += 2
                 
-                    row_byte += 1
+                # 计算跳过的行数和字节位置
+                bytes_to_skip = zero_count
+                while bytes_to_skip > 0:
+                    # 计算当前行还能放几个字节
+                    bytes_remaining_in_row = bytes_per_row - row_byte
+                    if bytes_to_skip >= bytes_remaining_in_row:
+                        # 跳到下一行
+                        bytes_to_skip -= bytes_remaining_in_row
+                        current_row += 1
+                        row_byte = 0
+                    else:
+                        # 在当前行前进
+                        row_byte += bytes_to_skip
+                        bytes_to_skip = 0
+                        
+                    if current_row >= height:
+                        return bitmap
+            else:
+                # 处理非零字节
+                if byte_value:  # 只处理非零值
+                    base_x = row_byte * 8
+                    for bit_pos in range(8):
+                        if byte_value & (0x80 >> bit_pos):
+                            x = base_x + bit_pos
+                            if x < width:
+                                bitmap.pixel(x, current_row, foreground, transparent=False)
+                
+                i += 1
+                row_byte += 1
                 if row_byte >= bytes_per_row:
                     row_byte = 0
                     current_row += 1
 
-            if current_row >= height:
-                return bitmap
-
     return bitmap
-
 
     
