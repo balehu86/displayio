@@ -8,19 +8,20 @@ class Widget:
     PINK  = 0xf81f
 
     def __init__(self,
-                 abs_x = 0, abs_y = 0,
+                 abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
                  visibility = True,
                  background_color = None):
         # 初始化时坐标，分绝对坐标和相对坐标
+        # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
         self.abs_x = abs_x
         self.abs_y = abs_y
         self.rel_x = rel_x
         self.rel_y = rel_y
         # 目标位置，由布局系统确定
-        self.dx = abs_x
-        self.dy = abs_y
+        self.dx = abs_x if abs_x is not None else 0
+        self.dy = abs_y if abs_y is not None else 0
         # widget 是否可见
         self.visibility = visibility
         self.width = width
@@ -36,10 +37,8 @@ class Widget:
         self._dirty = True
         self._content_dirty = True
         # 布局系统脏标记，用来触发重新计算布局。
-        # self._position_dirty = True
-        # self._size_dirty = True
         self._layout_dirty = True
-
+        # 部件继承关系
         self.parent = None
         self.children = []
         # 背景色
@@ -50,7 +49,7 @@ class Widget:
             
             
     def layout(self,
-               dx = 0, dy = 0,
+               dx, dy,
                width = None, height = None):
         """
         布局函数,设置控件的位置和大小,由父容器调用
@@ -64,22 +63,40 @@ class Widget:
             width (_type_, optional): _description_. Defaults to None.
             height (_type_, optional): _description_. Defaults to None.
         """
-        self.dx = dx if self.dx !=dx else self.dx
-        self.dy = dy if self.dy !=dy else self.dy
-        self.width = width if self.width_resizable and self.width != width and width !=None else self.width
-        self.height = height if self.height_resizable and self.height != height and height != None else self.height
+        rel_x = self.rel_x if self.rel_x is not None else 0
+        rel_y = self.rel_y if self.rel_y is not None else 0
+        
+        # 处理绝对位置，它具有最高优先级
+        if self.abs_x is not None:
+            self.dx = self.abs_x
+        else:
+            # 没有绝对位置时，使用父容器位置加上相对偏移
+            self.dx = dx + rel_x
+            
+        if self.abs_y is not None:
+            self.dy = self.abs_y
+        else:
+            # 没有绝对位置时，使用父容器位置加上相对偏移
+            self.dy = dy + rel_y
+
+        # 处理尺寸
+        if self.width_resizable:
+            self.width = (width-rel_x) if width is not None else 0
+        if self.height_resizable:
+            self.height = (height-rel_y) if height is not None else 0
+
         self._dirty = True
         self._layout_dirty = False
-    
-    def move_to(self,abs_x = 0, abs_y = 0):
+
+    def move(self,abs_x = None, abs_y = None, rel_x=None, rel_y=None):
         """重新设置位置
 
         Args:
             abs_x (int, optional): _description_. Defaults to 0.
             abs_y (int, optional): _description_. Defaults to 0.
         """
-        self.dx = abs_x if self.dx !=abs_x else self.dx
-        self.dy = abs_y if self.dy !=abs_y else self.dy
+        self.dx = abs_x if abs_x is not None else self.dx
+        self.dy = abs_y if abs_y is not None else self.dy
         self.register_layout_dirty()
 
     def resize(self, width = None, height = None):
@@ -110,7 +127,6 @@ class Widget:
         for child in self.children:
             child.unhide()
         
-
     def _get_min_size(self):
         """
         计算元素尺寸用。
@@ -123,6 +139,7 @@ class Widget:
         
         min_width = width + rel_x
         min_height = height + rel_y
+ 
         return (min_width, min_height)
     
     def update_layout(self):
@@ -148,24 +165,6 @@ class Widget:
         for child in self.children:
             child.mark_dirty()
 
-    # def register_position_dirty(self):
-    #     self._position_dirty = True
-    #     if self.parent:
-    #         self.parent.register_position_dirty()
-    # def mark_position_dirty(self):
-    #     self._position_dirty = True
-    #     for child in self.children:
-    #         child.mark_position_dirty()
-
-    # def register_size_dirty(self):
-    #     self._size_dirty = True
-    #     if self.parent:
-    #         self.parent.register_size_dirty()
-    # def mark_size_dirty(self):
-    #     self._size_dirty = True
-    #     for child in self.children:
-    #         child.mark_size_dirty()
-
     def register_content_dirty(self):
         """向上汇报 内容脏
         """
@@ -176,7 +175,6 @@ class Widget:
     #     self._content_dirty = True
     #     for child in self.children:
     #         child.mark_content_dirty()
-
 
     def register_layout_dirty(self):
         """向上汇报 布局脏

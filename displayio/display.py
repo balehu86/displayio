@@ -36,7 +36,7 @@ class Display:
         self.event_queue.append(event)
     
     @timeit
-    def check_dirty(self):
+    def check_content_dirty(self):
         if self.root._dirty:
 
             def render_widget(widget):
@@ -67,10 +67,12 @@ class Display:
     def check_layout_dirty(self):
         if self.root._layout_dirty:
             self.root.layout(dx=0, dy=0,width=self.width, height=self.height)
-    
+    def check_dirty(self):
+        self.check_layout_dirty()
+        self.check_content_dirty()
     @timeit
     def handle_event(self):
-        self.root.event_handler(event)
+        self.root.event_handler(self.event)
 
     def run(self):
         while True:

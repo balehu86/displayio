@@ -3,7 +3,7 @@ from .widget import Widget
 
 class Container(Widget):
     def __init__(self,
-                 abs_x = 0,abs_y = 0,
+                 abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
                  visibility = True):
@@ -33,4 +33,14 @@ class Container(Widget):
         self.mark_dirty()
         self.register_dirty()
         self.register_layout_dirty()
-    
+    def layout(self,
+               dx = 0, dy = 0,
+               width = None, height = None):
+        """
+        重写布局方法，确保先更新自身位置和大小
+        """
+        # 设置自己的布局
+        super().layout(dx = dx, dy = dy,
+                       width = width, height = height)
+        # 设置子元素的布局
+        self.update_layout()

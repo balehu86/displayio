@@ -23,7 +23,7 @@ class Button(Label):
                  align=Label.ALIGN_CENTER,  # 按钮文字默认居中
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
                  
-                 abs_x=0,abs_y=0,
+                 abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
                  visibility=True): 

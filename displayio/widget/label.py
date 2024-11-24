@@ -31,7 +31,7 @@ class Label(Widget):
                 #  corner_color=None,  # 圆角颜色，None表示使用背景色
                 #  corner_transparent=False,  # 圆角是否透明
 
-                 abs_x=0,abs_y=0,
+                 abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
                  visibility=True):  # 内边距 (左,上,右,下)
