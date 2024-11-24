@@ -1,6 +1,6 @@
 # ./display.py
 from .core.bitmap import Bitmap
-from .core.widget import Widget
+from .core.event import EventManager
 from .utils.decorator import fps
 import micropython # type: ignore
 
@@ -10,7 +10,9 @@ class Display:
         self.height = height
         self.root = None
         self.driver = driver
-        self.event_queue = []
+
+        self.event_manager = EventManager(self, threaded=False)
+
         self.threaded = threaded
         if threaded and driver is not None:
             import _thread
@@ -32,8 +34,8 @@ class Display:
         self.root.width_resizable = False
         self.root.height_resizable = False
     
-    def add_event(self,event):
-        self.event_queue.append(event)
+    def add_event(self, event):
+        self.event_manager.add_event(event)
     
     @fps
     def check_content_dirty(self):
@@ -70,9 +72,10 @@ class Display:
     def check_dirty(self):
         self.check_layout_dirty()
         self.check_content_dirty()
-    @fps
+
     def handle_event(self):
-        self.root.event_handler(self.event)
+        if self.root:
+            self.root.event_handler(self.event)
 
     def run(self):
         while True:

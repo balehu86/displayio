@@ -298,6 +298,4 @@ class ST7789:
                 """将位图数据刷新到显示屏"""                   
                 self.set_window(dx, dy, dx + width - 1, dy + height - 1)
                 self.write_data(bitmap.buffer)
-
-            finally:
-                lock.release()
+            finally:lock.release()

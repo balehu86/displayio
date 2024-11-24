@@ -33,7 +33,7 @@ class Widget:
         # 缓存的位图对象
         self._bitmap = None
         self._text_bitmap = None
-        # 绘制系统脏标记,分别用来触发刷新和重绘
+        # 绘制系统的脏标记,分别用来触发刷新和重绘
         self._dirty = True
         self._content_dirty = True
         # 布局系统脏标记，用来触发重新计算布局。
