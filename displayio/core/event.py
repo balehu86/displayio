@@ -40,11 +40,10 @@ class Event:
     Timed_Out = 999   # 超时
 
     """事件基类"""
-    def __init__(self, event_type: EventType, target=None, data=None, target_position=[0,0], event_queue=[]):
+    def __init__(self, event_type: EventType, data=None, target_position=[0,0], event_queue=[]):
         self.type: EventType = event_type    # 事件类型
         # self.target = target                 # 事件目标对象
         self.target_position = target_position    # 事件目标位置
-        self.current_target = target         # 当前处理事件的对象
         self.data = data or {}              # 事件相关数据
         self.timestamp = 0                   # 事件发生时间戳
         self.event_queue = event_queue

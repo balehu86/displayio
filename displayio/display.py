@@ -1,7 +1,7 @@
 # ./display.py
 from .core.bitmap import Bitmap
 from .core.widget import Widget
-from .utils.decorator import timeit
+from .utils.decorator import fps
 import micropython # type: ignore
 
 class Display:
@@ -35,7 +35,7 @@ class Display:
     def add_event(self,event):
         self.event_queue.append(event)
     
-    @timeit
+    @fps
     def check_content_dirty(self):
         if self.root._dirty:
 
@@ -70,7 +70,7 @@ class Display:
     def check_dirty(self):
         self.check_layout_dirty()
         self.check_content_dirty()
-    @timeit
+    @fps
     def handle_event(self):
         self.root.event_handler(self.event)
 

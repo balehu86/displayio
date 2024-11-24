@@ -44,8 +44,7 @@ class Button(Label):
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
                          visibility = visibility)
-        
-        self.border_radius = border_radius
+
         self.state = self.STATE_NORMAL
         
         # 状态对应的样式
@@ -99,51 +98,24 @@ class Button(Label):
         创建按钮位图
         添加边框和状态效果
         """
-        bitmap = Bitmap(self.width, self.height)
-        
         # 获取当前状态的样式
         style = self.styles[self.state]
-        
-        # 绘制背景（带圆角）
-        self._draw_rounded_rect(
-            bitmap,
-            0, 0,
-            self.width, self.height,
-            self.border_radius,
-            style['background']
-        )
-        
-         # 绘制文本部分
-        if self.font:
-            # 临时保存原来的颜色
-            original_color = self.text_color
-            self.text_color = style['text_color']
-            
-            # 创建文本位图
-            text_bitmap = self._create_text_bitmap()
-            self._text_bitmap = text_bitmap
-            
-            if text_bitmap:
-                # 计算文本位置（从Label类复用此逻辑）
-                if self.align == self.ALIGN_LEFT:
-                    text_x = self.padding[0]
-                elif self.align == self.ALIGN_CENTER:
-                    text_x = (self.width - self.text_width) // 2
-                else:  # ALIGN_RIGHT
-                    text_x = self.width - self.text_width - self.padding[2]
-                
-                if self.align == self.ALIGH_TOP:
-                    text_y = self.padding[1]
-                elif self.align == self.ALIGN_BOTTOM:
-                    text_y = self.height - self.text_height - self.padding[3]
-                else:  # ALIGN_CENTER
-                    text_y = (self.height - self.font_height) // 2
-                
-                # 将文本bitmap绘制到背景
-                bitmap.blit(text_bitmap, dx=text_x, dy=text_y)
-            
-            # 恢复原来的颜色
-            self.text_color = original_color
+        # 创建新的位图
+        bitmap = Bitmap(self.width, self.height)
+        # 填充背景
+        bitmap.fill_rect(0, 0, self.width, self.height, style['background'])        
+        # 绘制文本部分
+        # 临时保存原来的颜色
+        original_color = self.text_color
+        self.text_color = style['text_color']
+        # 创建文本位图
+        self._text_bitmap = self._create_text_bitmap()
+        # 计算文本位置（从Label类复用此逻辑）
+        text_x, text_y = self._calculate_text_position()
+        # 将文本bitmap绘制到背景
+        bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
+        # 恢复原来的颜色
+        self.text_color = original_color
             
         return bitmap
     def get_bitmap(self):
@@ -153,72 +125,16 @@ class Button(Label):
         """
         if self.visibility:
             if self._content_dirty:
-                bitmap = self._create_bitmap()
-                self._bitmap = bitmap
+                self._bitmap = self._create_bitmap()
                 self._content_dirty = False
-                self._dirty = False
+            self._dirty = False
             return self._bitmap
         else:
-            bitmap=Bitmap(self.width,self.height)
-            bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
+            if self._cache_bitmap is None:
+                self._cache_bitmap = Bitmap(self.width,self.height)
+                self._cache_bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
             self._dirty = False
-            return bitmap
-    
-    def _draw_rounded_rect(self, bitmap, x, y, width, height, radius, color):
-        """
-        绘制圆角矩形
-        
-        参数:
-            bitmap: 目标位图
-            x, y: 起始坐标
-            width, height: 宽度和高度
-            radius: 圆角半径
-            color: 填充颜色
-        """
-        # 填充中心区域
-        bitmap.fill_rect(
-            x + radius, y,
-            width - 2 * radius, height,
-            color
-        )
-        bitmap.fill_rect(
-            x, y + radius,
-            width, height - 2 * radius,
-            color
-        )
-        
-        # 绘制四个圆角
-        self._draw_circle(bitmap, x + radius, y + radius, radius, color)
-        self._draw_circle(bitmap, x + width - radius, y + radius, radius, color)
-        self._draw_circle(bitmap, x + radius, y + height - radius, radius, color)
-        self._draw_circle(bitmap, x + width - radius, y + height - radius, radius, color)
-    
-    def _draw_circle(self, bitmap, cx, cy, radius, color):
-        """
-        绘制实心圆
-        使用Bresenham算法
-        """
-        x = radius - 1
-        y = 0
-        dx = 1
-        dy = 1
-        err = dx - (radius << 1)
-        
-        while x >= y:
-            # 填充每个八分之一圆的水平线
-            bitmap.fill_rect(cx - x, cy + y, x << 1, 1, color, transparent=True)
-            bitmap.fill_rect(cx - x, cy - y, x << 1, 1, color, transparent=True)
-            bitmap.fill_rect(cx - y, cy + x, y << 1, 1, color, transparent=True)
-            bitmap.fill_rect(cx - y, cy - x, y << 1, 1, color, transparent=True)
-            
-            if err <= 0:
-                y += 1
-                err += dy
-                dy += 2
-            if err > 0:
-                x -= 1
-                dx += 2
-                err += dx - (radius << 1)
+            return self._cache_bitmap
     
     def handle_touch(self, event_type, x, y):
         """

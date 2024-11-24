@@ -4,7 +4,6 @@ from ..core.widget import Widget
 from ..core.bitmap import Bitmap
 
 from ..utils.font_utils import hex_font_to_bitmap
-from ..utils.decorator import timeit
 
 class Label(Widget):
     """
@@ -69,6 +68,8 @@ class Label(Widget):
         self.background = background
         self.align = align
         self.padding = padding
+
+        self._cache_bitmap = None
     def _create_text_bitmap(self):
         """
         创建控件文本渲染的位图
@@ -120,12 +121,11 @@ class Label(Widget):
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, self.background)
         # 绘制文字
-        text_bitmap = self._create_text_bitmap()   
-        self._text_bitmap = text_bitmap
-        
+        self._text_bitmap = self._create_text_bitmap()   
+        # 计算文本位置
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
-        bitmap.blit(text_bitmap, dx=text_x, dy=text_y)
+        bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
 
         return bitmap
     
@@ -139,13 +139,14 @@ class Label(Widget):
             if self._content_dirty:
                 self._bitmap = self._create_bitmap()
                 self._content_dirty = False
-                self._dirty = False
+            self._dirty = False
             return self._bitmap
         else:
-            bitmap = Bitmap(self.width,self.height)
-            bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
+            if self._cache_bitmap is None:
+                self._cache_bitmap = Bitmap(self.width,self.height)
+                self._cache_bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
             self._dirty = False
-            return bitmap
+            return self._cache_bitmap
 
     
     def set_text(self, text):

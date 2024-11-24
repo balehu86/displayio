@@ -88,16 +88,19 @@ class Widget:
         self._dirty = True
         self._layout_dirty = False
 
-    def move(self,abs_x = None, abs_y = None, rel_x=None, rel_y=None):
-        """重新设置位置
+    # def move(self,abs_x = None, abs_y = None, rel_x=None, rel_y=None):
+    #     """重新设置位置
+    #         警告：flex布局禁止设置abs_x和abs_y
 
-        Args:
-            abs_x (int, optional): _description_. Defaults to 0.
-            abs_y (int, optional): _description_. Defaults to 0.
-        """
-        self.dx = abs_x if abs_x is not None else self.dx
-        self.dy = abs_y if abs_y is not None else self.dy
-        self.register_layout_dirty()
+    #     Args:
+    #         abs_x (int, optional): _description_. Defaults to 0.
+    #         abs_y (int, optional): _description_. Defaults to 0.
+    #     """
+    #     self.abs_x = abs_x
+    #     self.abs_y = abs_y
+    #     self.rel_x += rel_x
+    #     self.rel_y += rel_y
+    #     self.register_layout_dirty()
 
     def resize(self, width = None, height = None):
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
@@ -115,7 +118,6 @@ class Widget:
         """
         self.visibility = False
         self.register_dirty()
-        self._dirty = True
         for child in self.children:
             child.hide()
         
@@ -142,15 +144,6 @@ class Widget:
  
         return (min_width, min_height)
     
-    def update_layout(self):
-        """
-        统计子元素的尺寸,并按照容器类型调用layout()布局设置
-        次函数每种容器实现方式不同，所以需要容器自己重写次函数
-
-        """
-        pass
-
-
     def register_dirty(self):
         """向上汇报 脏
         """
