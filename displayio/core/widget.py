@@ -1,4 +1,5 @@
 # ./core/widget.py
+import uasyncio # type: ignore
 from .event import Event
 
 class Widget:
@@ -45,27 +46,17 @@ class Widget:
         self.background_color = background_color
 
         # event注册
-        self.registed_event = []
+        self.event_handlers = {}  # 事件处理器字典
             
-            
-    def layout(self,
-               dx, dy,
-               width = None, height = None):
+    def layout(self, dx, dy, width=None, height=None):
         """
         布局函数,设置控件的位置和大小,由父容器调用
         此函数从root开始,一层层调用
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
-
-        Args:
-            dx (int, optional): _description_. Defaults to 0.
-            dy (int, optional): _description_. Defaults to 0.
-            width (_type_, optional): _description_. Defaults to None.
-            height (_type_, optional): _description_. Defaults to None.
         """
         rel_x = self.rel_x if self.rel_x is not None else 0
         rel_y = self.rel_y if self.rel_y is not None else 0
-        
         # 处理绝对位置，它具有最高优先级
         if self.abs_x is not None:
             self.dx = self.abs_x
@@ -88,20 +79,10 @@ class Widget:
         self._dirty = True
         self._layout_dirty = False
 
-    # def move(self,abs_x = None, abs_y = None, rel_x=None, rel_y=None):
-    #     """重新设置位置
-    #         警告：flex布局禁止设置abs_x和abs_y
-
-    #     Args:
-    #         abs_x (int, optional): _description_. Defaults to 0.
-    #         abs_y (int, optional): _description_. Defaults to 0.
-    #     """
-    #     self.abs_x = abs_x
-    #     self.abs_y = abs_y
-    #     self.rel_x += rel_x
-    #     self.rel_y += rel_y
-    #     self.register_layout_dirty()
-
+    async def async_layout(self, dx, dy, width=None, height=None):
+        """异步布局函数"""
+        return self.layout(dx, dy, width, height)
+    
     def resize(self, width = None, height = None):
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
@@ -164,10 +145,6 @@ class Widget:
         self._content_dirty = True
         if self.parent:
             self.parent.register_content_dirty()
-    # def mark_content_dirty(self):
-    #     self._content_dirty = True
-    #     for child in self.children:
-    #         child.mark_content_dirty()
 
     def register_layout_dirty(self):
         """向上汇报 布局脏
@@ -176,16 +153,84 @@ class Widget:
         if self.parent:
             self.parent.register_layout_dirty()
 
-    def event_handler(self, event: Event):
-        """处理event,决定是自己处理还是向下传递. 然后向上汇报处理结果
-
-        Args:
-            event (_type_): _description_
-        """
-        if event.type in self.registed_event:
-            # do something
-            event.done()
-            return
-        else:
-            for child in self.children:
+    def event_handler(self, event):
+        """处理事件
+        
+        首先检查自己是否有对应的处理器，然后决定是否传递给子组件
+        """           
+        # 检查事件坐标是否在组件范围内
+        if hasattr(event, 'target_position'):
+            x, y = event.target_position
+            if not (self.dx <= x < self.dx + self.width and 
+                    self.dy <= y < self.dy + self.height):
+                return
+                
+        # 处理事件
+        handled = False
+        if event.type in self.event_handlers:
+            for handler in self.event_handlers[event.type]:
+                handler(event)
+                handled = True
+                
+        # 如果事件未被处理，传递给子组件
+        if not handled:
+            for child in reversed(self.children):  # 从上到下传递
                 child.event_handler(event)
+                if event.status_code == Event.Completed:
+                    break
+    
+    async def async_event_handler(self, event):
+        """异步事件处理"""
+        # 检查事件坐标是否在组件范围内
+        if hasattr(event, 'target_position'):
+            x, y = event.target_position
+            if not (self.dx <= x < self.dx + self.width and 
+                    self.dy <= y < self.dy + self.height):
+                return
+        
+        # 处理事件
+        handled = False
+        if event.type in self.event_handlers:
+            for handler in self.event_handlers[event.type]:
+                try:
+                    if uasyncio.iscoroutinefunction(handler):
+                        await handler(event)
+                    else:
+                        handler(event)
+                    handled = True
+                except Exception as e:
+                    print(f"Error in async event handler: {e}")
+        
+        # 如果事件未被处理，传递给子组件
+        if not handled:
+            for child in reversed(self.children):  # 从上到下传递
+                await child.async_event_handler(event)
+                if event.status_code == Event.Completed:
+                    break
+
+    def bind(self, event_type, handler):
+        """绑定事件处理器
+        
+        Args:
+            event_type: 事件类型（EventType枚举值）
+            handler: 事件处理函数，接收Event对象作为参数
+        """
+        if event_type not in self.event_handlers:
+            self.event_handlers[event_type] = []
+        self.event_handlers[event_type].append(handler)
+
+    def unbind(self, event_type, handler=None):
+        """解绑事件处理器
+        
+        Args:
+            event_type: 事件类型
+            handler: 要解绑的处理器，None表示解绑所有
+        """
+        if event_type in self.event_handlers:
+            if handler is None:
+                self.event_handlers[event_type] = []
+            else:
+                self.event_handlers[event_type] = [
+                    h for h in self.event_handlers[event_type] 
+                    if h != handler
+                ]

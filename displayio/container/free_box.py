@@ -1,6 +1,8 @@
 # ./container/free_box.py
 from ..core.container import Container
 
+import micropython # type: ignore
+
 class FreeBox(Container):
     def __init__(self,
                  abs_x = None, abs_y = None,
@@ -16,6 +18,7 @@ class FreeBox(Container):
                          width = width, height = height,
                          visibility = visibility)
 
+    @micropython.native
     def _get_min_size(self):
         """
         重写方法
@@ -43,6 +46,7 @@ class FreeBox(Container):
 
         return (min_width+self_rel_x, min_height+self_rel_y)
     
+    @micropython.native
     def update_layout(self):
         """
         更新容器的布局
@@ -67,5 +71,8 @@ class FreeBox(Container):
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = self.dx, dy = self.dy, 
                     width = container_width, height = container_height)
+    
+    async def async_update_layout(self):
+        return self.update_layout()
 
 
