@@ -1,5 +1,15 @@
 # ./core/bitmap.py
 import framebuf # type: ignore
+import micropython # type: ignore
+
+@micropython.viper
+def _swap_rgb565(color: int) -> int:
+    """交换颜色值的高低字节
+        因为framebuf.FrameBuffer的序列为小端序,
+        而驱动一般采用大端序
+        所以在这里先做个交换第一第二字节的处理，
+        可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
+    return ((color >> 8) | (color << 8)) & 0xFFFF
 
 class Bitmap:
     # 支持的颜色格式
@@ -14,7 +24,7 @@ class Bitmap:
     def __init__(self, width=0, height=0, format=framebuf.RGB565):
         self.width = width
         self.height = height
-        self.format=format
+        self.format = format
         buffer_size = width * height
         if format == framebuf.RGB565:
             buffer_size *= 2
@@ -25,20 +35,14 @@ class Bitmap:
         self._mask = bytearray((width * height + 7) // 8)
         # 缓存常用的掩码值
         self._bit_masks = [1 << i for i in range(8)]
-
-    def _swap_rgb565(self, color):
-        """交换颜色值的高低字节
-            因为framebuf.FrameBuffer的序列为小端序,
-            而驱动一般采用大端序
-            所以在这里先做个交换第一第二字节的处理，
-            可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
-        return ((color >> 8) | (color << 8)) & 0xFFFF
-        
+    
+    @micropython.native
     def _get_mask_index(self, x, y):
         """获取遮罩的字节索引和位索引"""
         pos = y * self.width + x
         return pos >> 3, pos & 0x07
     
+    @micropython.native
     def pixel(self, x, y, color=None, transparent=False):
         """获取或设置像素点"""
         # 若超出位图范围，直接返回
@@ -51,24 +55,24 @@ class Bitmap:
         if color is None:
             if self._mask[byte_idx] & bit_mask:  # 不透明
                 value = self.fb.pixel(x, y)
-                return self._swap_rgb565(value) if self.format == framebuf.RGB565 else value
+                return _swap_rgb565(value) if self.format == framebuf.RGB565 else value
             return None   
              
         # 设置像素时转换颜色 
         if self.format == framebuf.RGB565:
-            color = self._swap_rgb565(color)    
+            color = _swap_rgb565(color)    
         self.fb.pixel(x, y, color)
 
         if transparent:
             self._mask[byte_idx] &= ~bit_mask
         else:
             self._mask[byte_idx] |= bit_mask
-
+    @micropython.native
     def fill_rect(self, x, y, width, height, color, transparent=False):
         """填充矩形区域"""
         # 使用FrameBuffer的原生fill_rect进行填充
         if self.format == framebuf.RGB565:
-            color = self._swap_rgb565(color)
+            color = _swap_rgb565(color)
         self.fb.fill_rect(x, y, width, height, color)
         
         # 批量设置透明度
@@ -117,7 +121,7 @@ class Bitmap:
                         self._mask[i] = 0xFF
                     # 最后一个字节
                     self._mask[row_end] |= ((1 << (end_bit + 1)) - 1)
-
+    @micropython.native
     def blit(self, source, sx=0, sy=0, sw=None, sh=None, dx=0, dy=0):
         """将源bitmap复制到当前bitmap"""
         if sw is None:
@@ -159,9 +163,9 @@ class Bitmap:
                     color = source.fb.pixel(src_x, src_y)
                      # 如果源和目标的格式都是RGB565，不需要转换
                     if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
-                        color = self._swap_rgb565(color)
+                        color = _swap_rgb565(color)
                     elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
-                        color = source._swap_rgb565(color)
+                        color = _swap_rgb565(color)
                     self.fb.pixel(dst_x, dst_y, color)
                     
                     # 设置目标像素为不透明
