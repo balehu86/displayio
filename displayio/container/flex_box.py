@@ -52,7 +52,6 @@ class FlexBox(Container):
                 
                 min_width += child_min_width
                 min_height = max(min_height, child_min_height)
-                
                 # 添加间距
                 if i < len(self.children) - 1:
                     min_width += self.spacing
@@ -64,7 +63,6 @@ class FlexBox(Container):
                 
                 min_width = max(min_width, child_min_width)
                 min_height += child_min_height
-                
                 # 添加间距
                 if i < len(self.children) - 1:
                     min_height += self.spacing
@@ -87,13 +85,10 @@ class FlexBox(Container):
         :param flexible_count: 可伸缩元素数量
         :return: 每个可伸缩元素应得的尺寸
         """
-
         # 计算剩余空间
         remaining = total_size - fixed_size_sum - spacing * (children_num - 1)
-
         if remaining < 0:
             raise ValueError(f'计算可伸缩元素尺寸时，剩余空间不够。\n    总可用{total_size},固定尺寸实际占用{fixed_size_sum}')
-        
         # 平均分配给每个可伸缩元素
         if flexible_count == 0:
             return 0
@@ -101,13 +96,9 @@ class FlexBox(Container):
         return int(max(0, remaining // flexible_count))
 
     def update_layout(self):
-        """
-        更新容器的布局
-        处理子元素的位置和大小
-        """
+        """更新容器的布局,处理子元素的位置和大小"""
         if not self.children:
-            return
-            
+            return   
         # 获取容器的最小所需尺寸
         # 确保容器有足够的空间
         min_width, min_height = self._get_min_size()
@@ -118,6 +109,18 @@ class FlexBox(Container):
             self._layout_horizontal()
         else:
             self._layout_vertical()
+
+    async def async_update_layout(self):
+        if not self.children:
+            return
+        min_width, min_height = self._get_min_size()
+        if (min_width > self.width) or (min_height > self.height):
+            raise ValueError(f'子元素尺寸大于容器尺寸，请调整子元素的初始化参数。\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
+        # 异步更新布局细节
+        if self.direction == 'h':
+            await self._async_layout_horizontal()
+        else:
+            await self._async_layout_vertical()
 
     @micropython.native
     def _layout_horizontal(self):
@@ -170,9 +173,6 @@ class FlexBox(Container):
             if self.order == 'normal':
                 dx += actual_width + self.spacing
 
-            
-
-
     @micropython.native
     def _layout_vertical(self):
         """
@@ -222,5 +222,16 @@ class FlexBox(Container):
                          width = actual_width, height = actual_height)
             if self.order == 'normal':
                 dy += actual_height + self.spacing
-            
+
+    async def _async_layout_horizontal(self):
+        """异步水平方向的布局处理"""
+        # 保留原有的_layout_horizontal实现逻辑
+        # 如果需要异步处理，可以在此添加异步操作
+        self._layout_horizontal()
+    
+    async def _async_layout_vertical(self):
+        """异步垂直方向的布局处理"""
+        # 保留原有的_layout_vertical实现逻辑
+        # 如果需要异步处理，可以在此添加异步操作
+        self._layout_vertical()        
                 
