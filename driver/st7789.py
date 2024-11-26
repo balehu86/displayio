@@ -1,4 +1,5 @@
 import time
+import uasyncio # type: ignore
 from micropython import const # type: ignore
 import ustruct as struct # type: ignore
 
@@ -282,20 +283,22 @@ class ST7789:
         # if width is None:
         #     width = bitmap.width
         # if height is None:
-        #     height = bitmap.height
-        
-        self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-        
+        #     height = bitmap.height     
+        self.set_window(dx, dy, dx + width - 1, dy + height - 1)     
         # mv = memoryview(bitmap.buffer)
         self.write_data(bitmap_memview)
 
-
-    def thread_refresh(self, bitmap, dx, dy, width, height,
-                       lock):
+    def thread_refresh(self, bitmap, dx, dy, width, height, lock):
         while True:
-            lock.acquire()
-            try:
+            with lock:
                 """将位图数据刷新到显示屏"""                   
                 self.set_window(dx, dy, dx + width - 1, dy + height - 1)
                 self.write_data(bitmap.buffer)
-            finally:lock.release()
+            time.sleep_ms(100)
+
+    async def async_refresh(self, bitmap, dx ,dy, width, height, lock):
+        while True:
+            with lock:
+                self.set_window(dx, dy, dx + width - 1, dy + height - 1)
+                self.write_data(bitmap.buffer)
+            uasyncio.sleep_ms(1)
