@@ -1,9 +1,10 @@
 # ./widget/label.py
-
 from ..core.widget import Widget
 from ..core.bitmap import Bitmap
 
 from ..utils.font_utils import hex_font_to_bitmap
+
+import micropython # type: ignore
 
 class Label(Widget):
     """
@@ -25,11 +26,6 @@ class Label(Widget):
                  background=0x7f34,  # 背景色（默认绿色）
                  align=ALIGN_LEFT,  # 文本对齐方式
                  padding=(2, 2, 2, 2),  # 文字边距
-
-                #  corner_radius=0,  # 圆角半径
-                #  corner_color=None,  # 圆角颜色，None表示使用背景色
-                #  corner_transparent=False,  # 圆角是否透明
-
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
@@ -70,6 +66,8 @@ class Label(Widget):
         self.padding = padding
 
         self._cache_bitmap = None
+
+    @micropython.native
     def _create_text_bitmap(self):
         """
         创建控件文本渲染的位图
@@ -94,6 +92,8 @@ class Label(Widget):
             return bitmap
         # 能到这步，说明没有给self.font，直接报错
         raise ValueError("未知的字体库")
+    
+    @micropython.native
     def _calculate_text_position(self):
         """
         根据文本对齐方式计算文本位图位置
@@ -111,6 +111,8 @@ class Label(Widget):
         elif self.align == self.ALIGN_BOTTOM:
             text_y = self.height - self.text_height - self.padding[3]
         return text_x, text_y
+    
+    @micropython.native
     def _create_bitmap(self):
         """
         创建控件的位图
@@ -126,7 +128,6 @@ class Label(Widget):
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
         bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
-
         return bitmap
     
     # @timeit
@@ -147,7 +148,6 @@ class Label(Widget):
                 self._cache_bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
             self._dirty = False
             return self._cache_bitmap
-
     
     def set_text(self, text):
         """设置文本内容"""
@@ -156,7 +156,6 @@ class Label(Widget):
             self.text_width = self.font_width * len(text)
             self.register_dirty()
             self.register_content_dirty()
-    
     def set_color(self, text_color=None, background=None):
         """设置文本和背景颜色"""
         if text_color is not None:

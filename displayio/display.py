@@ -93,6 +93,7 @@ class MainLoop:
             event = self.event_queue.popleft()
             if self.display.root:
                 await self.display.root.async_event_handler(event)
+                
     def _update_layout(self):
         """更新布局"""
         if self.display.root and self.display.root._layout_dirty:
@@ -181,10 +182,8 @@ class MainLoop:
             if self._should_update_frame():
                 # 更新布局
                 self._update_layout()
-                
                 # 更新显示
                 self._update_display()
-                
             # 避免过度占用CPU
             time.sleep_ms(1)
 
@@ -200,6 +199,5 @@ class MainLoop:
                 await self._async_update_layout()
                 # 异步更新显示
                 await self._async_update_display()
-                
             # 避免过度占用CPU
             await uasyncio.sleep_ms(1)

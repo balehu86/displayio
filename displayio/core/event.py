@@ -1,5 +1,4 @@
 # ./core/event.py
-import time
 
 class EventType():
     """事件类型枚举"""
@@ -45,6 +44,4 @@ class Event:
         self.data = data or {}              # 事件相关数据
         self.timestamp = 0                   # 事件发生时间戳
         self.status_code = self.Initializing
-
-
 
