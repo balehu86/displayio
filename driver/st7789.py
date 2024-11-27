@@ -288,13 +288,25 @@ class ST7789:
         # mv = memoryview(bitmap.buffer)
         self.write_data(bitmap_memview)
 
-    def thread_refresh(self, bitmap, dx, dy, width, height, lock):
-        while True:
-            with lock:
-                """将位图数据刷新到显示屏"""                   
-                self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-                self.write_data(bitmap.buffer)
-            time.sleep_ms(100)
+    def _thread_refresh_wrapper(self, display):
+        """线程刷新的包装器，增加线程生命周期管理"""
+        old_buffer = None
+        try:
+            while display.thread_running:
+                # 使用实例方法和实例属性
+                if old_buffer != display.thread_bitmap_memview:
+                    with display.lock:
+                        self.set_window(
+                            display.thread_dx, display.thread_dy, 
+                            display.thread_dx + display.thread_width - 1, 
+                            display.thread_dy + display.thread_height - 1)
+                        self.write_data(display.thread_bitmap_memview)
+                        old_buffer = display.thread_bitmap_memview
+                time.sleep_ms(3)
+        except Exception as e:
+            print(f"Thread refresh error: {e}")
+        finally:
+            print("Display refresh thread terminated")
 
     async def async_refresh(self, bitmap, dx ,dy, width, height, lock):
         while True:
