@@ -140,13 +140,11 @@ class Label(Widget):
             if self._content_dirty:
                 self._bitmap = self._create_bitmap()
                 self._content_dirty = False
-            self._dirty = False
             return self._bitmap
         else:
             if self._cache_bitmap is None:
                 self._cache_bitmap = Bitmap(self.width,self.height)
                 self._cache_bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
-            self._dirty = False
             return self._cache_bitmap
     
     def set_text(self, text):
@@ -154,16 +152,16 @@ class Label(Widget):
         if self.text != text:
             self.text = text
             self.text_width = self.font_width * len(text)
+            self._content_dirty = True
             self.register_dirty()
-            self.register_content_dirty()
     def set_color(self, text_color=None, background=None):
         """设置文本和背景颜色"""
         if text_color is not None:
             self.text_color = text_color
         if background is not None:
             self.background = background
+        self._content_dirty = True
         self.register_dirty()
-        self.register_content_dirty()
     def set_font(self,font):
         """设置字体"""
         self.font = font
@@ -173,15 +171,15 @@ class Label(Widget):
         self.font_rle = font[b'RLE'][0]
         self.text_width = self.font_width * len(self.text)
         self.text_height = self.font_height
+        self._content_dirty = True
         self.register_dirty()
-        self.register_content_dirty()
     def set_align(self,align):
         """设置文本对齐"""
         self.align = align
+        self._content_dirty = True
         self.register_dirty()
-        self.register_content_dirty()
     def set_padding(self,padding):
         """设置文本边距"""
         self.padding = padding
+        self._content_dirty = True
         self.register_dirty()
-        self.register_content_dirty()

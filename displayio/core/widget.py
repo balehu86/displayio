@@ -34,6 +34,18 @@ class Widget:
         # 缓存的位图对象
         self._bitmap = None
         self._text_bitmap = None
+        """脏标记解释：
+        _dirty: 部件是否需要重绘,只用于发起重绘,
+            是否重绘缓存的bitmap取决于_content_dirty.
+            在调用Widget的部分设置函数时标记,并向根部传递,
+            在Display的事件循环render_widget()中调用get_bitmap()后取消标记。
+        _content_dirty: 部件的内容是否需要重绘,用于重绘部件实例缓存的bitmap,
+            在调用Widget的部分设置函数时标记,  不会传递！！！
+            在Display的事件循环render_widget()中调用get_bitmap()后取消标记。
+        _layout_dirty: 部件的布局是否需要重新计算,并重新布局,
+            在调用widget的部分设置和container的布局树结构发生改变时标记,并向根部传递,
+            在Widget的layout()中,重新布局后取消。
+        """
         # 绘制系统的脏标记,分别用来触发刷新和重绘
         self._dirty = True
         self._content_dirty = True
@@ -44,7 +56,6 @@ class Widget:
         self.children = []
         # 背景色
         self.background_color = background_color
-
         # event注册
         self.event_handlers = {}  # 事件处理器字典
             
@@ -139,13 +150,6 @@ class Widget:
         for child in self.children:
             child.mark_dirty()
 
-    def register_content_dirty(self):
-        """向上汇报 内容脏
-        """
-        self._content_dirty = True
-        if self.parent:
-            self.parent.register_content_dirty()
-
     def register_layout_dirty(self):
         """向上汇报 布局脏
         """
@@ -157,13 +161,17 @@ class Widget:
         """处理事件
         
         首先检查自己是否有对应的处理器，然后决定是否传递给子组件
-        """           
-        # 检查事件坐标是否在组件范围内
-        if hasattr(event, 'target_position'):
+        """
+        # 如果指定了目标位置，检查是否在组件范围内
+        if event.target_position is not None:
             x, y = event.target_position
             if not (self.dx <= x < self.dx + self.width and 
                     self.dy <= y < self.dy + self.height):
                 return
+        # 如果指定了目标组件，检查是否匹配
+        if event.target_widget is not None:
+            if event.target_widget != self:
+                return  
                 
         # 处理事件
         handled = False

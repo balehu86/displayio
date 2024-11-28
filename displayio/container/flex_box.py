@@ -135,12 +135,10 @@ class FlexBox(Container):
 
         # 第一遍遍历：计算固定宽度和可伸缩元素数量
         for child in self.children:
-            child_width = child.width
-            child_width_resizable = child.width_resizable
-            if child_width_resizable:
+            if child.width_resizable:
                 flexible_count += 1
             else:
-                fixed_width_sum += child_width
+                fixed_width_sum += child.width
 
         # 计算可伸缩元素的宽度
         flexible_width = self._calculate_flexible_size(
@@ -148,14 +146,10 @@ class FlexBox(Container):
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
-            child_width=child.width
-            child_height=child.height
-            child_width_resizable=child.width_resizable
-            child_height_resizable=child.height_resizable
             # 确定实际使用的宽度
-            actual_width = flexible_width if child_width_resizable else child_width
+            actual_width = flexible_width if child.width_resizable else child.width
             # 确定实际使用的高度
-            actual_height = self.height if child_height_resizable else child_height
+            actual_height = self.height if child.height_resizable else child.height
 
             # 根据对齐方式计算y坐标
             if self.align == 'start':
@@ -185,12 +179,10 @@ class FlexBox(Container):
 
         # 第一遍遍历：计算固定高度和可伸缩元素数量
         for child in self.children:
-            child_height = child.height
-            child_height_resizable = child.height_resizable
-            if child_height_resizable:
+            if child.height_resizable:
                 flexible_count += 1
             else:
-                fixed_height_sum += child_height
+                fixed_height_sum += child.height
 
         # 计算可伸缩元素的高度
         flexible_height = self._calculate_flexible_size(
@@ -198,14 +190,10 @@ class FlexBox(Container):
 
         # 第二遍遍历：设置实际布局
         for child in self.children:
-            child_width=child.width
-            child_height=child.height
-            child_width_resizable=child.width_resizable
-            child_height_resizable=child.height_resizable
             # 确定实际使用的宽度
-            actual_width = self.width if child_width_resizable else child_width
+            actual_width = self.width if child.width_resizable else child.width
             # 确定实际使用的高度
-            actual_height = flexible_height if child_height_resizable else child_height
+            actual_height = flexible_height if child.height_resizable else child.height
 
             # 根据对齐方式计算x坐标
             if self.align == 'start':

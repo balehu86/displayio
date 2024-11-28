@@ -37,8 +37,10 @@ class Event:
     Timed_Out = 999   # 超时
 
     """事件基类"""
-    def __init__(self, event_type: EventType, data=None, target_position=[0,0], target_widget=None):
+    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None):
         self.type: EventType = event_type    # 事件类型
+        if target_position is None and target_widget is None:
+            raise ValueError("事件必须指定目标位置或目标组件")
         self.target_widget = target_widget   # 事件目标对象
         self.target_position = target_position    # 事件目标位置
         self.data = data or {}              # 事件相关数据
