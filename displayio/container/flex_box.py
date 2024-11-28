@@ -18,16 +18,15 @@ class FlexBox(Container):
         :param flex: 分配空间的比例
         :param order: 元素排列顺序，'normal' 为顺序排列，'reverse'为倒序
         """
-        super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
-                         width = width, height = height,
-                         visibility = visibility)
-        
         self.direction = direction
         self.spacing = spacing
         self.align = align
         self.flex = flex
         self.order = order
+        super().__init__(abs_x = abs_x, abs_y = abs_y,
+                         rel_x = rel_x, rel_y = rel_y,
+                         width = width, height = height,
+                         visibility = visibility)
         
     @micropython.native
     def _get_min_size(self):
@@ -98,7 +97,7 @@ class FlexBox(Container):
     def update_layout(self):
         """更新容器的布局,处理子元素的位置和大小"""
         if not self.children:
-            return   
+            return
         # 获取容器的最小所需尺寸
         # 确保容器有足够的空间
         min_width, min_height = self._get_min_size()
@@ -129,7 +128,7 @@ class FlexBox(Container):
         处理None值的情况,计算并分配空间
         """
 
-        dx = self.dx if self.order == 'normal' else (self.dx + self.width + self.spacing -1)
+        dx = self.dx if self.order == 'normal' else (self.dx + self.width + self.spacing)
         fixed_width_sum = 0
         flexible_count = 0
 
@@ -173,7 +172,7 @@ class FlexBox(Container):
         垂直方向的布局处理
         处理None值的情况,计算并分配空间
         """
-        dy = self.dy if self.order == 'normal' else (self.dy + self.height + self.spacing -1)
+        dy = self.dy if self.order == 'normal' else (self.dy + self.height + self.spacing)
         fixed_height_sum = 0
         flexible_count = 0
 

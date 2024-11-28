@@ -259,11 +259,6 @@ class ST7789:
         self._set_rows(y0, y1)
         self.write_cmd(ST77XX_RAMWR)
 
-    def blit_buffer(self, buffer, x, y, width, height):
-        self.set_window(x, y, x + width - 1, y + height - 1)
-        self.write_data(buffer)
-
-
     def fill_rect(self, x, y, width, height, color):
         self.set_window(x, y, x + width - 1, y + height - 1)
         chunks, rest = divmod(width * height, _BUFFER_SIZE)

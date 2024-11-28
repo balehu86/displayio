@@ -55,22 +55,22 @@ class FreeBox(Container):
         if not self.children:
             return
         
-        # 获取子元素的最小所需尺寸
-        min_width, min_height = self._get_min_size()    
+        # 获取自己的最小所需尺寸
+        min_width, min_height = self._get_min_size()
 
         # 确保容器有足够的空间
-        # 使用实际容器尺寸，而不是最小尺寸
-        container_width = max(self.width or 0, min_width)
-        container_height = max(self.height or 0, min_height)
-        
-        # 检查容器尺寸是否足够
-        if (min_width > container_width) or (min_height > container_height):
+        # 使用实际容器尺寸，而不是最小尺寸        
+        if (min_width > self.width) or (min_height > self.height):
             raise ValueError(f'子元素尺寸大于容器尺寸，或有元素超出屏幕范围，请调整子元素的初始化参数。\n'
-                            f'容器宽高{container_width} {container_height},组件所需尺寸{min_width} {min_height}')
+                            f'容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')
          
         for child in self.children:
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             actual_width, actual_height = child._get_min_size()
+            if child.width_resizable:
+                actual_width = self.width
+            if child.height_resizable:
+                actual_height = self.height
             child.layout(dx = self.dx, dy = self.dy, 
                     width = actual_width, height = actual_height)
     

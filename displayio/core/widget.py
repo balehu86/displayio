@@ -130,11 +130,8 @@ class Widget:
         height = self.height if not self.height_resizable else 0
         rel_x = self.rel_x if self.rel_x is not None else 0
         rel_y = self.rel_y if self.rel_y is not None else 0
-        
-        min_width = width + rel_x
-        min_height = height + rel_y
  
-        return (min_width, min_height)
+        return (width + rel_x, height + rel_y)
     
     def register_dirty(self):
         """向上汇报 脏
