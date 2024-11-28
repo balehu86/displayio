@@ -1,20 +1,21 @@
 # ./display.py
 from .core.bitmap import Bitmap
-from .utils.decorator import fps, timeit
+from .utils.decorator import fps, timeit, measure_iterations
 import uasyncio # type: ignore
 from collections import deque
 import time
 
 class Display:
     def __init__(self, width, height, root=None,
-                 format=Bitmap.RGB565, driver=None, fps=1,
-                 threaded=True):
+                 format=Bitmap.RGB565, driver=None, fps=5,
+                 show_fps=False, threaded=True):
         self.width = width
         self.height = height
         self.root = root
         self.format = format
         self.driver = driver
         self.fps = fps
+        self.show_fps = show_fps
         # 创建事件循环
         self.event_loop = MainLoop(self, fps)
         # 标志是否开启多线程
@@ -50,8 +51,12 @@ class Display:
 
     def run(self,func):
         """启动显示循环"""
-        self.event_loop.start(func)
-        
+        if self.show_fps:
+            self.event_loop._update_layout()
+            self.event_loop.start_with_fps(func)
+        else:
+            self.event_loop.start(func)
+
     def run_as_async(self):
         self.event_loop.async_start()
         
@@ -80,6 +85,10 @@ class MainLoop:
         """启动事件循环"""
         self.running = True
         self._run(func)
+
+    def start_with_fps(self,func):
+        self.running = True
+        self._run_with_fps(func)
 
     def async_start(self):
         """启动异步事件循环"""
@@ -117,7 +126,7 @@ class MainLoop:
         """异步更新布局"""
         if self.display.root and self.display.root._layout_dirty:
             await self.display.root.async_layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
-    @timeit
+
     def _update_display(self):
         """更新显示"""
         if self.display.root and self.display.root._dirty:
@@ -213,3 +222,17 @@ class MainLoop:
                 await self._async_update_display()
             # 避免过度占用CPU
             await uasyncio.sleep_ms(1)
+
+    @measure_iterations  
+    def _run_with_fps(self,func):
+        func()
+        # 处理事件
+        self._process_events()
+        # 检查是否需要更新帧
+
+        # 更新布局
+        self._update_layout()
+        self._process_events()
+        # 更新显示
+        self._update_display()
+        self._process_events()
