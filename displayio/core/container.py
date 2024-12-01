@@ -3,14 +3,19 @@ from .widget import Widget
 
 class Container(Widget):
     def __init__(self,
-                 abs_x = None, abs_y = None,
-                 rel_x = None, rel_y = None,
-                 width = None, height = None,
-                 visibility = True):
+                 abs_x=None, abs_y=None,
+                 rel_x=None, rel_y=None,
+                 width=None, height=None,
+                 visibility=True,
+                 background_color=None,
+                 transparent_color=None):
+        
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility)
+                         visibility = visibility,
+                         background_color = background_color,
+                         transparent_color = transparent_color)
         
         # self.dirty_children = []
 

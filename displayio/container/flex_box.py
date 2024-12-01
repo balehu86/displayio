@@ -5,28 +5,33 @@ import micropython # type: ignore
 
 class FlexBox(Container):
     def __init__(self,
-                 abs_x = None, abs_y = None,
-                 rel_x = None, rel_y = None,
-                 width = None, height = None,
-                 visibility = True,
-                 direction='h', spacing=0, align='start', flex = 0, order = 'normal'):
+                 direction='h', spacing=0, align='start', flex=0, reverse=False,
+
+                 abs_x=None, abs_y=None,
+                 rel_x=None, rel_y=None,
+                 width=None, height=None,
+                 visibility=True,
+                 background_color=None,
+                 transparent_color=None):
         """
         初始化Box容器
         :param direction: 布局方向，'h'为水平，'v'为垂直
         :param spacing: 子元素间距
         :param align: 对齐方式，'start'/'center'/'end'
         :param flex: 分配空间的比例
-        :param order: 元素排列顺序，'normal' 为顺序排列，'reverse'为倒序
+        :param reverse: 元素排列顺序,False 为顺序排列,True为倒序
         """
         self.direction = direction
         self.spacing = spacing
         self.align = align
         self.flex = flex
-        self.order = order
+        self.reverse = reverse
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility)
+                         visibility = visibility,
+                         background_color = background_color,
+                         transparent_color = transparent_color)
         
     @micropython.native
     def _get_min_size(self):
@@ -128,7 +133,7 @@ class FlexBox(Container):
         处理None值的情况,计算并分配空间
         """
 
-        dx = self.dx if self.order == 'normal' else (self.dx + self.width + self.spacing)
+        dx = self.dx if not self.reverse else (self.dx + self.width + self.spacing)
         fixed_width_sum = 0
         flexible_count = 0
 
@@ -158,12 +163,12 @@ class FlexBox(Container):
             else:  # end
                 dy = self.dy + self.height - actual_height
 
-            if self.order != 'normal':
+            if self.reverse:
                 dx -= (actual_width + self.spacing)
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)           
-            if self.order == 'normal':
+            if not self.reverse:
                 dx += actual_width + self.spacing
 
     @micropython.native
@@ -172,7 +177,7 @@ class FlexBox(Container):
         垂直方向的布局处理
         处理None值的情况,计算并分配空间
         """
-        dy = self.dy if self.order == 'normal' else (self.dy + self.height + self.spacing)
+        dy = self.dy if not self.reverse else (self.dy + self.height + self.spacing)
         fixed_height_sum = 0
         flexible_count = 0
 
@@ -202,12 +207,12 @@ class FlexBox(Container):
             else:  # end
                 dx = self.dx + self.width - actual_width
 
-            if self.order != 'normal':
+            if self.reverse:
                 dy -= (actual_height + self.spacing)
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)
-            if self.order == 'normal':
+            if not self.reverse:
                 dy += actual_height + self.spacing
 
     async def _async_layout_horizontal(self):

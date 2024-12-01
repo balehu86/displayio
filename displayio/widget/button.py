@@ -18,15 +18,16 @@ class Button(Label):
     def __init__(self,
                  text="",
                  font=None,
-                 text_color=0xFFFF,
-                 background=0x841F,  # 默认蓝色背景
+                 text_color=Label.WHITE, # 文字颜色默认白色
                  align=Label.ALIGN_CENTER,  # 按钮文字默认居中
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
                  
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
-                 visibility=True): 
+                 visibility=True,
+                 background_color = Label.BLUE, # 默认蓝色背景
+                 transparent_color = None): 
         """
         初始化按钮控件
         
@@ -36,29 +37,30 @@ class Button(Label):
         super().__init__(text = text,
                          font = font,
                          text_color = text_color,
-                         background = background,
                          align = align,
                          padding = padding,
 
                          abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility)
+                         visibility = visibility,
+                         background_color = background_color,
+                         transparent_color = transparent_color)
 
         self.state = self.STATE_NORMAL
         
         # 状态对应的样式
         self.styles = {
             self.STATE_NORMAL: {
-                'background': background,
+                'background_color': background_color,
                 'text_color': text_color
             },
             self.STATE_PRESSED: {
-                'background': self._darken_color(background, 0.7),
+                'background_color': self._darken_color(background_color, 0.7),
                 'text_color': text_color
             },
             self.STATE_DISABLED: {
-                'background': 0x7BEF,  # 灰色
+                'background_color': 0x7BEF,  # 灰色
                 'text_color': 0xC618  # 暗灰色
             }
         }
@@ -96,7 +98,7 @@ class Button(Label):
         # 创建新的位图
         bitmap = Bitmap(self.width, self.height)
         # 填充背景
-        bitmap.fill_rect(0, 0, self.width, self.height, style['background'])        
+        bitmap.fill_rect(0, 0, self.width, self.height, style['background_color'])        
         # 绘制文本部分
         # 临时保存原来的颜色
         original_color = self.text_color

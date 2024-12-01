@@ -57,8 +57,8 @@ class Display:
         else:
             self.event_loop.start(func)
 
-    def run_as_async(self):
-        self.event_loop.async_start()
+    def run_as_async(self,func):
+        self.event_loop.async_start(func)
         
     def stop(self):
         """停止显示循环和线程"""
@@ -90,10 +90,10 @@ class MainLoop:
         self.running = True
         self._run_with_fps(func)
 
-    def async_start(self):
+    def async_start(self,func):
         """启动异步事件循环"""
         self.running = True
-        uasyncio.run(self._async_run())
+        uasyncio.run(self._async_run(func))
     
     def stop(self):
         """停止事件循环"""
@@ -208,21 +208,39 @@ class MainLoop:
             # # 避免过度占用CPU
             # time.sleep_ms(1)
 
-    async def _async_run(self):
-        """异步运行事件循环"""
-        while self.running:
-            # 处理事件
-            await self._async_process_events()
-            
-            # 检查是否需要更新帧
-            if self._should_update_frame():
-                # 异步更新布局
-                await self._async_update_layout()
-                # 异步更新显示
-                await self._async_update_display()
-            # 避免过度占用CPU
-            await uasyncio.sleep_ms(1)
-
+    async def _async_run(self, func=None):
+        try:
+            while self.running:
+                # Execute custom function if provided
+                if func:
+                    await self._safe_async_exec(func)
+                
+                # Process all pending events
+                await self._async_process_events()
+                
+                # Check if it's time to update the frame based on FPS
+                if self._should_update_frame():
+                    # Perform layout update if needed
+                    if self.display.root and self.display.root._layout_dirty:
+                        await self._async_update_layout()
+                    
+                    # Process any events that might have been generated during layout update
+                    await self._async_process_events()
+                    
+                    # Update display rendering
+                    await self._async_update_display()
+                    
+                    # Process any events that might have been generated during rendering
+                    await self._async_process_events()
+                
+                # Yield control to prevent blocking and allow other coroutines
+                await uasyncio.sleep_ms(1)
+        
+        except Exception as e:
+            print(f"Error in async event loop: {e}")
+            self.running = False
+        finally:
+            self.running = False
     @measure_iterations  
     def _run_with_fps(self,func):
         func()
@@ -236,3 +254,12 @@ class MainLoop:
         # 更新显示
         self._update_display()
         self._process_events()
+    
+    async def _safe_async_exec(self, func):
+        try:
+            if hasattr(func(), '__await__'):
+                await func()
+            else:
+                func()
+        except Exception as e:
+            print(f"Error executing user function: {e}")

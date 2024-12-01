@@ -7,13 +7,24 @@ class Widget:
     GREEN = 0x07e0
     BLUE  = 0x001f
     PINK  = 0xf81f
+    WHITE = 0xffff
+
+    # 文本对齐方式常量
+    ALIGN_LEFT = 'left'
+    ALIGN_CENTER = 'center'
+    ALIGN_RIGHT = 'right'
+    ALIGH_TOP = 'top'
+    ALIGN_BOTTOM = 'bottom'
+    ALIGH_START = 'start'
+    ALIGH_END = 'end'
 
     def __init__(self,
                  abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
                  visibility = True,
-                 background_color = None):
+                 background_color = None,
+                 transparent_color = None):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
         self.abs_x = abs_x
@@ -33,7 +44,6 @@ class Widget:
         self.height_resizable = True if height is None else False
         # 缓存的位图对象
         self._bitmap = None
-        self._text_bitmap = None
         """脏标记解释：
         _dirty: 部件是否需要重绘,只用于发起重绘,
             是否重绘缓存的bitmap取决于_content_dirty.
@@ -56,8 +66,9 @@ class Widget:
         self.children = []
         # 背景色
         self.background_color = background_color
-        # event注册
-        self.event_handlers = {}  # 事件处理器字典
+        self.transparent_color = transparent_color
+        # event监听器注册
+        self.event_listener = {}  # 事件处理器字典
             
     def layout(self, dx, dy, width=None, height=None):
         """
@@ -172,8 +183,8 @@ class Widget:
                 
         # 处理事件
         handled = False
-        if event.type in self.event_handlers:
-            for handler in self.event_handlers[event.type]:
+        if event.type in self.event_listener:
+            for handler in self.event_listener[event.type]:
                 handler(event)
                 handled = True
                 
@@ -187,18 +198,20 @@ class Widget:
     async def async_event_handler(self, event):
         """异步事件处理"""
         # 检查事件坐标是否在组件范围内
-        if hasattr(event, 'target_position'):
+        if event.target_position is not None:
             x, y = event.target_position
             if not (self.dx <= x < self.dx + self.width and 
                     self.dy <= y < self.dy + self.height):
                 return
-        
+        if event.target_widget is not None:
+            if event.target_widget != self:
+                return
         # 处理事件
         handled = False
-        if event.type in self.event_handlers:
-            for handler in self.event_handlers[event.type]:
+        if event.type in self.event_listener:
+            for handler in self.event_listener[event.type]:
                 try:
-                    if uasyncio.iscoroutinefunction(handler):
+                    if hasattr(handler, '__await__'):
                         await handler(event)
                     else:
                         handler(event)
@@ -220,9 +233,9 @@ class Widget:
             event_type: 事件类型（EventType枚举值）
             handler: 事件处理函数，接收Event对象作为参数
         """
-        if event_type not in self.event_handlers:
-            self.event_handlers[event_type] = []
-        self.event_handlers[event_type].append(handler)
+        if event_type not in self.event_listener:
+            self.event_listener[event_type] = []
+        self.event_listener[event_type].append(handler)
 
     def unbind(self, event_type, handler=None):
         """解绑事件处理器
@@ -231,11 +244,11 @@ class Widget:
             event_type: 事件类型
             handler: 要解绑的处理器，None表示解绑所有
         """
-        if event_type in self.event_handlers:
+        if event_type in self.event_listener:
             if handler is None:
-                self.event_handlers[event_type] = []
+                self.event_listener[event_type] = []
             else:
-                self.event_handlers[event_type] = [
-                    h for h in self.event_handlers[event_type] 
+                self.event_listener[event_type] = [
+                    h for h in self.event_listener[event_type] 
                     if h != handler
                 ]
