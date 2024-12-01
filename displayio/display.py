@@ -7,20 +7,22 @@ import time
 
 class Display:
     def __init__(self, width, height, root=None,
-                 format=Bitmap.RGB565, driver=None, fps=5,
+                 format=Bitmap.RGB565, output=None,
+                 input=None, fps=5,
                  show_fps=False, threaded=True):
         self.width = width
         self.height = height
         self.root = root
         self.format = format
-        self.driver = driver
+        self.output = output
+        self.input = input
         self.fps = fps
         self.show_fps = show_fps
         # 创建事件循环
         self.event_loop = MainLoop(self, fps)
         # 标志是否开启多线程
         self.threaded = threaded
-        if threaded and driver is not None:
+        if threaded and output is not None:
             import _thread
             # 坐标和尺寸参数 x,y,width,height
             self.thread_dx = 0
@@ -36,7 +38,7 @@ class Display:
             self.thread_args = {'bitmap_memview':memoryview(init_buffer), 'thread_running':self.thread_running,
                                 'dx':0, 'dy':0, 'width':self.width, 'height':self.height}
             # 创建线程
-            self.thread = _thread.start_new_thread(self.driver._thread_refresh_wrapper,(self.thread_args,self.lock))
+            self.thread = _thread.start_new_thread(self.output._thread_refresh_wrapper,(self.thread_args,self.lock))
 
     def set_root(self, widget):
         """设置根组件"""
@@ -93,7 +95,8 @@ class MainLoop:
     def async_start(self,func):
         """启动异步事件循环"""
         self.running = True
-        uasyncio.run(self._async_run(func))
+        loop = uasyncio.new_event_loop()
+        loop.run_until_complete(self._async_run(func))
     
     def stop(self):
         """停止事件循环"""
@@ -112,11 +115,14 @@ class MainLoop:
 
     async def _async_process_events(self):
         """异步处理所有待处理事件"""
-        while self.event_queue and self.running:
-            event = self.event_queue.popleft()
-            if self.display.root:
-                await self.display.root.async_event_handler(event)
-                
+        while self.running:
+            while self.event_queue:
+                event = self.event_queue.popleft()
+                if self.display.root:
+                    await self.display.root.async_event_handler(event)
+                await uasyncio.sleep_ms(1)
+            await uasyncio.sleep_ms(1)
+            
     def _update_layout(self):
         """更新布局"""
         if self.display.root and self.display.root._layout_dirty:
@@ -124,8 +130,10 @@ class MainLoop:
     
     async def _async_update_layout(self):
         """异步更新布局"""
-        if self.display.root and self.display.root._layout_dirty:
-            await self.display.root.async_layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
+        while self.running:
+            if self.display.root and self.display.root._layout_dirty:
+                await self.display.root.async_layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
+            uasyncio.sleep_ms(1)
 
     def _update_display(self):
         """更新显示"""
@@ -134,8 +142,9 @@ class MainLoop:
 
     async def _async_update_display(self):
         """异步更新显示"""
-        if self.display.root and self.display.root._dirty:
-            await self._async_render_widget(self.display.root)
+        while self.running:
+            if self.display.root and self.display.root._dirty:
+                await self._async_render_widget(self.display.root)
 
     def _render_widget(self, widget):
         """递归渲染widget及其子组件"""
@@ -151,7 +160,7 @@ class MainLoop:
                         self.display.thread_args['width'] = widget.width
                         self.display.thread_args['height'] = widget.height   
                 else:
-                    self.display.driver.refresh(
+                    self.display.output.refresh(
                         mem_view, dx=widget.dx, dy=widget.dy, 
                         width=widget.width, height=widget.height)
             widget._dirty = False            
@@ -172,7 +181,7 @@ class MainLoop:
                         self.display.tem_width = widget.width
                         self.display.tem_height = widget.height
                 else:
-                    self.display.driver.refresh(
+                    self.display.output.refresh(
                         memoryview(bitmap.buffer),
                         dx=widget.dx,
                         dy=widget.dy, 
