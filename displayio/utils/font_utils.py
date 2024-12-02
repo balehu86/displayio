@@ -39,7 +39,7 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
                     for bit_pos in range(8):
                         if byte_value & (0x80 >> bit_pos):
                             x = byte_index * 8 + bit_pos
-                            bitmap.pixel(x, y, foreground, transparent=False)
+                            bitmap.pixel(x, y, foreground)
         return bitmap
     else:
         # RLE压缩数据模式
@@ -80,7 +80,7 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
                         if byte_value & (0x80 >> bit_pos):
                             x = base_x + bit_pos
                             if x < width:
-                                bitmap.pixel(x, current_row, foreground, transparent=False)
+                                bitmap.pixel(x, current_row, foreground)
                 
                 i += 1
                 row_byte += 1
