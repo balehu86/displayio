@@ -8,7 +8,7 @@ class Container(Widget):
                  width=None, height=None,
                  visibility=True,
                  background_color=None,
-                 transparent_color=None):
+                 transparent_color=Widget.PINK):
         
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,

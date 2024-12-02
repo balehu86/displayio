@@ -27,7 +27,7 @@ class Button(Label):
                  width=None,height=None,
                  visibility=True,
                  background_color = Label.BLUE, # 默认蓝色背景
-                 transparent_color = None): 
+                 transparent_color = Label.PINK): 
         """
         初始化按钮控件
         
@@ -96,7 +96,7 @@ class Button(Label):
         # 获取当前状态的样式
         style = self.styles[self.state]
         # 创建新的位图
-        bitmap = Bitmap(self.width, self.height)
+        bitmap = Bitmap(self.width, self.height,transparent_color=self.transparent_color)
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, style['background_color'])        
         # 绘制文本部分

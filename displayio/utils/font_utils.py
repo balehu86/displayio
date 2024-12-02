@@ -1,6 +1,7 @@
 import micropython # type: ignore
 @micropython.native
-def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False):
+def hex_font_to_bitmap(hex_data, width=8, height=8, scale=1,
+                       foreground=0xffff, rle=False):
     """将点阵数据转换为带透明背景的Bitmap
     
     Args:
@@ -22,12 +23,14 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
         
     bytes_per_row = width // 8 # 每行需要的字节数
     expected_data_length = height * bytes_per_row
-    bitmap = Bitmap(width, height, format=Bitmap.RGB565)
+    bitmap = Bitmap(width, height, transparent_color=0x0000,
+                    format=Bitmap.RGB565)
     
     if not rle:
         # 原始数据模式
         if len(hex_data) != expected_data_length:
-            raise ValueError(f"hex_data必须是长度为{expected_data_length}的bytearray，每行需要{bytes_per_row}个字节表示{width}个像素")
+            raise ValueError(f"hex_data必须是长度为{expected_data_length}的bytearray\
+                             ,每行需要{bytes_per_row}个字节表示{width}个像素")
             
         for y in range(height):
             row_start = y * bytes_per_row

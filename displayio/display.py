@@ -64,8 +64,8 @@ class Display:
         else:
             self.loop.start(func)
 
-    def run_as_async(self,func):
-        self.loop.async_start(func)
+    # def run_as_async(self,func):
+    #     self.loop.async_start(func)
         
     def stop(self):
         """停止显示循环和线程"""
@@ -97,11 +97,11 @@ class MainLoop:
         self.running = True
         self._run_with_fps(func)
 
-    def async_start(self,func):
-        """启动异步事件循环"""
-        self.running = True
-        loop = uasyncio.new_loop()
-        loop.run_until_complete(self._async_run(func))
+    # def async_start(self,func):
+    #     """启动异步事件循环"""
+    #     self.running = True
+    #     loop = uasyncio.new_loop()
+    #     loop.run_until_complete(self._async_run(func))
     
     def stop(self):
         """停止事件循环"""
@@ -118,15 +118,15 @@ class MainLoop:
             if self.display.root:
                 self.display.root.event_handler(event)
 
-    async def _async_process_events(self):
-        """异步处理所有待处理事件"""
-        while self.running:
-            while self.event_queue:
-                event = self.event_queue.popleft()
-                if self.display.root:
-                    await self.display.root.async_event_handler(event)
-                await uasyncio.sleep_ms(1)
-            await uasyncio.sleep_ms(1)
+    # async def _async_process_events(self):
+    #     """异步处理所有待处理事件"""
+    #     while self.running:
+    #         while self.event_queue:
+    #             event = self.event_queue.popleft()
+    #             if self.display.root:
+    #                 await self.display.root.async_event_handler(event)
+    #             await uasyncio.sleep_ms(1)
+    #         await uasyncio.sleep_ms(1)
 
     def _process_input(self):
         for device in self.display.input:
@@ -138,23 +138,23 @@ class MainLoop:
         if self.display.root and self.display.root._layout_dirty:
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
     
-    async def _async_update_layout(self):
-        """异步更新布局"""
-        while self.running:
-            if self.display.root and self.display.root._layout_dirty:
-                await self.display.root.async_layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
-            uasyncio.sleep_ms(1)
+    # async def _async_update_layout(self):
+    #     """异步更新布局"""
+    #     while self.running:
+    #         if self.display.root and self.display.root._layout_dirty:
+    #             await self.display.root.async_layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
+    #         uasyncio.sleep_ms(1)
 
     def _update_display(self):
         """更新显示"""
         if self.display.root and self.display.root._dirty:
             self._render_widget(self.display.root)
 
-    async def _async_update_display(self):
-        """异步更新显示"""
-        while self.running:
-            if self.display.root and self.display.root._dirty:
-                await self._async_render_widget(self.display.root)
+    # async def _async_update_display(self):
+    #     """异步更新显示"""
+    #     while self.running:
+    #         if self.display.root and self.display.root._dirty:
+    #             await self._async_render_widget(self.display.root)
 
     def _render_widget(self, widget):
         """递归渲染widget及其子组件"""
@@ -177,29 +177,29 @@ class MainLoop:
         for child in widget.children:
             self._render_widget(child)
 
-    async def _async_render_widget(self, widget):
-        """递归异步渲染widget及其子组件"""
-        if widget._dirty:
-            if hasattr(widget, 'get_bitmap'):
-                bitmap = await widget.async_get_bitmap() if hasattr(widget, 'async_get_bitmap') else widget.get_bitmap()
+    # async def _async_render_widget(self, widget):
+    #     """递归异步渲染widget及其子组件"""
+    #     if widget._dirty:
+    #         if hasattr(widget, 'get_bitmap'):
+    #             bitmap = await widget.async_get_bitmap() if hasattr(widget, 'async_get_bitmap') else widget.get_bitmap()
                 
-                if self.display.threaded:
-                    with self.display.bitmap_lock:
-                        self.display.tem_bitmap = bitmap
-                        self.display.tem_dx = widget.dx
-                        self.display.tem_dy = widget.dy
-                        self.display.tem_width = widget.width
-                        self.display.tem_height = widget.height
-                else:
-                    self.display.output.refresh(
-                        memoryview(bitmap.buffer),
-                        dx=widget.dx,
-                        dy=widget.dy, 
-                        width=widget.width,
-                        height=widget.height)
+    #             if self.display.threaded:
+    #                 with self.display.bitmap_lock:
+    #                     self.display.tem_bitmap = bitmap
+    #                     self.display.tem_dx = widget.dx
+    #                     self.display.tem_dy = widget.dy
+    #                     self.display.tem_width = widget.width
+    #                     self.display.tem_height = widget.height
+    #             else:
+    #                 self.display.output.refresh(
+    #                     memoryview(bitmap.buffer),
+    #                     dx=widget.dx,
+    #                     dy=widget.dy, 
+    #                     width=widget.width,
+    #                     height=widget.height)
         
-        for child in widget.children:
-            await self._async_render_widget(child)
+    #     for child in widget.children:
+    #         await self._async_render_widget(child)
     
     def _should_update_frame(self):
         """检查是否应该更新帧"""
@@ -225,41 +225,41 @@ class MainLoop:
                 self._update_display()
                 self._process_events()
             # # 避免过度占用CPU
-            # time.sleep_ms(1)
+            time.sleep_ms(10)
 
-    async def _async_run(self, func=None):
-        try:
-            while self.running:
-                # Execute custom function if provided
-                if func:
-                    await self._safe_async_exec(func)
+    # async def _async_run(self, func=None):
+    #     try:
+    #         while self.running:
+    #             # Execute custom function if provided
+    #             if func:
+    #                 await self._safe_async_exec(func)
                 
-                # Process all pending events
-                await self._async_process_events()
+    #             # Process all pending events
+    #             await self._async_process_events()
                 
-                # Check if it's time to update the frame based on FPS
-                if self._should_update_frame():
-                    # Perform layout update if needed
-                    if self.display.root and self.display.root._layout_dirty:
-                        await self._async_update_layout()
+    #             # Check if it's time to update the frame based on FPS
+    #             if self._should_update_frame():
+    #                 # Perform layout update if needed
+    #                 if self.display.root and self.display.root._layout_dirty:
+    #                     await self._async_update_layout()
                     
-                    # Process any events that might have been generated during layout update
-                    await self._async_process_events()
+    #                 # Process any events that might have been generated during layout update
+    #                 await self._async_process_events()
                     
-                    # Update display rendering
-                    await self._async_update_display()
+    #                 # Update display rendering
+    #                 await self._async_update_display()
                     
-                    # Process any events that might have been generated during rendering
-                    await self._async_process_events()
+    #                 # Process any events that might have been generated during rendering
+    #                 await self._async_process_events()
                 
-                # Yield control to prevent blocking and allow other coroutines
-                await uasyncio.sleep_ms(1)
+    #             # Yield control to prevent blocking and allow other coroutines
+    #             await uasyncio.sleep_ms(1)
         
-        except Exception as e:
-            print(f"Error in async event loop: {e}")
-            self.running = False
-        finally:
-            self.running = False
+    #     except Exception as e:
+    #         print(f"Error in async event loop: {e}")
+    #         self.running = False
+    #     finally:
+    #         self.running = False
     @measure_iterations  
     def _run_with_fps(self,func):
         func()

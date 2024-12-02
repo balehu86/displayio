@@ -23,7 +23,7 @@ class Label(Widget):
                  width=None,height=None,
                  visibility=True,
                  background_color=0x7f34, # 背景色（默认绿色）
-                 transparent_color=None):
+                 transparent_color=Widget.PINK):
         """
         初始化标签控件
         
@@ -73,7 +73,8 @@ class Label(Widget):
         """              
         if self.font:
             # 创建新的位图
-            bitmap = Bitmap(self.text_width, self.text_height)
+            bitmap = Bitmap(self.text_width, self.text_height,
+                            transparent_color=0,format=Bitmap.RGB565)
             # 渲染每个字符
             text_dx = 0
             for i, char in enumerate(self.text):
@@ -118,11 +119,12 @@ class Label(Widget):
         包含背景和文本渲染
         """
         # 创建新的位图
-        bitmap = Bitmap(self.width, self.height)      
+        bitmap = Bitmap(self.width, self.height,
+                        transparent_color=self.transparent_color,format=Bitmap.RGB565)
         # 填充背景
         bitmap.fill_rect(0, 0, self.width, self.height, self.background_color)
         # 绘制文字
-        self._text_bitmap = self._create_text_bitmap()   
+        self._text_bitmap = self._create_text_bitmap()
         # 计算文本位置
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
@@ -142,8 +144,10 @@ class Label(Widget):
             return self._bitmap
         else:
             if self._cache_bitmap is None:
-                self._cache_bitmap = Bitmap(self.width,self.height)
-                self._cache_bitmap.fill_rect(0,0,self.width,self.height,super().PINK)
+                self._cache_bitmap = Bitmap(self.width,self.height,
+                                            transparent_color=self.transparent_color,
+                                            format=Bitmap.RGB565)
+                self._cache_bitmap.fill_rect(0,0,self.width,self.height,self.background_color)
             return self._cache_bitmap
     
     def set_text(self, text):

@@ -23,8 +23,8 @@ class Widget:
                  rel_x = None, rel_y = None,
                  width = None, height = None,
                  visibility = True,
-                 background_color = None,
-                 transparent_color = None):
+                 background_color = 0xffff,
+                 transparent_color = PINK):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
         self.abs_x = abs_x
@@ -101,9 +101,9 @@ class Widget:
         self._dirty = True
         self._layout_dirty = False
 
-    async def async_layout(self, dx, dy, width=None, height=None):
-        """异步布局函数"""
-        return self.layout(dx, dy, width, height)
+    # async def async_layout(self, dx, dy, width=None, height=None):
+    #     """异步布局函数"""
+    #     return self.layout(dx, dy, width, height)
     
     def resize(self, width = None, height = None):
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
@@ -195,36 +195,36 @@ class Widget:
                 if event.status_code == Event.Completed:
                     break
     
-    async def async_event_handler(self, event):
-        """异步事件处理"""
-        # 检查事件坐标是否在组件范围内
-        if event.target_position is not None:
-            x, y = event.target_position
-            if not (self.dx <= x < self.dx + self.width and 
-                    self.dy <= y < self.dy + self.height):
-                return
-        if event.target_widget is not None:
-            if event.target_widget != self:
-                return
-        # 处理事件
-        handled = False
-        if event.type in self.event_listener:
-            for handler in self.event_listener[event.type]:
-                try:
-                    if hasattr(handler, '__await__'):
-                        await handler(event)
-                    else:
-                        handler(event)
-                    handled = True
-                except Exception as e:
-                    print(f"Error in async event handler: {e}")
+    # async def async_event_handler(self, event):
+    #     """异步事件处理"""
+    #     # 检查事件坐标是否在组件范围内
+    #     if event.target_position is not None:
+    #         x, y = event.target_position
+    #         if not (self.dx <= x < self.dx + self.width and 
+    #                 self.dy <= y < self.dy + self.height):
+    #             return
+    #     if event.target_widget is not None:
+    #         if event.target_widget != self:
+    #             return
+    #     # 处理事件
+    #     handled = False
+    #     if event.type in self.event_listener:
+    #         for handler in self.event_listener[event.type]:
+    #             try:
+    #                 if hasattr(handler, '__await__'):
+    #                     await handler(event)
+    #                 else:
+    #                     handler(event)
+    #                 handled = True
+    #             except Exception as e:
+    #                 print(f"Error in async event handler: {e}")
         
-        # 如果事件未被处理，传递给子组件
-        if not handled:
-            for child in reversed(self.children):  # 从上到下传递
-                await child.async_event_handler(event)
-                if event.status_code == Event.Completed:
-                    break
+    #     # 如果事件未被处理，传递给子组件
+    #     if not handled:
+    #         for child in reversed(self.children):  # 从上到下传递
+    #             await child.async_event_handler(event)
+    #             if event.status_code == Event.Completed:
+    #                 break
 
     def bind(self, event_type, handler):
         """绑定事件处理器
@@ -252,3 +252,8 @@ class Widget:
                     h for h in self.event_listener[event_type] 
                     if h != handler
                 ]
+
+    def set_transparent_color(self,color):
+        self.transparent_color = color
+        for child in self.children:
+            child.set_transparent_color(color)

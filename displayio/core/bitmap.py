@@ -21,10 +21,12 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, width=0, height=0, format=framebuf.RGB565):
+    def __init__(self, width=0, height=0, transparent_color=0xf81f, format=framebuf.RGB565,):
         self.width = width
         self.height = height
+        self.transparent_color = transparent_color
         self.format = format
+
         buffer_size = width * height
         if format == framebuf.RGB565:
             buffer_size *= 2
@@ -56,18 +58,14 @@ class Bitmap:
         self.fb.fill_rect(x, y, width, height, color)
         
     @micropython.native
-    def blit(self, source, x=0, y=0, key=-1):
-        """将源bitmap复制到当前bitmap，使用framebuf的透明色机制"""
-        if sw is None:
-            sw = source.width
-        if sh is None:
-            sh = source.height
-        
+    def blit(self, source, dx=0, dy=0):
+        """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
         # 如果源和目标的颜色格式不同，转换颜色
+        key = source.transparent_color
         if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
-            key = _swap_rgb565(key) if key != -1 else -1
+            key = _swap_rgb565(key) if source.transparent_color != -1 else -1
         elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
-            key = _swap_rgb565(key) if key != -1 else -1
+            key = _swap_rgb565(key) if source.transparent_color != -1 else -1
         
         # 使用framebuf的blit方法，传入透明色键值
-        self.fb.blit(source.fb, x, y, key)
+        self.fb.blit(source.fb, dx, dy, key)
