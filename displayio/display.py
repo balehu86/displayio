@@ -8,7 +8,7 @@ import time
 class Display:
     def __init__(self, width, height, root=None,
                  format=Bitmap.RGB565, output=None,
-                 input=None, fps=5,
+                 input=[], fps=5,
                  show_fps=False, threaded=True):
         self.width = width
         self.height = height
@@ -19,7 +19,7 @@ class Display:
         self.fps = fps
         self.show_fps = show_fps
         # 创建事件循环
-        self.event_loop = MainLoop(self, fps)
+        self.loop = MainLoop(self, fps)
         # 标志是否开启多线程
         self.threaded = threaded
         if threaded and output is not None:
@@ -49,23 +49,28 @@ class Display:
     
     def add_event(self, event):
         """添加事件到事件循环"""
-        self.event_loop.post_event(event)
+        self.loop.post_event(event)
+
+
+    def add_input(self,device):
+        if device not in self.input:
+            self.input.append(device)
 
     def run(self,func):
         """启动显示循环"""
         if self.show_fps:
-            self.event_loop._update_layout()
-            self.event_loop.start_with_fps(func)
+            self.loop._update_layout()
+            self.loop.start_with_fps(func)
         else:
-            self.event_loop.start(func)
+            self.loop.start(func)
 
     def run_as_async(self,func):
-        self.event_loop.async_start(func)
+        self.loop.async_start(func)
         
     def stop(self):
         """停止显示循环和线程"""
         # 停止事件循环
-        self.event_loop.stop()
+        self.loop.stop()
         # 停止线程
         if self.threaded:
             self.thread_running = False
@@ -95,7 +100,7 @@ class MainLoop:
     def async_start(self,func):
         """启动异步事件循环"""
         self.running = True
-        loop = uasyncio.new_event_loop()
+        loop = uasyncio.new_loop()
         loop.run_until_complete(self._async_run(func))
     
     def stop(self):
@@ -105,7 +110,7 @@ class MainLoop:
     def post_event(self, event):
         """添加事件到队列"""
         self.event_queue.append(event)
-  
+
     def _process_events(self):
         """处理所有待处理事件"""
         while self.event_queue and self.running:
@@ -122,7 +127,12 @@ class MainLoop:
                     await self.display.root.async_event_handler(event)
                 await uasyncio.sleep_ms(1)
             await uasyncio.sleep_ms(1)
-            
+
+    def _process_input(self):
+        for device in self.display.input:
+            event = device.check_input()
+            self.post_event(event)
+
     def _update_layout(self):
         """更新布局"""
         if self.display.root and self.display.root._layout_dirty:

@@ -1,7 +1,8 @@
 # ./core/event.py
 
-class EventType():
+class EventType:
     """事件类型枚举"""
+    NO = -1               # No event
     TOUCH_START = 0       # 触摸开始
     TOUCH_MOVE = 1        # 触摸移动
     TOUCH_END = 2         # 触摸结束
