@@ -2,15 +2,15 @@
 
 class EventType:
     """事件类型枚举"""
-    NO = -1               # No event
+    NORMAL = -1           # No event
     TOUCH_START = 0       # 触摸开始
     TOUCH_MOVE = 1        # 触摸移动
     TOUCH_END = 2         # 触摸结束
     PRESS = 3             # 按下
     RELEASE = 4           # 释放
-    CLICK = 5             # 点击
-    LONG_PRESS = 6        # 长按
-    DOUBLE_CLICK = 7      # 双击
+    CLICK = 5             # 点击v
+    LONG_PRESS = 6        # 长按v
+    DOUBLE_CLICK = 7      # 双击v
     DRAG_START = 8        # 拖动开始
     DRAG_MOVE = 9         # 拖动中
     DRAG_END = 10         # 拖动结束

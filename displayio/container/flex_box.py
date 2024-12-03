@@ -114,17 +114,17 @@ class FlexBox(Container):
         else:
             self._layout_vertical()
 
-    async def async_update_layout(self):
-        if not self.children:
-            return
-        min_width, min_height = self._get_min_size()
-        if (min_width > self.width) or (min_height > self.height):
-            raise ValueError(f'子元素尺寸大于容器尺寸，请调整子元素的初始化参数。\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
-        # 异步更新布局细节
-        if self.direction == 'h':
-            await self._async_layout_horizontal()
-        else:
-            await self._async_layout_vertical()
+    # async def async_update_layout(self):
+    #     if not self.children:
+    #         return
+    #     min_width, min_height = self._get_min_size()
+    #     if (min_width > self.width) or (min_height > self.height):
+    #         raise ValueError(f'子元素尺寸大于容器尺寸，请调整子元素的初始化参数。\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
+    #     # 异步更新布局细节
+    #     if self.direction == 'h':
+    #         await self._async_layout_horizontal()
+    #     else:
+    #         await self._async_layout_vertical()
 
     @micropython.native
     def _layout_horizontal(self):
@@ -215,15 +215,15 @@ class FlexBox(Container):
             if not self.reverse:
                 dy += actual_height + self.spacing
 
-    async def _async_layout_horizontal(self):
-        """异步水平方向的布局处理"""
-        # 保留原有的_layout_horizontal实现逻辑
-        # 如果需要异步处理，可以在此添加异步操作
-        self._layout_horizontal()
+    # async def _async_layout_horizontal(self):
+    #     """异步水平方向的布局处理"""
+    #     # 保留原有的_layout_horizontal实现逻辑
+    #     # 如果需要异步处理，可以在此添加异步操作
+    #     self._layout_horizontal()
     
-    async def _async_layout_vertical(self):
-        """异步垂直方向的布局处理"""
-        # 保留原有的_layout_vertical实现逻辑
-        # 如果需要异步处理，可以在此添加异步操作
-        self._layout_vertical()        
+    # async def _async_layout_vertical(self):
+    #     """异步垂直方向的布局处理"""
+    #     # 保留原有的_layout_vertical实现逻辑
+    #     # 如果需要异步处理，可以在此添加异步操作
+    #     self._layout_vertical()        
                 

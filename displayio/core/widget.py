@@ -69,6 +69,7 @@ class Widget:
         self.transparent_color = transparent_color
         # event监听器注册
         self.event_listener = {}  # 事件处理器字典
+        self.input = []
             
     def layout(self, dx, dy, width=None, height=None):
         """

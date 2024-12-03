@@ -3,8 +3,8 @@ from ..core.container import Container
 
 import micropython # type: ignore
 
-class FreeBox(Container):
-    def __init__(self,
+class GridBox(Container):
+    def __init__(self, row=1, column=1,
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
@@ -15,6 +15,10 @@ class FreeBox(Container):
         初始化FreeBox容器
         警告：不建议此容器初始化width和height
         """
+        # 格子布局的行列数
+        self.row = row
+        self.column = column
+
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
