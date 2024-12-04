@@ -78,7 +78,3 @@ class FreeBox(Container):
             child.layout(dx = self.dx, dy = self.dy, 
                     width = actual_width, height = actual_height)
     
-    # async def async_update_layout(self):
-    #     return self.update_layout()
-
-

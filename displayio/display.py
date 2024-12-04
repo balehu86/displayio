@@ -64,9 +64,6 @@ class Display:
             self.loop.start_with_fps(func)
         else:
             self.loop.start(func)
-
-    # def run_as_async(self,func):
-    #     self.loop.async_start(func)
         
     def stop(self):
         """停止显示循环和线程"""

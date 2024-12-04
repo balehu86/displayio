@@ -42,14 +42,7 @@ class Container(Widget):
         super().layout(dx=dx, dy=dy, width=width, height=height)
         # 设置子元素的布局
         self.update_layout()
-    
-    # async def async_layout(self, dx=0, dy=0, width=None, height=None):
-    #     """异步布局方法"""
-    #     await super().async_layout(dx=dx, dy=dy, width=width, height=height)
-    #     await self.async_update_layout()
 
     def update_layout(self):
         pass
     
-    # async def async_update_layout(self):
-    #     pass

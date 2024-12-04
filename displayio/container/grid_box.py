@@ -4,7 +4,7 @@ from ..core.container import Container
 import micropython # type: ignore
 
 class GridBox(Container):
-    def __init__(self, row=1, column=1,
+    def __init__(self, row=1, column=1, spacing=0,
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
@@ -18,6 +18,7 @@ class GridBox(Container):
         # 格子布局的行列数
         self.row = row
         self.column = column
+        self.spacing = spacing
 
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
@@ -82,7 +83,3 @@ class GridBox(Container):
             child.layout(dx = self.dx, dy = self.dy, 
                     width = actual_width, height = actual_height)
     
-    # async def async_update_layout(self):
-    #     return self.update_layout()
-
-

@@ -274,13 +274,8 @@ class ST7789:
         self.fill_rect(0, 0, self.width, self.height, color)
 
     def refresh(self, bitmap_memview, dx=0, dy=0, width=0, height=0):
-        """将位图数据刷新到显示屏"""
-        # if width is None:
-        #     width = bitmap.width
-        # if height is None:
-        #     height = bitmap.height     
+        """将位图数据刷新到显示屏"""  
         self.set_window(dx, dy, dx + width - 1, dy + height - 1)     
-        # mv = memoryview(bitmap.buffer)
         self.write_data(bitmap_memview)
 
     def _thread_refresh_wrapper(self, args, lock):
@@ -302,10 +297,3 @@ class ST7789:
             print(f"Thread refresh error: {e}")
         finally:
             print("Display refresh thread terminated")
-
-    async def async_refresh(self, bitmap, dx ,dy, width, height, lock):
-        while True:
-            with lock:
-                self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-                self.write_data(bitmap.buffer)
-            uasyncio.sleep_ms(1)
