@@ -58,7 +58,7 @@ class Button(Label):
                 'text_color': text_color
             },
             self.STATE_PRESSED: {
-                'background_color': self._darken_color(background_color, 0.7),
+                'background_color': self._darken_color(background_color, 0.1),
                 'text_color': text_color
             },
             self.STATE_DISABLED: {
@@ -67,10 +67,10 @@ class Button(Label):
             }
         }
         
-        self.event_handlers = {EventType.CLICK:[],
-                               EventType.PRESS:[self.set_state(self.STATE_PRESSED)],
-                               EventType.RELEASE:[self.set_state(self.STATE_NORMAL)],
-                               EventType.LONG_PRESS:[self.set_state(self.STATE_PRESSED)],
+        self.event_listener = {EventType.CLICK:[self.pressed,self.release],
+                               EventType.PRESS:[self.pressed],
+                               EventType.RELEASE:[self.release],
+                               EventType.LONG_PRESS:[self.pressed],
                                EventType.DOUBLE_CLICK:[]}
         
     @micropython.native
@@ -107,7 +107,7 @@ class Button(Label):
         bitmap.fill_rect(0, 0, self.width, self.height, style['background_color'])        
         # 绘制文本部分
         # 临时保存原来的颜色
-        original_color = self.text_color
+        original_text_color = self.text_color
         self.text_color = style['text_color']
         # 创建文本位图
         self._text_bitmap = self._create_text_bitmap()
@@ -116,7 +116,7 @@ class Button(Label):
         # 将文本bitmap绘制到背景
         bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
         # 恢复原来的颜色
-        self.text_color = original_color
+        self.text_color = original_text_color
         return bitmap
       
     def set_enabled(self, enabled):
@@ -132,4 +132,14 @@ class Button(Label):
             self.state = state
             self._content_dirty = True
             self.register_dirty()
+
+    def pressed(self,event):
+        """
+        按钮按下
+        状态为STATE_PRESSED
+        """
+        self.set_state(self.STATE_PRESSED)
+    def release(self,event):
+        self.set_state(self.STATE_NORMAL)
+    
 

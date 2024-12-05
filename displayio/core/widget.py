@@ -1,6 +1,5 @@
 # ./core/widget.py
-import uasyncio # type: ignore
-from .event import Event
+from .event import Event,EventType
 
 class Widget:
     RED   = 0xf800
@@ -61,7 +60,7 @@ class Widget:
         # 绘制系统的脏标记,分别用来触发刷新和重绘
         self._dirty = True
         self._content_dirty = True
-        # 布局系统脏标记，用来触发重新计算布局。
+        # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
         self._layout_dirty = True
         # 部件继承关系
         self.parent = None
@@ -116,16 +115,14 @@ class Widget:
         self.register_layout_dirty()
 
     def hide(self):
-        """隐藏部件
-        """
+        """隐藏部件"""
         self.visibility = False
         self.register_dirty()
         for child in self.children:
             child.hide()
         
     def unhide(self):
-        """取消隐藏部件
-        """
+        """取消隐藏部件"""
         self.visibility = True
         self.register_dirty()
         for child in self.children:
@@ -144,22 +141,19 @@ class Widget:
         return (width + rel_x, height + rel_y)
     
     def register_dirty(self):
-        """向上汇报 脏
-        """
+        """向上汇报 脏"""
         self._dirty = True
         if self.parent:
             self.parent.register_dirty()
 
     def mark_dirty(self):
-        """向下通知 脏
-        """
+        """向下通知 脏"""
         self._dirty = True
         for child in self.children:
             child.mark_dirty()
 
     def register_layout_dirty(self):
-        """向上汇报 布局脏
-        """
+        """向上汇报 布局脏"""
         self._layout_dirty = True
         if self.parent:
             self.parent.register_layout_dirty()
@@ -208,12 +202,12 @@ class Widget:
             self.event_listener[event_type] = []
         self.event_listener[event_type].append(handler)
 
-    def unbind(self, event_type, handler=None):
+    def unbind(self, event_type: EventType, handler:function=None):
         """解绑事件处理器
         
         Args:
             event_type: 事件类型
-            handler: 要解绑的处理器，None表示解绑所有
+            handler: 要解绑的处理器,None表示解绑所有
         """
         if event_type in self.event_listener:
             if handler is None:
@@ -225,5 +219,11 @@ class Widget:
                 ]
 
     def __del__(self):
+        """析构函数,在部件被销毁时被调用"""
         if self.parent is not None:
             self.parent.children.remove(self)
+
+    def index(self):
+        """返回部件在父容器中的位置,从0开始"""
+        if self.parent is not None:
+            return self.parent.index(self)

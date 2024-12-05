@@ -23,7 +23,6 @@ class Input:
         self.state = self.IDLE
         self.press_start_time = 0 # 按下的时间
         self.last_click_time = 0 # 上一次确认触摸的事间，一般用于检测双击
-        self.click_count = 0 # 检测双击的计数器
         # 触摸时间参数
         self.click_min_duration = 8     # 最小点击时间：8ms
         self.click_max_duration = 400   # 最大点击时间：400ms

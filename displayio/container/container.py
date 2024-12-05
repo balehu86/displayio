@@ -29,10 +29,15 @@ class Container(Widget):
         self.register_layout_dirty()
 
     def insert(self,index,child):
+        """在指定位置插入元素"""
         self.children.insert(index,child)
         self.mark_dirty()
         self.register_dirty()
         self.register_layout_dirty()
+
+    def replace(self,old_child,new_child):
+        """将 old_child 替换换为 new_child"""
+        self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
 
     def remove(self, *childs):
         """从容器中移除元素"""
@@ -45,19 +50,22 @@ class Container(Widget):
         self.register_layout_dirty()
 
     def clear(self):
+        """清空容器中所有元素"""
         self.children.clear()
 
     def layout(self, dx=0, dy=0, width=None, height=None):
-        """重写布局方法，确保先更新自身位置和大小"""
+        """在这里重写布局方法,确保先更新自身位置和大小"""
         # 设置自己的布局
         super().layout(dx=dx, dy=dy, width=width, height=height)
         # 设置子元素的布局
         self.update_layout()
 
     def update_layout(self):
+        """在子类型里会重写这个方法,这里只做声明"""
         pass
 
     def bind(self,event_type, handler):
+        """事件委托,由容器为每个子元素绑定事件监听"""
         for child in self.children:
             child.bind(event_type, handler)
 
