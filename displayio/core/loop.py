@@ -1,6 +1,7 @@
 # ./core/loop.py
 from collections import deque
 import time
+from machine import Timer # type: ignore
 from ..utils.decorator import fps, timeit, measure_iterations
 
 class MainLoop:
@@ -9,22 +10,29 @@ class MainLoop:
         self.display = display
         self.running = False
         self.event_queue = deque([],10)
-        self.frame_interval = 1/fps  # default 1 FPS 
+        self.frame_interval = 1/fps  # default 5 FPS 
         self.last_frame_time = 0
+        self.timer = Timer(0)
         
     def start(self,func):
         """启动事件循环"""
         self.running = True
-        self._run(func)
-
-    def start_with_fps(self,func):
-        self.running = True
-        self._run_with_fps(func)
-
+        self.timer.init(mode=Timer.PERIODIC,freq=500, callback=self._check_input)
+        try:
+            if self.display.show_fps:
+                self._run_with_fps(func)
+            else:
+                self._run(func)
+        except KeyboardInterrupt:
+            print("捕获到键盘中断，正在退出...")
+            self.stop()
+        except Exception as e:
+            print(e)
     
     def stop(self):
         """停止事件循环"""
         self.running = False
+        self.timer.deinit()
         
     def post_event(self, event):
         """添加事件到队列"""
@@ -32,12 +40,12 @@ class MainLoop:
 
     def _process_events(self):
         """处理所有待处理事件"""
-        while self.event_queue and self.running:
+        while self.event_queue:
             event = self.event_queue.popleft()
             if self.display.root:
                 self.display.root.event_handler(event)
 
-    def _check_input(self):
+    def _check_input(self,timer):
         for device in self.display.inputs:
             event = device.check_input()
             if event is not None:
@@ -45,12 +53,12 @@ class MainLoop:
 
     def _update_layout(self):
         """更新布局"""
-        if self.display.root and self.display.root._layout_dirty:
+        if self.display.root._layout_dirty:
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
 
     def _update_display(self):
         """更新显示"""
-        if self.display.root and self.display.root._dirty:
+        if self.display.root._dirty:
             self._render_widget(self.display.root)
 
     def _render_widget(self, widget):
@@ -88,36 +96,24 @@ class MainLoop:
         while self.running:
             func()
             # 处理事件
-            self._check_input()
             self._process_events()
             # 检查是否需要更新帧
             if self._should_update_frame():
                 # 更新布局
-                self._check_input()
-                self._process_events()
                 self._update_layout()
                 # 更新显示
-                self._check_input()
-                self._process_events()
                 self._update_display()
             # # 避免过度占用CPU
-            time.sleep_ms(10)
+            time.sleep_ms(1)
 
     @measure_iterations  
     def _run_with_fps(self,func):
         func()
         # 处理事件
-        self._check_input()
         self._process_events()
-        # 检查是否需要更新帧
         # 更新布局
-        self._check_input()
-        self._process_events()
         self._update_layout()
-        self._process_events()
         # 更新显示
-        self._check_input()
-        self._process_events()
         self._update_display()
-        self._process_events()
+
     

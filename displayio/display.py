@@ -12,8 +12,10 @@ class Display:
         self.width = width
         self.height = height
         self.root = root
+
         self.output = output
         self.inputs = inputs
+
         self.fps = fps
         self.show_fps = show_fps
         # 创建事件循环
@@ -53,17 +55,12 @@ class Display:
         """添加事件到事件循环"""
         self.loop.post_event(event)
 
-    def add_input(self,device):
-        if device not in self.inputs:
-            self.inputs.append(device)
+    def add_input(self,*device):
+        self.inputs.extend(device)
 
     def run(self,func):
         """启动显示循环"""
-        if self.show_fps:
-            self.loop._update_layout()
-            self.loop.start_with_fps(func)
-        else:
-            self.loop.start(func)
+        self.loop.start(func)            
         
     def stop(self):
         """停止显示循环和线程"""

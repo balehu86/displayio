@@ -22,7 +22,7 @@ class Widget:
                  abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
-                 visibility = True,
+                 visibility = True, enabled = True,
                  background_color = 0xffff,
                  transparent_color = PINK):
         # 初始化时坐标，分绝对坐标和相对坐标
@@ -38,6 +38,8 @@ class Widget:
         self.visibility = visibility
         self.width = width
         self.height = height
+        # widget 是否可交互，如果部件未启用，则不会处理事件
+        self.enabled = enabled
         # 若已初始化时定义宽或高，则layout布局系统无法自动设置widget的大小
         # 但是可以通过resize()手动调整大小，不受次项限制
         self.width_resizable = True if width is None else False
@@ -167,6 +169,9 @@ class Widget:
         
         首先检查自己是否有对应的处理器，然后决定是否传递给子组件
         """
+        # 如果部件未启用，则不会处理事件
+        if not self.enabled:
+            return
         # 如果指定了目标位置，检查是否在组件范围内
         if event.target_position is not None:
             x, y = event.target_position
@@ -219,7 +224,6 @@ class Widget:
                     if h != handler
                 ]
 
-    def set_transparent_color(self,color):
-        self.transparent_color = color
-        for child in self.children:
-            child.set_transparent_color(color)
+    def __del__(self):
+        if self.parent is not None:
+            self.parent.children.remove(self)

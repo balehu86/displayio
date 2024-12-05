@@ -14,6 +14,7 @@ class Label(Widget):
     def __init__(self, 
                  text="",
                  font=None,  # 字体字典数据
+                 font_scale = 1, # 字体放大系数
                  text_color=Widget.RED,  # 文字颜色（默认红色）
                  align=Widget.ALIGN_LEFT,  # 文本对齐方式
                  padding=(2, 2, 2, 2),  # 文字边距,(左,上,右,下)
@@ -21,7 +22,7 @@ class Label(Widget):
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
-                 visibility=True,
+                 visibility=True, enabled=True,
                  background_color=0x7f34, # 背景色（默认绿色）
                  transparent_color=Widget.PINK):
         """
@@ -42,7 +43,7 @@ class Label(Widget):
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility,
+                         visibility = visibility, enabled = enabled,
                          background_color = background_color,
                          transparent_color = transparent_color)
         self.text = text
@@ -50,13 +51,14 @@ class Label(Widget):
             raise ValueError("label.font is not specified!")
         else:
             self.font = font
+        self.font_scale = font_scale
         self.font_width = font[b'WIDTH'][0]
         self.font_height = font[b'HEIGHT'][0]
         self.font_default = font[b'DEFAULT']
         self.font_rle = font[b'RLE'][0]
         # 计算文本 总宽度 总高度
-        self.text_width = self.font_width * len(text)
-        self.text_height = self.font_height
+        self.text_width = self.font_width * len(text) * font_scale
+        self.text_height = self.font_height * font_scale
             
         self.text_color = text_color
         self.background_color = background_color
@@ -81,13 +83,13 @@ class Label(Widget):
                 if char in self.font:
                     char_bitmap = hex_font_to_bitmap(
                         self.font[bytes(char,'ascii')], self.font_width, self.font_height,
-                        foreground=self.text_color, rle=self.font_rle)
+                        foreground=self.text_color, rle=self.font_rle, scale=self.font_scale)
                 else:
                     char_bitmap = hex_font_to_bitmap(
                         self.font_default, self.font_width, self.font_height,
-                        foreground=self.text_color, rle=self.font_rle)
+                        foreground=self.text_color, rle=self.font_rle, scale=self.font_scale)
                 # 将字符位图复制到主位图
-                x = text_dx + i * self.font_width
+                x = text_dx + i * self.font_width * self.font_scale
                 bitmap.blit(char_bitmap, dx=x, dy=0)
             return bitmap
         # 能到这步，说明没有给self.font，直接报错
@@ -154,7 +156,7 @@ class Label(Widget):
         """设置文本内容"""
         if self.text != text:
             self.text = text
-            self.text_width = self.font_width * len(text)
+            self.text_width = self.font_width * len(text) * self.font_scale
             self._content_dirty = True
             self.register_dirty()
     def set_color(self, text_color=None, background_color=None):
@@ -172,8 +174,8 @@ class Label(Widget):
         self.font_height = font[b'HEIGHT'][0]
         self.font_default = font[b'DEFAULT']
         self.font_rle = font[b'RLE'][0]
-        self.text_width = self.font_width * len(self.text)
-        self.text_height = self.font_height
+        self.text_width = self.font_width * len(self.text) * self.font_scale
+        self.text_height = self.font_height * self.font_scale
         self._content_dirty = True
         self.register_dirty()
     def set_align(self,align):

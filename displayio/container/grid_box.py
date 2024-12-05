@@ -1,5 +1,5 @@
 # ./container/free_box.py
-from ..core.container import Container
+from .container import Container
 
 import micropython # type: ignore
 
@@ -8,7 +8,7 @@ class GridBox(Container):
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
-                 visibility=True,
+                 visibility=True, enabled=True,
                  background_color=None,
                  transparent_color=None):
         """
@@ -16,14 +16,18 @@ class GridBox(Container):
         警告：不建议此容器初始化width和height
         """
         # 格子布局的行列数
+
+
         self.row = row
         self.column = column
         self.spacing = spacing
+        self.row_height = [0]*row
+        self.column_width = [0]*column
 
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility,
+                         visibility = visibility, enabled = enabled,
                          background_color = background_color,
                          transparent_color = transparent_color)
 

@@ -18,6 +18,7 @@ class Button(Label):
     def __init__(self,
                  text="",
                  font=None,
+                 font_scale=1,
                  text_color=Label.WHITE, # 文字颜色默认白色
                  align=Label.ALIGN_CENTER,  # 按钮文字默认居中
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
@@ -25,7 +26,7 @@ class Button(Label):
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
-                 visibility=True,
+                 visibility=True, enabled=True,
                  background_color = Label.BLUE, # 默认蓝色背景
                  transparent_color = Label.PINK): 
         """
@@ -36,6 +37,7 @@ class Button(Label):
         """
         super().__init__(text = text,
                          font = font,
+                         font_scale = font_scale,
                          text_color = text_color,
                          align = align,
                          padding = padding,
@@ -43,7 +45,7 @@ class Button(Label):
                          abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility,
+                         visibility = visibility, enabled = enabled,
                          background_color = background_color,
                          transparent_color = transparent_color)
 
@@ -65,7 +67,11 @@ class Button(Label):
             }
         }
         
-        self.event_handlers = {EventType.CLICK:[],}
+        self.event_handlers = {EventType.CLICK:[],
+                               EventType.PRESS:[self.set_state(self.STATE_PRESSED)],
+                               EventType.RELEASE:[self.set_state(self.STATE_NORMAL)],
+                               EventType.LONG_PRESS:[self.set_state(self.STATE_PRESSED)],
+                               EventType.DOUBLE_CLICK:[]}
         
     @micropython.native
     def _darken_color(self, color, factor):
@@ -120,6 +126,7 @@ class Button(Label):
             self.state = new_state
             self._content_dirty = True
             self.register_dirty()
+
     def set_state(self, state):
         if state in self.styles and self.state != state:
             self.state = state

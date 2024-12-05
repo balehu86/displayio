@@ -1,6 +1,6 @@
 import micropython # type: ignore
 @micropython.native
-def hex_font_to_bitmap(hex_data, width=8, height=8, scale=1,
+def hex_font_to_bitmap(hex_data, width=16, height=16, scale=1,
                        foreground=0xffff, rle=False):
     """将点阵数据转换为带透明背景的Bitmap
     
