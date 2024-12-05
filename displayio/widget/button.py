@@ -71,7 +71,7 @@ class Button(Label):
                                EventType.PRESS:[self.pressed],
                                EventType.RELEASE:[self.release],
                                EventType.LONG_PRESS:[self.pressed],
-                               EventType.DOUBLE_CLICK:[]}
+                               EventType.DOUBLE_CLICK:[self.pressed,self.release]}
         
     @micropython.native
     def _darken_color(self, color, factor):
