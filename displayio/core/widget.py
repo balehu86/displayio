@@ -57,9 +57,9 @@ class Widget:
             在调用widget的部分设置和container的布局树结构发生改变时标记,并向根部传递,
             在Widget的layout()中,重新布局后取消。
         """
-        # 绘制系统的脏标记,分别用来触发刷新和重绘
-        self._dirty = True
-        self._content_dirty = True
+        # 绘制系统的脏标记
+        self._dirty = True # 触发刷新检查
+        self._content_dirty = True # 触发重绘
         # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
         self._layout_dirty = True
         # 部件继承关系
@@ -67,10 +67,10 @@ class Widget:
         self.children = []
         # 背景色
         self.background_color = background_color
+        # 透明色
         self.transparent_color = transparent_color
         # event监听器注册
         self.event_listener = {}  # 事件处理器字典
-        self.input = []
             
     def layout(self, dx, dy, width=None, height=None):
         """
@@ -103,16 +103,16 @@ class Widget:
         self._dirty = True
         self._layout_dirty = False
     
-    def resize(self, width = None, height = None):
-        """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
+    # def resize(self, width = None, height = None):
+    #     """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
-        Args:
-            width (_type_, optional): _description_. Defaults to None.
-            height (_type_, optional): _description_. Defaults to None.
-        """
-        self.width = width if self.width_resizable and self.width != width and width !=None else self.width
-        self.height = height if self.height_resizable and self.height != height and height != None else self.height
-        self.register_layout_dirty()
+    #     Args:
+    #         width (_type_, optional): _description_. Defaults to None.
+    #         height (_type_, optional): _description_. Defaults to None.
+    #     """
+    #     self.width = width if self.width_resizable and self.width != width and width !=None else self.width
+    #     self.height = height if self.height_resizable and self.height != height and height != None else self.height
+    #     self.register_layout_dirty()
 
     def hide(self):
         """隐藏部件"""

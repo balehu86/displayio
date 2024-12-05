@@ -38,6 +38,9 @@ class Container(Widget):
     def replace(self,old_child,new_child):
         """将 old_child 替换换为 new_child"""
         self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
+        self.mark_dirty()
+        self.register_dirty()
+        self.register_layout_dirty()
 
     def remove(self, *childs):
         """从容器中移除元素"""
@@ -51,7 +54,10 @@ class Container(Widget):
 
     def clear(self):
         """清空容器中所有元素"""
+        self.mark_dirty()
         self.children.clear()
+        self.register_dirty()
+        self.register_layout_dirty()
 
     def layout(self, dx=0, dy=0, width=None, height=None):
         """在这里重写布局方法,确保先更新自身位置和大小"""

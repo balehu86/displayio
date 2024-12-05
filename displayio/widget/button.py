@@ -123,6 +123,7 @@ class Button(Label):
         """设置按钮是否可用"""
         new_state = self.STATE_NORMAL if enabled else self.STATE_DISABLED
         if new_state != self.state:
+            self.enabled = enabled
             self.state = new_state
             self._content_dirty = True
             self.register_dirty()
