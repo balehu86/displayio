@@ -6,6 +6,7 @@ class Input:
 
     PRESS = EventType.PRESS               # 按下
     RELEASE = EventType.RELEASE           # 释放
+    LONG_PRESS_RELEASE = EventType.LONG_PRESS_RELEASE # 长按释放
 
     CLICK = EventType.CLICK               # 点击
     LONG_PRESS = EventType.LONG_PRESS     # 长按

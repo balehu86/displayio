@@ -38,10 +38,10 @@ class TouchPin(Input):
             if self.state == self.LONG_PRESS:
                 self.last_click_time = current_time
                 self.state = self.IDLE
-                return Event(self.RELEASE, target_widget=self.target_widget,
+                return Event(self.LONG_PRESS_RELEASE, target_widget=self.target_widget,
                              target_position=self.target_position)
 
-            if self.state==self.PRESS:
+            if self.state == self.PRESS:
                 # 触摸持续时间
                 press_duration = time.ticks_diff(current_time, self.press_start_time)         
                 # 有效单次点击检测

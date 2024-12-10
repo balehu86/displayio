@@ -67,11 +67,12 @@ class Button(Label):
             }
         }
         
-        self.event_listener = {EventType.CLICK:[self.pressed,self.release],
-                               EventType.PRESS:[self.pressed],
+        self.event_listener = {EventType.CLICK:[self.press,self.release],
+                               EventType.PRESS:[self.press],
                                EventType.RELEASE:[self.release],
-                               EventType.LONG_PRESS:[self.pressed],
-                               EventType.DOUBLE_CLICK:[self.pressed,self.release]}
+                               EventType.LONG_PRESS:[self.press],
+                               EventType.LONG_PRESS_RELEASE:[self.long_press_release],
+                               EventType.DOUBLE_CLICK:[self.press,self.release]}
         
     @micropython.native
     def _darken_color(self, color, factor):
@@ -134,13 +135,16 @@ class Button(Label):
             self._content_dirty = True
             self.register_dirty()
 
-    def pressed(self,event):
+    def press(self,event):
         """
         按钮按下
         状态为STATE_PRESSED
         """
         self.set_state(self.STATE_PRESSED)
     def release(self,event):
+        self.set_state(self.STATE_NORMAL)
+    
+    def long_press_release(self,event):
         self.set_state(self.STATE_NORMAL)
     
 

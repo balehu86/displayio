@@ -75,13 +75,30 @@ class MainLoop:
                         self.display.thread_args['width'] = widget.width
                         self.display.thread_args['height'] = widget.height   
                 else:
-                    self.display.output.refresh(
-                        mem_view, dx=widget.dx, dy=widget.dy, 
-                        width=widget.width, height=widget.height)
-            widget._dirty = False            
+                    self.display.output.refresh(mem_view, dx=widget.dx, dy=widget.dy, 
+                                                width=widget.width, height=widget.height)
+            widget._dirty = False
         for child in widget.children:
             self._render_widget(child)
     
+    def _update_display_fully(self):
+        """全屏刷新"""
+        if self.display.root._dirty:
+            self._render_widget(self.display.root)
+        mem_view = memoryview(self.display.root._bitmap.buffer)
+        self.display.output.refresh(mem_view, dx=0, dy=0, 
+                                    width=self.display.width, height=self.display.height)
+
+    def _render_widget_fully(self, widget):
+        """绘制整个屏幕的buffer"""
+        if widget._dirty:
+            if hasattr(widget, 'get_bitmap'):
+                bitmap = widget.get_bitmap()
+                self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
+            widget._dirty = False
+        for child in widget.children:
+            self._render_widget(child)
+
     def _should_update_frame(self):
         """检查是否应该更新帧"""
         current_time = time.ticks_ms()

@@ -1,23 +1,26 @@
 # ./display.py
-from .core.bitmap import Bitmap
 from .core.loop import MainLoop
-import uasyncio # type: ignore
-
+from .core.bitmap import Bitmap
 import time
 
 class Display:
     def __init__(self, width, height, root=None,
                  output=None, inputs=[], fps=5,
-                 show_fps=False, threaded=True):
+                 show_fps=False, partly_refresh=True, threaded=True):
+        # 屏幕尺寸和根节点
         self.width = width
         self.height = height
         self.root = root
-
+        # 输入输出设备
         self.output = output
         self.inputs = inputs
-
+        # 刷新频率和出否在命令行输出fps信息
         self.fps = fps
         self.show_fps = show_fps
+        # 局部刷新
+        self.partly_refresh = partly_refresh
+        # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
+        self.dirty_area = [[0,0,0,0]]
         # 创建事件循环
         self.loop = MainLoop(self, fps)
         # 标志是否开启多线程
@@ -50,17 +53,22 @@ class Display:
         self.root.layout(dx=0, dy=0, width=self.width, height=self.height)
         self.root.width_resizable = False
         self.root.height_resizable = False
+        # 如果局部刷新,在root 部件创建一个全屏framebuff。
+        if self.partly_refresh:
+            self.root._bitmap = Bitmap(self.root.width,self.root.height,
+                                       transparent_color=self.root.transparent_color,
+                                       format=Bitmap.RGB565)
     
     def add_event(self, event):
         """添加事件到事件循环"""
         self.loop.post_event(event)
 
-    def add_input(self,*device):
+    def add_input_device(self,*device):
         self.inputs.extend(device)
 
     def run(self,func):
         """启动显示循环"""
-        self.loop.start(func)            
+        self.loop.start(func)
         
     def stop(self):
         """停止显示循环和线程"""

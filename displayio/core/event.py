@@ -8,6 +8,7 @@ class EventType:
     TOUCH_END = 2         # 触摸结束
     PRESS = 3             # 按下
     RELEASE = 4           # 释放
+    LONG_PRESS_RELEASE = 21 # 长按释放 
     CLICK = 5             # 点击v
     LONG_PRESS = 6        # 长按v
     DOUBLE_CLICK = 7      # 双击v

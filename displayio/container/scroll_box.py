@@ -1,9 +1,10 @@
 # ./container/free_box.py
 from .container import Container
+from ..core.bitmap import Bitmap
 
 import micropython # type: ignore
 
-class GridBox(Container):
+class ScrollBox(Container):
     def __init__(self, row=1, column=1, spacing=0,
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
@@ -12,8 +13,7 @@ class GridBox(Container):
                  background_color=None,
                  transparent_color=None):
         """
-        初始化FreeBox容器
-        警告：不建议此容器初始化width和height
+        初始化ScrollBox容器,此容器的子元素的dx、dy不再生效,均使用rel_x、rel_y.
         """
         # 格子布局的行列数
 
@@ -21,10 +21,9 @@ class GridBox(Container):
         self.row = row
         self.column = column
         self.spacing = spacing
-        # 每一行列的尺寸，default to -1 ,表示按比例分配。
-        # 非负数为实际显示尺寸，负数为其分配比例
-        self.row_height = [-1]*row
-        self.column_width = [-1]*column
+        self.row_height = [0]*row
+        self.column_width = [0]*column
+        self._cache_bitmap = None
 
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
@@ -79,7 +78,7 @@ class GridBox(Container):
             raise ValueError(f'子元素尺寸大于容器尺寸，或有元素超出屏幕范围，请调整子元素的初始化参数。\n'
                             f'容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')
          
-        for i,child in enumerate(self.children):
+        for child in self.children:
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             actual_width, actual_height = child._get_min_size()
             if child.width_resizable:
@@ -88,4 +87,8 @@ class GridBox(Container):
                 actual_height = self.height
             child.layout(dx = self.dx, dy = self.dy, 
                     width = actual_width, height = actual_height)
-    
+
+    def get_bitmap(self):
+        """在这维护一个整体buffer。不再单独刷新此滚动容器的子元素,将子元素合并成整体刷新。"""
+        self._cache_bitmap=Bitmap(self.width, self.height,transparent_color=self.transparent_color,format=Bitmap.RGB565)
+        return self._cache_bitmap

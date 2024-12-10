@@ -188,3 +188,6 @@ class Label(Widget):
         self.padding = padding
         self._content_dirty = True
         self.register_dirty()
+
+    def focus(self):
+        pass
