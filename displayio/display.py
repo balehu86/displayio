@@ -5,7 +5,7 @@ import time
 
 class Display:
     def __init__(self, width, height, root=None,
-                 output=None, inputs=[], fps=5,
+                 output=None, inputs=[], fps=0,
                  show_fps=False, partly_refresh=True, threaded=True):
         # 屏幕尺寸和根节点
         self.width = width
@@ -15,14 +15,14 @@ class Display:
         self.output = output
         self.inputs = inputs
         # 刷新频率和出否在命令行输出fps信息
-        self.fps = fps
-        self.show_fps = show_fps
+        self.fps = fps # 默认0，不限制刷新频率
+        self.show_fps = show_fps # 是否显示刷新率
         # 局部刷新
         self.partly_refresh = partly_refresh
         # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
         self.dirty_area = [[0,0,0,0]]
         # 创建事件循环
-        self.loop = MainLoop(self, fps)
+        self.loop = MainLoop(self)
         # 标志是否开启多线程
         self.threaded = threaded
         if threaded and output is not None:
@@ -54,7 +54,7 @@ class Display:
         self.root.width_resizable = False
         self.root.height_resizable = False
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
-        if self.partly_refresh:
+        if not self.partly_refresh:
             self.root._bitmap = Bitmap(self.root.width,self.root.height,
                                        transparent_color=self.root.transparent_color,
                                        format=Bitmap.RGB565)
