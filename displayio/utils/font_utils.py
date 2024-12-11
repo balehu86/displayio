@@ -24,6 +24,9 @@ def hex_font_to_bitmap(hex_data, width=16, height=16, scale=1,
     if scale < 1:
         raise ValueError("缩放倍数必须大于等于1")
     
+    if foreground==0x0000:
+        raise ValueError("字体颜色不能为0x0000,因为无法和字符背景色区分")
+    
     # 计算缩放后的宽度和高度
     scaled_width = width * scale
     scaled_height = height * scale    

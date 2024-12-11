@@ -12,7 +12,7 @@ class Input:
     LONG_PRESS = EventType.LONG_PRESS     # 长按
     DOUBLE_CLICK = EventType.DOUBLE_CLICK # 双击
     
-    def __init__(self, device, target_widget=None, target_position=None,):
+    def __init__(self, device, target_widget=None, target_position=None):
         # 统一驱动读取输入为self.input.read()
         self.input = device
         # 目标管理

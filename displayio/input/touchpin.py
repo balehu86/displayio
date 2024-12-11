@@ -29,9 +29,10 @@ class TouchPin(Input):
             # 检查长按
             press_duration = time.ticks_diff(current_time,self.press_start_time)
             if press_duration >= self.long_press_duration:
-                self.state = self.LONG_PRESS
-                return Event(self.LONG_PRESS, target_widget=self.target_widget,
-                             target_position=self.target_position)
+                if self.state != self.LONG_PRESS:
+                    self.state = self.LONG_PRESS
+                    return Event(self.LONG_PRESS, target_widget=self.target_widget,
+                                target_position=self.target_position)
             
         else:# 触摸释放
             # 长按释放

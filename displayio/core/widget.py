@@ -26,17 +26,14 @@ class Widget:
                  transparent_color = PINK):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
-        self.abs_x = abs_x
-        self.abs_y = abs_y
-        self.rel_x = rel_x
-        self.rel_y = rel_y
+        self.abs_x, self.abs_y = abs_x, abs_y
+        self.rel_x, self.rel_y = rel_x, rel_y
         # 目标位置，由布局系统确定
         self.dx = abs_x if abs_x is not None else 0
         self.dy = abs_y if abs_y is not None else 0
         # widget 是否可见
         self.visibility = visibility
-        self.width = width
-        self.height = height
+        self.width, self.height = width, height
         # widget 是否可交互，如果部件未启用，则不会处理事件
         self.enabled = enabled
         # 若已初始化时定义宽或高，则layout布局系统无法自动设置widget的大小
@@ -166,17 +163,14 @@ class Widget:
         # 如果部件未启用，则不会处理事件
         if not self.enabled:
             return
-        # 如果指定了目标位置，检查是否在组件范围内
+        # 如果position和widget都没匹配到，则return
         if event.target_position is not None:
             x, y = event.target_position
             if not (self.dx <= x < self.dx + self.width and 
-                    self.dy <= y < self.dy + self.height):
-                return
-        # 如果指定了目标组件，检查是否匹配
-        if event.target_widget is not None:
-            if event.target_widget != self:
-                return  
-                
+                    self.dy <= y < self.dy + self.height):#位置没匹配到
+                if event.target_widget is not self:
+                    return
+
         # 处理事件
         handled = False
         if event.type in self.event_listener:
