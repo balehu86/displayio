@@ -8,17 +8,17 @@ class EventType:
     TOUCH_END = 2         # 触摸结束
     PRESS = 3             # 按下
     RELEASE = 4           # 释放
-    LONG_PRESS_RELEASE = 21 # 长按释放 
-    CLICK = 5             # 点击v
-    LONG_PRESS = 6        # 长按v
-    DOUBLE_CLICK = 7      # 双击v
-    DRAG_START = 8        # 拖动开始
-    DRAG_MOVE = 9         # 拖动中
-    DRAG_END = 10         # 拖动结束
-    FOCUS = 11            # 获得焦点
-    BLUR = 12             # 失去焦点
-    VALUE_CHANGE = 13     # 值改变
-    SELECTION_CHANGE = 14 # 选择改变
+    LONG_PRESS_RELEASE = 5 # 长按释放 
+    CLICK = 6             # 点击v
+    LONG_PRESS = 7        # 长按v
+    DOUBLE_CLICK = 8      # 双击v
+    DRAG_START = 9        # 拖动开始
+    DRAG_MOVE = 10         # 拖动中
+    DRAG_END = 11         # 拖动结束
+    FOCUS = 12            # 获得焦点
+    BLUR = 13             # 失去焦点
+    VALUE_CHANGE = 14     # 值改变
+    SELECTION_CHANGE = 15 # 选择改变
     CUSTOM = 20           # 自定义事件
 """
 [Initializing] -> [Pending] -> [Scheduled] -> [Processing] -> [Completed]

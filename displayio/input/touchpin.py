@@ -4,7 +4,9 @@ from .base_input import Input
 from ..core.event import Event
 
 class TouchPin(Input):
-    def __init__(self, pin, target_widget=None, target_position=None, touch_threshold = 100000):
+    def __init__(self, pin, touch_threshold=100000,
+                 
+                 target_widget=None, target_position=None):
 
         super().__init__(TouchPad(Pin(pin)),
                          target_widget=target_widget,
