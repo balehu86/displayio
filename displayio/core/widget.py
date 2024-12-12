@@ -11,7 +11,6 @@ class Widget:
     STATE_PRESSED = 6   # 受到压力
     STATE_SCROLLED = 7  # 正在滚动
     STATE_DISABLED = 8  # 已禁用
-    STATE_PRESSED = 9   # 被按下
 
     RED   = 0xf800
     GREEN = 0x07e0
