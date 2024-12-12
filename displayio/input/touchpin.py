@@ -61,4 +61,6 @@ class TouchPin(Input):
                     else:# 不是双击
                         return Event(self.CLICK, target_widget=self.target_widget, 
                                      target_position=self.target_position)
-                        
+                else: # 持续时长超过短按,不足长按
+                    return Event(self.RELEASE, target_widget=self.target_widget, 
+                                     target_position=self.target_position)
