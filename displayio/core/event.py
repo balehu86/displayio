@@ -2,7 +2,7 @@
 
 class EventType:
     """事件类型枚举"""
-    NORMAL = -1           # No event
+    DEFAULT = -1           # No event
     TOUCH_START = 0       # 触摸开始
     TOUCH_MOVE = 1        # 触摸移动
     TOUCH_END = 2         # 触摸结束
