@@ -21,10 +21,10 @@ class Input:
         # 状态管理
         self.state = self.IDLE
         self.press_start_time = 0 # 按下的时间
-        self.last_click_time = 0 # 上一次确认触摸的事间，一般用于检测双击
+        self.last_release_time = 0 # 上一次确认触摸的事间，一般用于检测双击
         # 触摸时间参数
-        self.click_min_duration = 8     # 最小点击时间：8ms
-        self.click_max_duration = 400   # 最大点击时间：400ms
+        self.click_min_duration = 10    # 最小点击时间：10ms
+        self.click_max_duration = 500   # 最大点击时间：500ms
         self.long_press_duration = 500  # 长按阈值：500ms
         # 双击时间间隔
         self.double_click_max_interval = 300  # 两次点击最大间隔：300ms
