@@ -37,9 +37,11 @@ class TouchPin(Input):
                                 target_position=self.target_position)
             
         else:# 触摸释放
+            if self.state == self.IDLE:
+                return None
             # 长按释放
             if self.state == self.LONG_PRESS:
-                self.last_click_time = current_time
+                self.last_release_time = current_time
                 self.state = self.IDLE
                 return Event(self.LONG_PRESS_RELEASE, target_widget=self.target_widget,
                              target_position=self.target_position)
@@ -50,16 +52,13 @@ class TouchPin(Input):
                 # 有效单次点击检测
                 if self.click_min_duration < press_duration < self.click_max_duration:
                     # 先判断是否为双击
-                    click_interval = time.ticks_diff(current_time, self.last_click_time)
+                    click_interval = time.ticks_diff(self.press_start_time, self.last_release_time)
+                    self.last_release_time = current_time
+                    self.state = self.IDLE
                     if click_interval <= self.double_click_max_interval:# 是双击
-                        self.last_click_time = current_time
-                        self.state = self.IDLE
                         return Event(self.DOUBLE_CLICK, target_widget=self.target_widget, 
                                      target_position=self.target_position)
                     else:# 不是双击
-                        self.last_click_time = current_time
-                        self.state = self.IDLE
                         return Event(self.CLICK, target_widget=self.target_widget, 
                                      target_position=self.target_position)
-        
-        return None
+                        
