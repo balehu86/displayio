@@ -2,7 +2,7 @@
 from ..core.event import EventType
 
 class Input:
-    IDLE = EventType.NORMAL
+    IDLE = EventType.DEFAULT
 
     PRESS = EventType.PRESS               # 按下
     RELEASE = EventType.RELEASE           # 释放
