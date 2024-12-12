@@ -5,11 +5,11 @@ class Input:
     IDLE = EventType.DEFAULT
 
     PRESS = EventType.PRESS               # 按下
+    LONG_PRESS = EventType.LONG_PRESS     # 长按
+    
     RELEASE = EventType.RELEASE           # 释放
     LONG_PRESS_RELEASE = EventType.LONG_PRESS_RELEASE # 长按释放
-
     CLICK = EventType.CLICK               # 点击
-    LONG_PRESS = EventType.LONG_PRESS     # 长按
     DOUBLE_CLICK = EventType.DOUBLE_CLICK # 双击
     
     def __init__(self, device, target_widget=None, target_position=None):
