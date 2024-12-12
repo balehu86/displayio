@@ -2,6 +2,16 @@
 from .event import Event,EventType
 
 class Widget:
+    STATE_DEFAULT = 0   # 正常、释放状态
+    STATE_CHECKED = 1   # 切换或选中状态
+    STATE_FOCUSED = 2   # 通过键盘或编码器聚焦或通过触摸板/鼠标点击
+    STATE_FOCUS_KEY = 3 # 通过键盘或编码器聚焦，但不通过触摸板/鼠标聚焦
+    STATE_EDITED = 4    # 通过编码器编辑
+    STATE_HOVERED = 5   # 鼠标悬停
+    STATE_PRESSED = 6   # 受到压力
+    STATE_SCROLLED = 7  # 正在滚动
+    STATE_DISABLED = 8  # 已禁用
+    
     RED   = 0xf800
     GREEN = 0x07e0
     BLUE  = 0x001f
