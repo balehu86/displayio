@@ -23,11 +23,11 @@ class Input:
         self.press_start_time = 0 # 按下的时间
         self.last_release_time = 0 # 上一次确认触摸释放的时间，用于检测双击
         # 触摸时间参数
-        self.click_min_duration = 10    # 最小点击时间：10ms
-        self.click_max_duration = 500   # 最大点击时间：500ms
+        self.click_min_duration = 50    # 最小点击时间：10ms
+        self.click_max_duration = 300   # 最大点击时间：500ms
         self.long_press_duration = 500  # 长按阈值：500ms
         # 双击时间间隔
-        self.double_click_max_interval = 300  # 上一次释放和下一次开始。点击最大间隔：300ms
+        self.double_click_max_interval = 250  # 上一次释放和下一次开始。点击最大间隔：300ms
 
     def check_input(self):
         pass
