@@ -11,7 +11,8 @@ class Widget:
     STATE_PRESSED = 6   # 受到压力
     STATE_SCROLLED = 7  # 正在滚动
     STATE_DISABLED = 8  # 已禁用
-    
+    STATE_PRESSED = 9   # 被按下
+
     RED   = 0xf800
     GREEN = 0x07e0
     BLUE  = 0x001f
@@ -31,7 +32,7 @@ class Widget:
                  abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
-                 visibility = True, enabled = True,
+                 visibility = True, state = STATE_DEFAULT,
                  background_color = 0xffff,
                  transparent_color = PINK):
         # 初始化时坐标，分绝对坐标和相对坐标
@@ -45,7 +46,7 @@ class Widget:
         self.visibility = visibility
         self.width, self.height = width, height
         # widget 是否可交互，如果部件未启用，则不会处理事件
-        self.enabled = enabled
+        self.state = state
         # 若已初始化时定义宽或高，则layout布局系统无法自动设置widget的大小
         # 但是可以通过resize()手动调整大小，不受次项限制
         self.width_resizable = True if width is None else False
@@ -171,7 +172,7 @@ class Widget:
         首先检查自己是否有对应的处理器，然后决定是否传递给子组件
         """
         # 如果部件未启用，则不会处理事件
-        if not self.enabled:
+        if self.state == self.STATE_DISABLED:
             return
         # 如果position和widget都没匹配到，则return
         if event.target_position is not None:

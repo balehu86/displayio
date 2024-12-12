@@ -9,7 +9,7 @@ class Style:
     def __init__(self, abs_x = None, abs_y = None,
                  rel_x = None, rel_y = None,
                  width = None, height = None,
-                 visibility = True, enabled = True,
+                 visibility = True, state = Container.STATE_DEFAULT,
                  background_color = 0xffff,
                  transparent_color = PINK):
         pass

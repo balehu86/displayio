@@ -22,7 +22,7 @@ class Label(Widget):
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
-                 visibility=True, enabled=True,
+                 visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=0x7f34, # 背景色（默认绿色）
                  transparent_color=Widget.PINK):
         """
@@ -43,7 +43,7 @@ class Label(Widget):
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility, enabled = enabled,
+                         visibility = visibility, state = state,
                          background_color = background_color,
                          transparent_color = transparent_color)
         self.text = text

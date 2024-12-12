@@ -6,14 +6,14 @@ class Container(Widget):
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
-                 visibility=True,enabled=True,
+                 visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=None,
                  transparent_color=Widget.PINK):
         
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility, enabled = enabled,
+                         visibility = visibility, state = state,
                          background_color = background_color,
                          transparent_color = transparent_color)
         

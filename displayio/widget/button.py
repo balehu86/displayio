@@ -30,11 +30,6 @@ class Button(Label):
     继承自Label，添加了状态和交互功能
     """
     
-    # 按钮状态常量
-    STATE_NORMAL = 0
-    STATE_PRESSED = 1
-    STATE_DISABLED = 2
-    
     def __init__(self,
                  text="",
                  font=None,
@@ -46,7 +41,7 @@ class Button(Label):
                  abs_x=None, abs_y=None,
                  rel_x=None,rel_y=None,
                  width=None,height=None,
-                 visibility=True, enabled=True,
+                 visibility=True, state=Label.STATE_DEFAULT,
                  background_color = Label.BLUE, # 默认蓝色背景
                  transparent_color = Label.PINK): 
         """
@@ -65,15 +60,13 @@ class Button(Label):
                          abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility, enabled = enabled,
+                         visibility = visibility, state = state,
                          background_color = background_color,
                          transparent_color = transparent_color)
-
-        self.state = self.STATE_NORMAL
         
         # 状态对应的样式
         self.styles = {
-            self.STATE_NORMAL: {
+            self.STATE_DEFAULT: {
                 'background_color': background_color,
                 'text_color': text_color
             },
@@ -124,7 +117,7 @@ class Button(Label):
       
     def set_enabled(self, enabled):
         """设置按钮是否可用"""
-        new_state = self.STATE_NORMAL if enabled else self.STATE_DISABLED
+        new_state = self.STATE_DEFAULT if enabled else self.STATE_DISABLED
         if new_state != self.state:
             self.enabled = enabled
             self.state = new_state
@@ -144,9 +137,9 @@ class Button(Label):
         """
         self.set_state(self.STATE_PRESSED)
     def release(self,event):
-        self.set_state(self.STATE_NORMAL)
+        self.set_state(self.STATE_DEFAULT)
     
     def long_press_release(self,event):
-        self.set_state(self.STATE_NORMAL)
+        self.set_state(self.STATE_DEFAULT)
     
 

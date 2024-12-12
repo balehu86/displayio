@@ -6,10 +6,11 @@ import micropython # type: ignore
 
 class ScrollBox(Container):
     def __init__(self, row=1, column=1, spacing=0,
+                 
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
-                 visibility=True, enabled=True,
+                 visibility=True, state=Container.STATE_DEFAULT,
                  background_color=None,
                  transparent_color=None):
         """
@@ -23,12 +24,11 @@ class ScrollBox(Container):
         self.spacing = spacing
         self.row_height = [0]*row
         self.column_width = [0]*column
-        self._cache_bitmap = None
 
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
-                         visibility = visibility, enabled = enabled,
+                         visibility = visibility, state = state,
                          background_color = background_color,
                          transparent_color = transparent_color)
 
@@ -91,4 +91,4 @@ class ScrollBox(Container):
     def get_bitmap(self):
         """在这维护一个整体buffer。不再单独刷新此滚动容器的子元素,将子元素合并成整体刷新。"""
         self._cache_bitmap=Bitmap(self.width, self.height,transparent_color=self.transparent_color,format=Bitmap.RGB565)
-        return self._cache_bitmap
+        return self._bitmap
