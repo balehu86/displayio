@@ -86,8 +86,9 @@ class Widget:
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
         """
-        rel_x = self.rel_x if self.rel_x is not None else 0
-        rel_y = self.rel_y if self.rel_y is not None else 0
+        # 如果rel_value为None则取0, 否则取rel_value
+        rel_x = self.rel_x or 0
+        rel_y = self.rel_y or 0
         # 处理绝对位置，它具有最高优先级
         if self.abs_x is not None:
             self.dx = self.abs_x
@@ -140,12 +141,11 @@ class Widget:
         计算元素尺寸用。
         容器会重写这个方法，用来迭代嵌套子元素的尺寸
         """
+        # 考虑自身的固定尺寸,如果固定尺寸则取self的尺寸，否则取0
         width = self.width if not self.width_resizable else 0
         height = self.height if not self.height_resizable else 0
-        rel_x = self.rel_x if self.rel_x is not None else 0
-        rel_y = self.rel_y if self.rel_y is not None else 0
- 
-        return (width + rel_x, height + rel_y)
+        # 如果为None则取0, 否则取rel_value
+        return (width + (self.rel_x or 0), height + (self.rel_y or 0))
     
     def register_dirty(self):
         """向上汇报 脏"""

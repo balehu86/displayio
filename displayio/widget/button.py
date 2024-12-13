@@ -113,7 +113,7 @@ class Button(Label):
         bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
         # 恢复原来的颜色
         self.text_color = original_text_color
-        return bitmap
+        self._bitmap = bitmap
       
     def set_enabled(self, enabled):
         """设置按钮是否可用"""

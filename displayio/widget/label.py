@@ -131,9 +131,8 @@ class Label(Widget):
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
         bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
-        return bitmap
+        self._bitmap = bitmap
     
-    # @timeit
     def get_bitmap(self):
         """
         获取控件的位图
@@ -141,8 +140,8 @@ class Label(Widget):
         """
         if self.visibility:
             if self._content_dirty:
-                self._bitmap = self._create_bitmap()
-                self._content_dirty = False
+                self._create_bitmap()
+                self._content_dirty = False 
             return self._bitmap
         else:
             if self._cache_bitmap is None:
