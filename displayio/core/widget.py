@@ -52,6 +52,7 @@ class Widget:
         self.height_resizable = True if height is None else False
         # 缓存的位图对象
         self._bitmap = None
+        self._empty_bitmap = None
         """脏标记解释：
         _dirty: 部件是否需要重绘,只用于发起重绘,
             是否重绘缓存的bitmap取决于_content_dirty.

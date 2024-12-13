@@ -66,7 +66,6 @@ class Label(Widget):
         self.padding = padding
 
         self._text_bitmap = None
-        self._cache_bitmap = None
 
     @micropython.native
     def _create_text_bitmap(self):
@@ -144,12 +143,12 @@ class Label(Widget):
                 self._content_dirty = False 
             return self._bitmap
         else:
-            if self._cache_bitmap is None:
-                self._cache_bitmap = Bitmap(self.width,self.height,
+            if self._empty_bitmap is None:
+                self._empty_bitmap = Bitmap(self.width,self.height,
                                             transparent_color=self.transparent_color,
                                             format=Bitmap.RGB565)
-                self._cache_bitmap.fill_rect(0,0,self.width,self.height,self.background_color)
-            return self._cache_bitmap
+                self._empty_bitmap.fill_rect(0,0,self.width,self.height,self.background_color)
+            return self._empty_bitmap
     
     def set_text(self, text):
         """设置文本内容"""
