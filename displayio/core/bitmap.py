@@ -21,7 +21,7 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, width=0, height=0, transparent_color=0xf81f, format=framebuf.RGB565,):
+    def __init__(self, width:int=0, height:int=0, transparent_color:int=0xf81f, format=framebuf.RGB565,):
         self.width = width
         self.height = height
         self.transparent_color = transparent_color
@@ -34,7 +34,7 @@ class Bitmap:
         self.fb = framebuf.FrameBuffer(self.buffer, width, height, format)
     
     @micropython.native
-    def pixel(self, x, y, color=None):
+    def pixel(self, x:int, y:int, color:int=None):
         """获取或设置像素点"""
         # 若超出位图范围，直接返回
         if not (0 <= x < self.width and 0 <= y < self.height):
@@ -50,7 +50,7 @@ class Bitmap:
         self.fb.pixel(x, y, color)
 
     @micropython.native
-    def fill_rect(self, x, y, width, height, color):
+    def fill_rect(self, x:int, y:int, width:int, height:int, color:int):
         """填充矩形区域"""
         # 使用FrameBuffer的原生fill_rect进行填充
         if self.format == framebuf.RGB565:  
@@ -58,7 +58,7 @@ class Bitmap:
         self.fb.fill_rect(x, y, width, height, color)
         
     @micropython.native
-    def blit(self, source, dx=0, dy=0):
+    def blit(self, source, dx:int=0, dy:int=0):
         """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
         # 如果源和目标的颜色格式不同，转换颜色
         key = source.transparent_color

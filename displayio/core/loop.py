@@ -156,7 +156,7 @@ class MainLoop:
         # 获取widget的边界
         x2_min, y2_min, width2, height2 = widget.dx, widget.dy, widget.width, widget.height
 
-        for dirty_area in self.display.dirty_area_list:
+        for dirty_area in widget.parent.dirty_area_list:
             # 获取dirty_area的边界
             x1_min, y1_min, width1, height1 = dirty_area
 

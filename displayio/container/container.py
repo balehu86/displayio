@@ -17,7 +17,8 @@ class Container(Widget):
                          background_color = background_color,
                          transparent_color = transparent_color)
         
-        # self.dirty_children = []
+        # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
+        self.dirty_area_list = [[0,0,0,0]]
 
     def add(self, *childs):
         """向容器中添加元素"""

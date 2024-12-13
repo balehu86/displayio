@@ -12,8 +12,8 @@ class EventType:
     CLICK = 7             # 点击v
     LONG_PRESS = 8        # 长按v
     DOUBLE_CLICK = 9      # 双击v
-    DRAG_START = 10        # 拖动开始
-    DRAG_MOVE = 11         # 拖动中
+    DRAG_START = 10       # 拖动开始,检测逻辑类似长按
+    DRAG_MOVE = 11        # 拖动中
     DRAG_END = 12         # 拖动结束
     FOCUS = 13            # 获得焦点
     BLUR = 14             # 失去焦点

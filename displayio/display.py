@@ -19,8 +19,6 @@ class Display:
         self.show_fps = show_fps # 是否显示刷新率
         # 局部刷新
         self.partly_refresh = partly_refresh
-        # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
-        self.dirty_area_list = [[0,0,0,0]]
         # 创建事件循环
         self.loop = MainLoop(self)
         # 标志是否开启多线程
