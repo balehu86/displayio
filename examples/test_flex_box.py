@@ -1,5 +1,6 @@
 # core and decorator
 from displayio.core.event import EventType, Event
+from displayio.core.style import Style, Color
 from displayio.display import Display
 
 # widgets
@@ -9,7 +10,7 @@ from displayio.widget.button import Button
 
 # font utils
 import btree # type: ignore
-f = open("/displayio/utils/font_16x16.db", "r+b")
+f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
 
 
@@ -42,17 +43,18 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touchs=TouchPin(12,target_position=[239,239])
+touch=TouchPin(12,target_position=[239,239])
 # 创建显示器
-display = Display(240, 240,output=output,inputs=[touchs],
+display = Display(240, 240,output=output,inputs=[touch],
                   threaded=False,
                   fps = 30,
-                  show_fps = True
+                  show_fps = True,
+                  partly_refresh = False
 )
 # 创建垂直布局容器
-main_box = FlexBox(direction='h')
-box1 = FlexBox(direction='v',width=200,spacing = 10)
-box2 = FlexBox(direction='h',spacing = 10,reverse = True)
+main_box = FlexBox(direction=Style.HORIZONTAL)
+box1 = FlexBox(direction=Style.VERTICAL,width=200,spacing = 10)
+box2 = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
 # # 设置根控件并刷新
 display.set_root(main_box)
 # 创建标签
@@ -126,6 +128,8 @@ def long_press_callback(event):
 #         label3.hide()
 #     else:
 #         label3.unhide()
+def long_press_release_callback(event):
+    print('long press released!')
 
 def release_callback(event):
     print('release!')
@@ -133,6 +137,7 @@ button.bind(EventType.CLICK, click_callback)
 button.bind(EventType.DOUBLE_CLICK, double_click_callback)
 button.bind(EventType.LONG_PRESS, long_press_callback)
 button.bind(EventType.RELEASE, release_callback)
+button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
 def main():
 #     check_touch()

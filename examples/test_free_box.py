@@ -1,5 +1,6 @@
 # core and decorator
 from displayio.core.event import EventType, Event
+from displayio.core.style import Style, Color
 from displayio.display import  Display
 
 # widgets
@@ -10,7 +11,7 @@ from displayio.widget.label import Label
 # font utils
 from displayio.utils import font_utils
 import btree # type: ignore
-f = open("/displayio/utils/font_16x16.db", "r+b")
+f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
 rle=font[b'RLE'][0]
 
@@ -65,7 +66,7 @@ display.set_root(main_box)
 # 创建标签
 label1 = Label(
     text="label1 in",
-    text_color=0x0000,
+    text_color=0x0001,
     font=font,
     align=Label.ALIGN_LEFT,
     background_color=0xcdb0,

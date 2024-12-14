@@ -4,19 +4,18 @@ from displayio.core.style import Style, Color
 from displayio.display import Display
 
 # widgets
+from displayio.container.scroll_box import ScrollBox
 from displayio.container.flex_box import FlexBox
-from displayio.container.free_box import FreeBox
 from displayio.widget.label import Label
 from displayio.widget.button import Button
 
 # font utils
-from displayio.utils import font_utils
 import btree # type: ignore
 f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
 
 
-# output
+# driver
 from displayio.output.st7789 import ST7789
 from displayio.input.touchpin import TouchPin
 
@@ -24,13 +23,12 @@ import time
 import machine # type: ignore
 
 # init SPI 接口
-spi = machine.SPI(1, baudrate=80000000, phase=1, polarity=1,\
-                  sck=machine.Pin(41), mosi=machine.Pin(40))
+spi = machine.SPI(1, baudrate=80000000, phase=1, polarity=1, sck=machine.Pin(41), mosi=machine.Pin(40))#, miso=machine.Pin(6))
 print("SPI 初始化成功")
 # 初始化 ST7789 显示屏
 output = ST7789(spi,
                 reset = machine.Pin(39, machine.Pin.OUT),
-                dc = machine.Pin(38, machine.Pin.OUT))
+                dc = machine.Pin(38, machine.Pin.OUT),)
 print("ST7789 显示屏初始化")
 # 初始化显示屏
 output.init()
@@ -46,103 +44,76 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touch=TouchPin(12,target_position=[-1,-1])
+touch=TouchPin(12,target_position=[239,239])
 # 创建显示器
 display = Display(240, 240,output=output,inputs=[touch],
                   threaded=False,
                   fps = 30,
-                  show_fps = False,
-                  partly_refresh = False
+                  show_fps = True,
+                  partly_refresh = True
 )
 # 创建垂直布局容器
-main_box = FlexBox(direction=Style.HORIZONTAL)
-
-vbox = FlexBox(direction=Style.VERTICAL,width=120,spacing = 10)
-main_box.add(vbox)
-
-hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
-vbox.add(hbox)
-
-fbox = FreeBox(height= 200)
-main_box.add(fbox)
-
-vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER)
-fbox.add(vbox_in_f)
-
+main_box = ScrollBox()
+box1 = FlexBox(direction=Style.VERTICAL,width=300,spacing = 10)
 
 # # 设置根控件并刷新
 display.set_root(main_box)
 # 创建标签
 label1 = Label(
-    text="1",
+    text="l1",
     text_color=0x0001,
     font=font,
-    align=Label.ALIGN_TOP,
+    font_scale =2,
+    align=Label.ALIGN_CENTER,
     background_color=0xcdb0,
+    height=40
 #     width=40
 )
 
 label2 = Label(
-    text="2",
+    text="l2",
     font=font,
     align=Label.ALIGN_CENTER,
-#     width = 150,
-#     height = 30,
-    rel_x = 20,
-    rel_y = 10
-    # background=0xffc0
+    # background_color=0xffc0
 )
 label3 = Label(
-    text="3",
+    text="l3",
     font=font,
-    font_scale = 3,
     background_color=0x0099,
     rel_x=20,
     rel_y=20
 )
 label4 = Label(
-    text="4",
+    text="l4",
     font=font,
-    font_scale = 3,
     align=Label.ALIGN_RIGHT,
     width=40,
     background_color=0x0000,
 )
 
-label5 = Label(
-    text="5",
-    font=font,
-    align=Label.ALIGN_CENTER,
-    width = 50,
-#     height = 30,
-    rel_x = 60,
-    rel_y = 10
-    # background=0xffc0
-)
 button = Button(
-    text = 'b',
+    text = 'but',
     font = font,
-    font_scale = 3,
+    font_scale = 1,
+    align=Label.ALIGN_LEFT
 )
-touch.target_position=None
-touch.target_widget=button
 
-hbox.add(label1, label2)
-vbox.add(label3)
-vbox_in_f.add(label4, button)
-fbox.add(label5)
+main_box.add(box1)
+box1.add(label1)
+box1.add(label2)
+box1.add(button)
+box1.add(label3)
+box1.add(label4)
 
 def click_callback(event):
     print('clicked!')
     
-    if label2 in hbox.children:
-        label1.set_text('out')
-        label1.set_color(background_color=0x54a0)
-        hbox.remove(label2)
-    else:
-        label1.set_text('in')
-        label1.set_color(background_color=0xd286)
-        hbox.add(label2)
+#     if box1 in main_box.children:
+#         label1.set_text('in')
+#         main_box.remove(box1)
+#     else:
+#         label1.set_text('#')
+#         main_box.add(box1)
 def double_click_callback(event):
 #     if button.state==2:
 #         button.set_enabled(True)
@@ -158,19 +129,17 @@ def long_press_callback(event):
 #         label3.unhide()
 def long_press_release_callback(event):
     print('long press released!')
+
 def release_callback(event):
     print('release!')
-def press_callback(event):
-    print('press!')
-button.bind(EventType.PRESS, press_callback)
 button.bind(EventType.CLICK, click_callback)
 button.bind(EventType.DOUBLE_CLICK, double_click_callback)
 button.bind(EventType.LONG_PRESS, long_press_callback)
 button.bind(EventType.RELEASE, release_callback)
 button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
-
 def main():
+#     check_touch()
     pass
 
 display.run(main)
