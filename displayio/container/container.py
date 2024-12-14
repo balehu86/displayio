@@ -19,6 +19,7 @@ class Container(Widget):
         
         # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
         self.dirty_area_list = [[0,0,0,0]]
+        
 
     def add(self, *childs):
         """向容器中添加元素"""
@@ -79,3 +80,36 @@ class Container(Widget):
     def unbind(self, event_type, handler=None):
         for child in self.children:
             child.unbind(event_type, handler)
+
+    def hide(self):
+        """隐藏容器"""
+        self.visibility = False
+        self.register_dirty()
+        for child in self.children:
+            child.hide()
+
+    def unhide(self):
+        """取消隐藏容器"""
+        self.visibility = True
+        self.register_dirty()
+        for child in self.children:
+            child.hide().unhide()
+
+    def mark_dirty(self):
+        """向下通知 脏"""
+        self._dirty = True
+        for child in self.children:
+            child.mark_dirty()
+
+    def event_handler(self, event):
+        """处理事件
+        首先检查容器自己是否有对应的处理器，如果有则看自己是否处理，不处理则传递给子组件
+        """
+        resault = super().event_handler(event)
+        # 如果事件未被处理，传递给子组件
+        if not resault:
+            for child in reversed(self.children): # 从上到下传递
+                if event.is_handled(): # 未被处理
+                    break
+                else: # 已处理
+                    child.event_handler(event)

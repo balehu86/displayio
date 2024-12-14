@@ -1,5 +1,5 @@
 # ./core/widget.py
-from .event import Event,EventType
+from .event import EventType
 
 class Widget:
     STATE_DEFAULT = 0   # 正常、释放状态
@@ -72,6 +72,7 @@ class Widget:
         self._layout_dirty = True
         # 部件继承关系
         self.parent = None
+        # 容器的子元素
         self.children = []
         # 背景色
         self.background_color = background_color
@@ -127,15 +128,11 @@ class Widget:
         """隐藏部件"""
         self.visibility = False
         self.register_dirty()
-        for child in self.children:
-            child.hide()
         
     def unhide(self):
         """取消隐藏部件"""
         self.visibility = True
         self.register_dirty()
-        for child in self.children:
-            child.unhide()
         
     def _get_min_size(self):
         """
@@ -154,73 +151,67 @@ class Widget:
         if self.parent:
             self.parent.register_dirty()
 
-    def mark_dirty(self):
-        """向下通知 脏"""
-        self._dirty = True
-        for child in self.children:
-            child.mark_dirty()
-
     def register_layout_dirty(self):
         """向上汇报 布局脏"""
         self._layout_dirty = True
         if self.parent:
             self.parent.register_layout_dirty()
 
-    def event_handler(self, event):
+    def mark_dirty(self):
+        self._dirty = True
+    
+    def event_handler(self, event) -> bool:
         """处理事件
         
-        首先检查自己是否有对应的处理器，然后决定是否传递给子组件
+        首先检查自己是否有对应的处理器,然后决定是否处理
         """
         # 如果部件未启用，则不会处理事件
         if self.state == self.STATE_DISABLED:
-            return
-        # 如果position和widget都没匹配到，则return
-        if event.target_position is not None:
+            return False
+
+        # 当 target_widget 不为 None 时，仅检查其是否为 self
+        if event.target_widget is not None:
+            if event.target_widget is not self:
+                return False
+        # 当 target_widget 为 None 且 target_position 不为 None 时，根据位置判断
+        elif event.target_position is not None:
             x, y = event.target_position
             if not (self.dx <= x < self.dx + self.width and 
-                    self.dy <= y < self.dy + self.height):#位置没匹配到
-                if event.target_widget is not self:
-                    return
-
+                    self.dy <= y < self.dy + self.height):
+                return False
+    
         # 处理事件
-        handled = False
         if event.type in self.event_listener:
-            for handler in self.event_listener[event.type]:
-                handler(event)
-                handled = True
-                
-        # 如果事件未被处理，传递给子组件
-        if not handled:
-            for child in reversed(self.children):  # 从上到下传递
-                child.event_handler(event)
-                if event.status_code == Event.Completed:
-                    break
+            for callback_func in self.event_listener[event.type]:
+                callback_func(event)
+                event.done()
+        return event.is_handled()
 
-    def bind(self, event_type, handler):
+    def bind(self, event_type: EventType, callback_func: function):
         """绑定事件处理器
         
         Args:
             event_type: 事件类型（EventType枚举值）
-            handler: 事件处理函数，接收Event对象作为参数
+            callback_func: 事件处理函数，接收Event对象作为参数
         """
         if event_type not in self.event_listener:
             self.event_listener[event_type] = []
-        self.event_listener[event_type].append(handler)
+        self.event_listener[event_type].append(callback_func)
 
-    def unbind(self, event_type: EventType, handler:function=None):
+    def unbind(self, event_type: EventType, callback_func: function=None):
         """解绑事件处理器
         
         Args:
             event_type: 事件类型
-            handler: 要解绑的处理器,None表示解绑所有
+            callback_func: 要解绑的处理器,None表示解绑所有
         """
         if event_type in self.event_listener:
-            if handler is None:
+            if callback_func is None:
                 self.event_listener[event_type] = []
             else:
                 self.event_listener[event_type] = [
-                    h for h in self.event_listener[event_type] 
-                    if h != handler
+                    cb for cb in self.event_listener[event_type] 
+                    if cb != callback_func
                 ]
 
     def __del__(self):

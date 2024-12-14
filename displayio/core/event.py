@@ -49,3 +49,13 @@ class Event:
         self.timestamp = 0                   # 事件发生时间戳
         self.status_code = self.Initializing
 
+    def is_handled(self) -> bool:
+        """ 返回event是否已被处理 """
+        if self.status_code == self.Completed:
+            return True
+        else:
+            return False
+    def done(self):
+        if self.status_code != self.Completed:
+            self.status_code = self.Completed 
+
