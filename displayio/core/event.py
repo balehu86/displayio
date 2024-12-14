@@ -55,7 +55,7 @@ class Event:
             return True
         else:
             return False
-    def done(self):
+    def done(self) -> None:
         if self.status_code != self.Completed:
             self.status_code = self.Completed 
 

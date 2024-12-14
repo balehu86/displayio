@@ -1,5 +1,4 @@
 import time
-import uasyncio # type: ignore
 from micropython import const # type: ignore
 import ustruct as struct # type: ignore
 
