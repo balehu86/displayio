@@ -74,8 +74,11 @@ class MainLoop:
             self._render_widget(self.display.root)
 
     def _render_widget(self, widget):
-        """递归渲染widget及其子组件"""
+        """递归渲染widget及其子组件
+                任何具有get_bitmap的组件将被视为组件树的末端
+        """
         if widget._dirty:
+            widget._dirty = False
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
                 mem_view = memoryview(bitmap.buffer)
@@ -87,9 +90,9 @@ class MainLoop:
                         self.display.thread_args['width'] = widget.width
                         self.display.thread_args['height'] = widget.height   
                 else:
-                    self.display.output.refresh(mem_view, dx=widget.dx, dy=widget.dy, 
-                                                width=widget.width, height=widget.height)
-            widget._dirty = False
+                    self.display.output.refresh(mem_view, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
+                return # 任何具有get_bitmap的组件将被视为组件树的末端
+
         for child in widget.children:
             self._render_widget(child)
     
@@ -98,16 +101,16 @@ class MainLoop:
         if self.display.root._dirty:
             self._render_widget_fully(self.display.root)
         mem_view = memoryview(self.display.root._bitmap.buffer)
-        self.display.output.refresh(mem_view, dx=0, dy=0, 
-                                    width=self.display.width, height=self.display.height)
+        self.display.output.refresh(mem_view, dx=0, dy=0, width=self.display.width, height=self.display.height)
 
     def _render_widget_fully(self, widget):
         """绘制整个屏幕的buffer"""
         if widget._dirty or self.widget_in_dirty_area(widget):
+            widget._dirty = False
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
                 self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
-            widget._dirty = False
+                return
         for child in widget.children:
             self._render_widget_fully(child)
 

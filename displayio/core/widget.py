@@ -1,7 +1,8 @@
 # ./core/widget.py
-from .event import EventType
+from .style import Color, Style
 
-class Widget:
+class Widget(Color, Style):
+    # widget状态枚举
     STATE_DEFAULT = 0   # 正常、释放状态
     STATE_CHECKED = 1   # 切换或选中状态
     STATE_FOCUSED = 2   # 通过键盘或编码器聚焦或通过触摸板/鼠标点击
@@ -12,28 +13,14 @@ class Widget:
     STATE_SCROLLED = 7  # 正在滚动
     STATE_DISABLED = 8  # 已禁用
 
-    RED   = 0xf800
-    GREEN = 0x07e0
-    BLUE  = 0x001f
-    PINK  = 0xf81f
-    WHITE = 0xffff
-
-    # 文本对齐方式常量
-    ALIGN_LEFT = 'left'
-    ALIGN_CENTER = 'center'
-    ALIGN_RIGHT = 'right'
-    ALIGH_TOP = 'top'
-    ALIGN_BOTTOM = 'bottom'
-    ALIGH_START = 'start'
-    ALIGH_END = 'end'
-
     def __init__(self,
-                 abs_x = None, abs_y = None,
-                 rel_x = None, rel_y = None,
-                 width = None, height = None,
-                 visibility = True, state = STATE_DEFAULT,
-                 background_color = 0xffff,
-                 transparent_color = PINK):
+                 abs_x=None, abs_y=None,
+                 rel_x=None, rel_y=None,
+                 width=None, height=None,
+                 visibility=True, state=STATE_DEFAULT,
+                 background_color=Color.WHITE, # 默认白色
+                 transparent_color=Color.PINK,
+                 color_format = Style.RGB565):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
         self.abs_x, self.abs_y = abs_x, abs_y
@@ -50,10 +37,12 @@ class Widget:
         # 但是可以通过resize()手动调整大小，不受次项限制
         self.width_resizable = True if width is None else False
         self.height_resizable = True if height is None else False
+        # 位图的色彩格式
+        self.color_format = color_format
         # 缓存的位图对象
         self._bitmap = None
         self._empty_bitmap = None
-        """脏标记解释：
+        """脏标记解释：    警告:任何具有get_bitmap的组件将被视为组件树的末端
         _dirty: 部件是否需要重绘,只用于发起重绘,
             是否重绘缓存的bitmap取决于_content_dirty.
             在调用Widget的部分设置函数时标记,并向根部传递,
@@ -81,7 +70,7 @@ class Widget:
         # event监听器注册
         self.event_listener = {}  # 事件处理器字典
             
-    def layout(self, dx, dy, width=None, height=None):
+    def layout(self, dx, dy, width=None, height=None) -> None:
         """
         布局函数,设置控件的位置和大小,由父容器调用
         此函数从root开始,一层层调用
@@ -124,17 +113,17 @@ class Widget:
     #     self.height = height if self.height_resizable and self.height != height and height != None else self.height
     #     self.register_layout_dirty()
 
-    def hide(self):
+    def hide(self) -> None:
         """隐藏部件"""
         self.visibility = False
         self.register_dirty()
         
-    def unhide(self):
+    def unhide(self) -> None:
         """取消隐藏部件"""
         self.visibility = True
         self.register_dirty()
         
-    def _get_min_size(self):
+    def _get_min_size(self) -> tuple[int, int]:
         """
         计算元素尺寸用。
         容器会重写这个方法，用来迭代嵌套子元素的尺寸
@@ -145,25 +134,31 @@ class Widget:
         # 如果为None则取0, 否则取rel_value
         return (width + (self.rel_x or 0), height + (self.rel_y or 0))
     
-    def register_dirty(self):
-        """向上汇报 脏"""
+    def register_dirty(self) -> None:
+        """向根方向汇报 脏"""
         self._dirty = True
         if self.parent:
             self.parent.register_dirty()
 
-    def register_layout_dirty(self):
-        """向上汇报 布局脏"""
+    def register_layout_dirty(self) -> None:
+        """向根方向传递 布局脏"""
         self._layout_dirty = True
         if self.parent:
             self.parent.register_layout_dirty()
 
-    def mark_dirty(self):
+    def mark_dirty(self) -> None:
         self._dirty = True
     
+    def mark_content_dirty(self) -> None:
+        self._content_dirty = True
+
     def event_handler(self, event) -> bool:
         """处理事件
         
         首先检查自己是否有对应的处理器,然后决定是否处理
+
+        Args:
+            event: Event类型实例
         """
         # 如果部件未启用，则不会处理事件
         if self.state == self.STATE_DISABLED:
@@ -187,23 +182,23 @@ class Widget:
                 event.done()
         return event.is_handled()
 
-    def bind(self, event_type: EventType, callback_func: function):
+    def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器
         
         Args:
-            event_type: 事件类型（EventType枚举值）
-            callback_func: 事件处理函数，接收Event对象作为参数
+            event_type (_EventType_): 事件类型（EventType枚举值）
+            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
         """
         if event_type not in self.event_listener:
             self.event_listener[event_type] = []
         self.event_listener[event_type].append(callback_func)
 
-    def unbind(self, event_type: EventType, callback_func: function=None):
+    def unbind(self, event_type, callback_func: function=None) -> None:
         """解绑事件处理器
         
         Args:
-            event_type: 事件类型
-            callback_func: 要解绑的处理器,None表示解绑所有
+            event_type (_EventType_): 事件类型（EventType枚举值）
+            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
         """
         if event_type in self.event_listener:
             if callback_func is None:
@@ -214,12 +209,12 @@ class Widget:
                     if cb != callback_func
                 ]
 
+    def index(self) -> int:
+        """返回部件在父容器中的位置,从0开始"""
+        if self.parent is not None:
+            return self.parent.index(self)
+
     def __del__(self):
         """析构函数,在部件被销毁时被调用"""
         if self.parent is not None:
             self.parent.children.remove(self)
-
-    def index(self):
-        """返回部件在父容器中的位置,从0开始"""
-        if self.parent is not None:
-            return self.parent.index(self)

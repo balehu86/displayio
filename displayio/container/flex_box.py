@@ -4,21 +4,28 @@ from .container import Container
 import micropython # type: ignore
 
 class FlexBox(Container):
+    """
+    FlexBox弹性容器类
+    继承自Container
+    """
     def __init__(self,
-                 direction='h', spacing=0, align='start', reverse=False,
+                 direction=Container.HORIZONTAL, spacing=0, align=Container.ALIGN_START, reverse=False,
 
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=None,
-                 transparent_color=None):
+                 background_color=Container.WHITE,
+                 transparent_color=Container.PINK,
+                 color_format=Container.RGB565):
         """
-        初始化Box容器
-        :param direction: 布局方向，'h'为水平，'v'为垂直
-        :param spacing: 子元素间距
-        :param align: 对齐方式，'start'/'center'/'end'
-        :param reverse: 元素排列顺序,False 为顺序排列,True为倒序
+        初始化FlexBox容器
+
+        继承Container的所有参数,额外添加:
+            direction: 布局方向
+            spacing: 子元素间距
+            align: 对齐方式，'start'/'center'/'end'
+            reverse: 元素排列顺序,False 为顺序排列,True为倒序
         """
         self.direction = direction
         self.spacing = spacing
@@ -30,10 +37,11 @@ class FlexBox(Container):
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,
-                         transparent_color = transparent_color)
+                         transparent_color = transparent_color,
+                         color_format = color_format)
         
     @micropython.native
-    def _get_min_size(self):
+    def _get_min_size(self) -> tuple[int, int]:
         """
         重写方法
         计算容器所需的最小尺寸
@@ -42,7 +50,7 @@ class FlexBox(Container):
         min_width = 0
         min_height = 0
 
-        if self.direction == 'h':
+        if self.direction == self.HORIZONTAL:
             # 水平布局
             for child in self.children:
                 # 递归获取其最小尺寸
@@ -53,7 +61,7 @@ class FlexBox(Container):
             # 添加间距
             min_width += self.spacing * (len(self.children) - 1)
 
-        else: # direction == 'v'
+        else: # direction == self.VERTICAL
             # 垂直布局
             for child in self.children:
                 # 递归获取其最小尺寸
@@ -92,7 +100,7 @@ class FlexBox(Container):
         # resault = int(max(0, remaining // flexible_count))
         return int(max(0, remaining // flexible_count))
 
-    def update_layout(self):
+    def update_layout(self) -> None:
         """更新容器的布局,处理子元素的位置和大小
             到这一步,self的尺寸已经被上层设置完成
         """
@@ -104,13 +112,13 @@ class FlexBox(Container):
             raise ValueError(f'子元素尺寸大于容器尺寸，请调整子元素的初始化参数。\n',
                              f'容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
 
-        if self.direction == 'h':
+        if self.direction == self.HORIZONTAL:
             self._layout_horizontal()
         else:
             self._layout_vertical()
 
     @micropython.native
-    def _layout_horizontal(self):
+    def _layout_horizontal(self) -> None:
         """
         水平方向的布局处理
         处理None值的情况,计算并分配空间
@@ -140,9 +148,9 @@ class FlexBox(Container):
             actual_height = self.height if child.height_resizable else child_min_height
 
             # 根据对齐方式计算y坐标
-            if self.align == 'start':
+            if self.align == self.ALIGN_START:
                 dy = self.dy
-            elif self.align == 'center':
+            elif self.align == self.ALIGN_CENTER:
                 dy = self.dy + (self.height - actual_height) // 2
             else:  # end
                 dy = self.dy + self.height - actual_height
@@ -156,7 +164,7 @@ class FlexBox(Container):
                 dx += actual_width + self.spacing
 
     @micropython.native
-    def _layout_vertical(self):
+    def _layout_vertical(self) -> None:
         """
         垂直方向的布局处理
         处理None值的情况,计算并分配空间
@@ -186,11 +194,11 @@ class FlexBox(Container):
             actual_height = flexible_height if child.height_resizable else child_min_height
 
             # 根据对齐方式计算x坐标
-            if self.align == 'start':
+            if self.align ==self.ALIGN_START:
                 dx = self.dx
-            elif self.align == 'center':
+            elif self.align == self.ALIGN_CENTER:
                 dx = self.dx + (self.width - actual_width) // 2
-            else:  # end
+            else:  # align_end
                 dx = self.dx + self.width - actual_width
 
             if self.reverse:

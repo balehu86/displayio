@@ -4,26 +4,35 @@ from .container import Container
 import micropython # type: ignore
 
 class FreeBox(Container):
+    """
+    FreeBox滚动容器类
+    继承自Container
+    """
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=None, rel_y=None,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=None,
-                 transparent_color=None):
+                 background_color=Container.WHITE,
+                 transparent_color=Container.PINK,
+                 color_format=Container.RGB565):
         """
         初始化FreeBox容器
         建议: 不建议此容器初始化width和height
+
+        继承Container的所有参数,额外添加:
+            pass
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,
-                         transparent_color = transparent_color)
+                         transparent_color = transparent_color,
+                         color_format = color_format)
 
     @micropython.native
-    def _get_min_size(self):
+    def _get_min_size(self) -> tuple[int, int]:
         """
         重写方法
         计算容器所需的最小尺寸
@@ -44,7 +53,7 @@ class FreeBox(Container):
         return (min_width+(self.rel_x or 0), min_height+(self.rel_y or 0))
     
     @micropython.native
-    def update_layout(self):
+    def update_layout(self) -> None:
         """
         更新容器的布局
         处理子元素的位置和大小
