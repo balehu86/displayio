@@ -3,23 +3,38 @@
 class EventType:
     """事件类型枚举"""
     DEFAULT = 0           # No event
+    IDLE = 0
+
+    # 触摸相关事件
     TOUCH_START = 1       # 触摸开始
     TOUCH_MOVE = 2        # 触摸移动
     TOUCH_END = 3         # 触摸结束
+    # 按键相关事件
     PRESS = 4             # 按下
     RELEASE = 5           # 释放
     LONG_PRESS_RELEASE = 6 # 长按释放 
     CLICK = 7             # 点击v
     LONG_PRESS = 8        # 长按v
     DOUBLE_CLICK = 9      # 双击v
+    # 拖动相关事件
     DRAG_START = 10       # 拖动开始,检测逻辑类似长按
     DRAG_MOVE = 11        # 拖动中
     DRAG_END = 12         # 拖动结束
+    # 焦点相关事件
     FOCUS = 13            # 获得焦点
     BLUR = 14             # 失去焦点
+    # 值和选择相关事件
     VALUE_CHANGE = 15     # 值改变
     SELECTION_CHANGE = 16 # 选择改变
-    CUSTOM = 20           # 自定义事件
+    # 旋转编码器相关事件
+    ROTATE = 17           # 旋转
+    ROTATE_LEFT = 18      # 左旋
+    ROTATE_RIGHT = 19     # 右旋
+    ROTATE_TICK = 20      # 一个tick
+    ROTATE_TICK_LEFT = 21 # 一个左旋tick
+    ROTATE_TICK_RIGHT =22 # 一个右旋tick
+
+    CUSTOM = 99           # 自定义事件
 """
 [Initializing] -> [Pending] -> [Scheduled] -> [Processing] -> [Completed]
                                 ↘ [Cancelled]

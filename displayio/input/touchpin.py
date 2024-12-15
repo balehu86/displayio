@@ -12,6 +12,14 @@ class TouchPin(Input):
                          target_widget=target_widget,
                          target_position=target_position)
         
+        self.press_start_time = 0 # 按下的时间
+        self.last_release_time = 0 # 上一次确认触摸释放的时间，用于检测双击
+        # 触摸时间参数
+        self.click_min_duration = 15    # 最小点击时间：15ms
+        self.click_max_duration = 300   # 最大点击时间：300ms
+        self.long_press_duration = 500  # 长按阈值：500ms
+        # 双击时间间隔
+        self.double_click_max_interval = 250  # 上一次释放和下一次开始。点击最大间隔：250ms
         # 触摸数据阈值
         self.touch_threshold = touch_threshold
 
