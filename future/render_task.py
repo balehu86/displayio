@@ -25,6 +25,12 @@ class RenderTask:
         子类应该重写此方法来设置 self.total_items
         """
         pass
+
+    def is_completed(self):
+        if self.compiled():
+            return True
+        else:
+            return False
     
     def __iter__(self):
         """迭代器接口"""
@@ -63,15 +69,17 @@ class RenderTask:
 
 class RenderLoop:
     def __init__(self):
-        render_queue=[]
+        self.render_queue=[]
     
     def render(self):
+        current_task:RenderTask = None
         while True:
-            task = self.render_queue.pop(0)
+            if current_task.is_completed():
+                current_task= self.render_queue.pop(0)
             try:
-                next(task())
-            except StopIteration:
-                break
+                next(current_task())
+            except Exception as e:
+                raise e
 
     def add_task(self, task):
         self.render_queue.append(task)
