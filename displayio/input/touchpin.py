@@ -8,10 +8,8 @@ class TouchPin(Input):
                  
                  target_widget=None, target_position=None):
 
-        super().__init__(TouchPad(Pin(pin)),
-                         target_widget=target_widget,
-                         target_position=target_position)
-        
+        super().__init__(target_widget=target_widget,target_position=target_position)
+        self.touch_pin = TouchPad(Pin(pin))
         self.press_start_time = 0 # 按下的时间
         self.last_release_time = 0 # 上一次确认触摸释放的时间，用于检测双击
         # 触摸时间参数
@@ -25,7 +23,7 @@ class TouchPin(Input):
 
     def check_input(self):
         # 非阻塞的触摸状态机
-        touch_value = self.input.read()
+        touch_value = self.touch_pin.read()
         current_time = time.ticks_ms()
 
         if touch_value > self.touch_threshold:# 触摸按下
