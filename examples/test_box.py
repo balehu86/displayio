@@ -19,9 +19,11 @@ font=btree.open(f)
 # output
 from displayio.output.st7789 import ST7789
 from displayio.input.touchpin import TouchPin
+from displayio.input.encoder import RotaryEncoder
 
 import time
 import machine # type: ignore
+import random
 
 # init SPI 接口
 spi = machine.SPI(1, baudrate=80000000, phase=1, polarity=1,\
@@ -46,9 +48,9 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touch=TouchPin(13,target_position=[-1,-1])
+
 # 创建显示器
-display = Display(240, 240,output=output,inputs=[touch],
+display = Display(240, 240,output=output,
                   threaded=False,
                   fps = 30,
                   show_fps = False,
@@ -69,14 +71,18 @@ main_box.add(fbox)
 vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER,height= 220)
 fbox.add(vbox_in_f)
 
-sbox_in_f=ScrollBox()
-vbox_in_f.add(sbox_in_f)
-vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,height=50,spacing = 10)
-sbox_in_f.add(vbox_in_s)
-vbox_in_s.visibility=False
-vbox_in_s.background_color = 0x4480
+sbox=ScrollBox(background_color=0xffff)
+print(sbox.event_listener)
+vbox.add(sbox)
 
+vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,
+                    height=240,
+                  spacing = 10)
+sbox.add(vbox_in_s)
+# vbox_in_s.visibility=True
+# vbox_in_s.background_color = 0x4480
 
+# sbox.visibility=False
 
 # # 设置根控件并刷新
 display.set_root(main_box)
@@ -132,13 +138,21 @@ button = Button(
     font = font,
     font_scale = 3,
 )
-touch.target_position=None
-touch.target_widget=button
 
 hbox.add(label1, label2)
-vbox.add(label3)
-vbox_in_f.add(label4, button)
+
+vbox_in_f.add(label3, label4, button)
 fbox.add(label5)
+
+for w in range(10):
+    vbox_in_s.add(Label(text=str(w)*5,
+                        height=15,
+                        font=font,
+                        background_color=random.getrandbits(16)))
+# 添加输入设备   
+touch=TouchPin(13,target_widget=button)
+encoder = RotaryEncoder(pin_a=6, pin_b=5,strict=False,target_widget=sbox)
+display.add_input_device(touch,encoder)
 
 def click_callback(event):
     print('clicked!')
@@ -177,6 +191,8 @@ button.bind(EventType.LONG_PRESS, long_press_callback)
 button.bind(EventType.RELEASE, release_callback)
 button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
+
+sbox.bind(EventType.ROTATE_TICK,sbox.scroll)
 
 def main():
     pass

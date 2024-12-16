@@ -27,11 +27,6 @@ class FlexBox(Container):
             align: 对齐方式，'start'/'center'/'end'
             reverse: 元素排列顺序,False 为顺序排列,True为倒序
         """
-        self.direction = direction
-        self.spacing = spacing
-        self.align = align
-        self.reverse = reverse
-
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
                          width = width, height = height,
@@ -39,6 +34,11 @@ class FlexBox(Container):
                          background_color = background_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
+        
+        self.direction = direction
+        self.spacing = spacing
+        self.align = align
+        self.reverse = reverse
         
     @micropython.native
     def _get_min_size(self) -> tuple[int, int]:

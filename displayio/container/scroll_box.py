@@ -1,7 +1,7 @@
 # ./container/free_box.py
 from .container import Container
 from ..core.bitmap import Bitmap
-from ..core.event import EventType, Event
+from ..core.event import EventType
 
 import micropython # type: ignore
 
@@ -31,6 +31,14 @@ class ScrollBox(Container):
         继承Container的所有参数,额外添加:
             pass
         """
+        super().__init__(abs_x = abs_x, abs_y = abs_y,
+                         rel_x = rel_x, rel_y = rel_y,
+                         width = width, height = height,
+                         visibility = visibility, state = state,
+                         background_color = background_color,
+                         transparent_color = transparent_color,
+                         color_format = color_format)
+        
         self.child = None
         # 滚动相关的属性
         # 记录滚动的当前偏移量
@@ -43,15 +51,8 @@ class ScrollBox(Container):
         self.scroll_range_x = 0
         self.scroll_range_y = 0
         # 事件监听器
-        self.event_listener = {EventType.SCROLL:[self.scroll]}
-
-        super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
-                         width = width, height = height,
-                         visibility = visibility, state = state,
-                         background_color = background_color,
-                         transparent_color = transparent_color,
-                         color_format = color_format)
+        self.event_listener = {EventType.SCROLL:[self.scroll],
+                               EventType.ROTATE_TICK:[self.scroll],}
 
     def add(self, child) -> None:
         """向容器中添加元素"""
@@ -91,8 +92,8 @@ class ScrollBox(Container):
             self.scroll_range_y = 0
             self.scroll_offset_y = 0
 
-        actual_width = max(self.width, child_min_width) if self.child.width_resizable else self.child.width
-        actual_height = max(self.height, child_min_height) if self.child.height_resizable else self.child.height
+        actual_width = child_min_width if self.child.width_resizable else self.child.width
+        actual_height = self.height if self.child.height_resizable else self.child.height
         # 根据滚动偏移量调整布局
         self.child.layout(dx=0 - self.scroll_offset_x, dy=0 - self.scroll_offset_y,
                           width=actual_width, height=actual_height)
@@ -101,10 +102,12 @@ class ScrollBox(Container):
         """
         滚动方法, x和y为滚动的增量
         """
+        print('hellp')
         if not self.children:
             raise ValueError("ScrollBox have no child")
-        x = event.data.get('x', 0)
-        y = event.data.get('y', 0)
+        x = event.data.get('rotate_tick_position', 0)
+        y = event.data.get('rotate_tick_position', 0)
+        print(x,y)
         # 限制水平滚动
         if self.is_scrollable_x:
             self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + x))
@@ -166,3 +169,30 @@ class ScrollBox(Container):
     def unhide(self):
         self.visibility = True
         self.register_dirty()
+
+    def bind(self, event_type, callback_func: function) -> None:
+        """绑定事件处理器
+        
+        Args:
+            event_type (_EventType_): 事件类型（EventType枚举值）
+            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
+        """
+        if event_type not in self.event_listener:
+            self.event_listener[event_type] = []
+        self.event_listener[event_type].append(callback_func)
+
+    def unbind(self, event_type, callback_func: function=None) -> None:
+        """解绑事件处理器
+        
+        Args:
+            event_type (_EventType_): 事件类型（EventType枚举值）
+            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
+        """
+        if event_type in self.event_listener:
+            if callback_func is None:
+                self.event_listener[event_type] = []
+            else:
+                self.event_listener[event_type] = [
+                    cb for cb in self.event_listener[event_type] 
+                    if cb != callback_func
+                ]
