@@ -6,11 +6,11 @@ from displayio.display import Display
 # widgets
 from displayio.container.flex_box import FlexBox
 from displayio.container.free_box import FreeBox
+from displayio.container.scroll_box import ScrollBox
 from displayio.widget.label import Label
 from displayio.widget.button import Button
 
 # font utils
-from displayio.utils import font_utils
 import btree # type: ignore
 f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
@@ -46,7 +46,7 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touch=TouchPin(12,target_position=[-1,-1])
+touch=TouchPin(13,target_position=[-1,-1])
 # 创建显示器
 display = Display(240, 240,output=output,inputs=[touch],
                   threaded=False,
@@ -63,11 +63,19 @@ main_box.add(vbox)
 hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
 vbox.add(hbox)
 
-fbox = FreeBox(height= 200)
+fbox = FreeBox()
 main_box.add(fbox)
 
-vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER)
+vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER,height= 220)
 fbox.add(vbox_in_f)
+
+sbox_in_f=ScrollBox()
+vbox_in_f.add(sbox_in_f)
+vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,height=50,spacing = 10)
+sbox_in_f.add(vbox_in_s)
+vbox_in_s.visibility=False
+vbox_in_s.background_color = 0x4480
+
 
 
 # # 设置根控件并刷新
@@ -104,9 +112,9 @@ label4 = Label(
     text="4",
     font=font,
     font_scale = 3,
-    align=Label.ALIGN_RIGHT,
+    align=Label.ALIGN_CENTER,
     width=40,
-    background_color=0x0000,
+    background_color=0x4480,
 )
 
 label5 = Label(
@@ -151,7 +159,6 @@ def double_click_callback(event):
     print('double click!')
 def long_press_callback(event):
     print('long press!')
-    
 #     if label3.visibility:
 #         label3.hide()
 #     else:
@@ -162,6 +169,7 @@ def release_callback(event):
     print('release!')
 def press_callback(event):
     print('press!')
+    
 button.bind(EventType.PRESS, press_callback)
 button.bind(EventType.CLICK, click_callback)
 button.bind(EventType.DOUBLE_CLICK, double_click_callback)

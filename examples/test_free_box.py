@@ -9,11 +9,9 @@ from displayio.widget.label import Label
 # from displayio.widget.button import Button
 
 # font utils
-from displayio.utils import font_utils
 import btree # type: ignore
 f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
-rle=font[b'RLE'][0]
 
 # driver
 from displayio.output.st7789 import ST7789

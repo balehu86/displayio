@@ -1,3 +1,5 @@
+import gc
+gc.collect()
 # core and decorator
 from displayio.core.event import EventType, Event
 from displayio.core.style import Style, Color
@@ -44,13 +46,12 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touch=TouchPin(12,target_position=[239,239])
 # 创建显示器
-display = Display(240, 240,output=output,inputs=[touch],
+display = Display(240, 240,output=output,
                   threaded=False,
                   fps = 30,
-                  show_fps = True,
-                  partly_refresh = True
+                  show_fps = False,
+                  partly_refresh = False
 )
 # 创建垂直布局容器
 main_box = ScrollBox()
@@ -88,58 +89,49 @@ label4 = Label(
     font=font,
     align=Label.ALIGN_RIGHT,
     width=40,
-    background_color=0x0000,
+    background_color=0xfec0,
 )
 
-button = Button(
-    text = 'but',
+button1 = Button(
+    text = 'butttt',
     font = font,
     font_scale = 1,
-    align=Label.ALIGN_LEFT
+    align=Label.ALIGN_RIGHT
+)
+button2 = Button(
+    text = 'butttt',
+    font = font,
+    font_scale = 1,
+    align=Label.ALIGN_RIGHT
 )
 
+touch1=TouchPin(12,target_widget=button1)
+touch2=TouchPin(13,target_widget=button2)
+display.add_input_device(touch1,touch2)
+
 main_box.add(box1)
-box1.add(label1)
-box1.add(label2)
-box1.add(button)
-box1.add(label3)
-box1.add(label4)
+box1.add(label1,label2,button1,button2,label3,label4)
 
-def click_callback(event):
-    print('clicked!')
-    
-#     if box1 in main_box.children:
-#         label1.set_text('in')
-#         main_box.remove(box1)
-#     else:
-#         label1.set_text('#')
-#         main_box.add(box1)
-def double_click_callback(event):
-#     if button.state==2:
-#         button.set_enabled(True)
-#     else:
-#         button.set_enabled(False)
-    print('double click!')
-def long_press_callback(event):
-    print('long press!')
-    
-#     if label3.visibility:
-#         label3.hide()
-#     else:
-#         label3.unhide()
-def long_press_release_callback(event):
-    print('long press released!')
+a=Event(EventType.SCROLL,data={'x': 10},target_widget=main_box)
+b=Event(EventType.SCROLL,data={'x':-10},target_widget=main_box)
+def click_callback1(event):
+    print('1 clicked!')
+    main_box.scroll(a)
 
-def release_callback(event):
-    print('release!')
-button.bind(EventType.CLICK, click_callback)
-button.bind(EventType.DOUBLE_CLICK, double_click_callback)
-button.bind(EventType.LONG_PRESS, long_press_callback)
-button.bind(EventType.RELEASE, release_callback)
-button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
+def click_callback2(event):
+    print('2 clicked!')
+    main_box.scroll(b)
+    
+def press(e):
+    print('pres')
+
+button1.bind(EventType.PRESS, press)
+button1.bind(EventType.CLICK, click_callback1)
+
+button2.bind(EventType.PRESS, press)
+button2.bind(EventType.CLICK, click_callback2)
 
 def main():
-#     check_touch()
     pass
 
 display.run(main)
