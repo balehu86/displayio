@@ -5,9 +5,7 @@ class Input(EventType):
     """
     输入设备基类
     """
-    def __init__(self, device, target_widget=None, target_position=None):
-        # 统一驱动读取输入为self.input.read()
-        self.input = device
+    def __init__(self,target_widget=None, target_position=None):
         # 目标管理
         self.target_widget = target_widget
         self.target_position = target_position
