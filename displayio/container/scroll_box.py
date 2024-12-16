@@ -111,7 +111,7 @@ class ScrollBox(Container):
         # 限制垂直滚动
         if self.is_scrollable_y:
             self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + y))
-        
+        print(x,y,self.scroll_offset_x, self.scroll_offset_y)
         self._content_dirty = True
         self.register_dirty()
 
