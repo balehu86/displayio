@@ -1,7 +1,7 @@
 # ./core/render_task.py
 
 class RenderTask:
-    def __init__(self, task_func, chunk_size=10):
+    def __init__(self,chunk_size=10):
         """
         初始化渲染任务
         
@@ -9,13 +9,16 @@ class RenderTask:
             task_func (callable): 需要执行的渲染任务函数
             chunk_size (int): 每次渲染的块大小，默认为10
         """
-        self.task_func = task_func
         self.chunk_size = chunk_size
         self.current_progress = 0
         self.total_items = None
         self.completed = False
         self._initialize_task()
         self.completed = False
+
+    def new_task(self, task_func):
+        pass
+
     def _initialize_task(self):
         """
         初始化任务，获取总数据量
@@ -56,3 +59,19 @@ class RenderTask:
             print(f"Render task failed: {e}")
             self.completed = True
             raise StopIteration
+    
+
+class RenderLoop:
+    def __init__(self):
+        render_queue=[]
+    
+    def render(self):
+        while True:
+            task = self.render_queue.pop(0)
+            try:
+                next(task())
+            except StopIteration:
+                break
+
+    def add_task(self, task):
+        self.render_queue.append(task)

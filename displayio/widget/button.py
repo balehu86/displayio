@@ -83,12 +83,12 @@ class Button(Label):
             }
         }
         
-        self.event_listener = {EventType.CLICK:[self.press,self.release],
+        self.event_listener = {EventType.CLICK:[self.release],
                                EventType.PRESS:[self.press],
                                EventType.RELEASE:[self.release],
                                EventType.LONG_PRESS:[self.press],
                                EventType.LONG_PRESS_RELEASE:[self.long_press_release],
-                               EventType.DOUBLE_CLICK:[self.press,self.release]}
+                               EventType.DOUBLE_CLICK:[self.release]}
         
     
     
