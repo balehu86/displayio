@@ -72,7 +72,6 @@ vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.A
 fbox.add(vbox_in_f)
 
 sbox=ScrollBox(background_color=0xffff)
-print(sbox.event_listener)
 vbox.add(sbox)
 
 vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,
@@ -191,8 +190,6 @@ button.bind(EventType.LONG_PRESS, long_press_callback)
 button.bind(EventType.RELEASE, release_callback)
 button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
-
-sbox.bind(EventType.ROTATE_TICK,sbox.scroll)
 
 def main():
     pass

@@ -105,8 +105,8 @@ class ScrollBox(Container):
         print('hellp')
         if not self.children:
             raise ValueError("ScrollBox have no child")
-        x = event.data.get('rotate_tick_position', 0)
-        y = event.data.get('rotate_tick_position', 0)
+        x = event.data.get('rotate_direction', 0)
+        y = event.data.get('rotate_direction', 0)
         print(x,y)
         # 限制水平滚动
         if self.is_scrollable_x:
@@ -159,7 +159,6 @@ class ScrollBox(Container):
                 return    
         for child in widget.children:
             self._render_child(child)
-
 
     def hide(self):
         """重写 隐藏部件方法"""
