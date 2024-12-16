@@ -8,7 +8,7 @@ class Container(Widget):
     """
     def __init__(self,
                  abs_x=None, abs_y=None,
-                 rel_x=None, rel_y=None,
+                 rel_x=0, rel_y=0,
                  width=None, height=None,
                  visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=Widget.WHITE,

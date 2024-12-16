@@ -20,7 +20,7 @@ class Label(Widget):
                  padding=(2, 2, 2, 2),  # 文字边距,(左,上,右,下)
 
                  abs_x=None, abs_y=None,
-                 rel_x=None,rel_y=None,
+                 rel_x=0,rel_y=0,
                  width=None,height=None,
                  visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=Widget.Label_GREEN, # 背景色（默认绿色）

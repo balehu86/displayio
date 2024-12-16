@@ -12,7 +12,7 @@ class FlexBox(Container):
                  direction=Container.HORIZONTAL, spacing=0, align=Container.ALIGN_START, reverse=False,
 
                  abs_x=None, abs_y=None,
-                 rel_x=None, rel_y=None,
+                 rel_x=0, rel_y=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
                  background_color=Container.WHITE,
@@ -77,8 +77,8 @@ class FlexBox(Container):
             min_width = max(min_width, self.width or 0)
         if not self.height_resizable:
             min_height = max(min_height, self.height or 0)
-        # 如果rel_value为None则取0, 否则取rel_value
-        return (min_width+(self.rel_x or 0), min_height+(self.rel_y or 0))
+
+        return min_width+self.rel_x, min_height+self.rel_y
 
     @micropython.viper
     @staticmethod
@@ -108,9 +108,8 @@ class FlexBox(Container):
             return
         # 获取容器的最小所需尺寸,,确保容器有足够的空间
         min_width, min_height = self._get_min_size()
-        if (min_width > self.width) or (min_height > self.height):
-            raise ValueError(f'子元素尺寸大于容器尺寸，请调整子元素的初始化参数。\n',
-                             f'容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
+        if (min_width > self.width+self.rel_x) or (min_height > self.height+self.rel_y):
+            raise ValueError(f'子元素尺寸大于flex容器尺寸,请调整子元素的初始化参数.\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')    
 
         if self.direction == self.HORIZONTAL:
             self._layout_horizontal()

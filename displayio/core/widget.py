@@ -15,7 +15,7 @@ class Widget(Color, Style):
 
     def __init__(self,
                  abs_x=None, abs_y=None,
-                 rel_x=None, rel_y=None,
+                 rel_x=0, rel_y=0,
                  width=None, height=None,
                  visibility=True, state=STATE_DEFAULT,
                  background_color=Color.WHITE, # 默认白色
@@ -77,41 +77,38 @@ class Widget(Color, Style):
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
         """
-        # 如果rel_value为None则取0, 否则取rel_value
-        rel_x = self.rel_x or 0
-        rel_y = self.rel_y or 0
+        rel_x = self.rel_x
+        rel_y = self.rel_y
         # 处理绝对位置，它具有最高优先级
-        if self.abs_x is not None:
-            self.dx = self.abs_x
-        else:
-            # 没有绝对位置时，使用父容器位置加上相对偏移
-            self.dx = dx + rel_x
-            
-        if self.abs_y is not None:
-            self.dy = self.abs_y
-        else:
-            # 没有绝对位置时，使用父容器位置加上相对偏移
-            self.dy = dy + rel_y
+        # 没有绝对位置时，使用父容器位置加上相对偏移
+        self.dx = self.abs_x or (dx + rel_x)
+        self.dy = self.abs_y or (dy + rel_y)
 
         # 处理尺寸
-        if self.width_resizable:
-            self.width = (width-rel_x) if width is not None else 0
-        if self.height_resizable:
-            self.height = (height-rel_y) if height is not None else 0
+        actual_width = (width-rel_x) if width is not None else 0
+        if self.width != actual_width:
+            self.width = actual_width
+            self._content_dirty = True
+
+        actual_height = (height-rel_y) if height is not None else 0
+        if self.height != actual_height:
+            self.height = actual_height
+            self._content_dirty = True
 
         self._dirty = True
         self._layout_dirty = False
     
-    # def resize(self, width = None, height = None):
-    #     """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
+    def resize(self, width = None, height = None):
+        """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
-    #     Args:
-    #         width (_type_, optional): _description_. Defaults to None.
-    #         height (_type_, optional): _description_. Defaults to None.
-    #     """
-    #     self.width = width if self.width_resizable and self.width != width and width !=None else self.width
-    #     self.height = height if self.height_resizable and self.height != height and height != None else self.height
-    #     self.register_layout_dirty()
+        Args:
+            width (_type_, optional): _description_. Defaults to None.
+            height (_type_, optional): _description_. Defaults to None.
+        """
+        self.width = width if self.width_resizable and self.width != width and width !=None else self.width
+        self.height = height if self.height_resizable and self.height != height and height != None else self.height
+        self._content_dirty = True
+        self.register_layout_dirty()
 
     def hide(self) -> None:
         """隐藏部件"""
@@ -131,8 +128,8 @@ class Widget(Color, Style):
         # 考虑自身的固定尺寸,如果固定尺寸则取self的尺寸，否则取0
         width = self.width if not self.width_resizable else 0
         height = self.height if not self.height_resizable else 0
-        # 如果为None则取0, 否则取rel_value
-        return (width + (self.rel_x or 0), height + (self.rel_y or 0))
+
+        return width+self.rel_x, height+self.rel_y
     
     def register_dirty(self) -> None:
         """向根方向汇报 脏"""

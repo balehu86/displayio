@@ -10,7 +10,7 @@ class FreeBox(Container):
     """
     def __init__(self,
                  abs_x=None, abs_y=None,
-                 rel_x=None, rel_y=None,
+                 rel_x=0, rel_y=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
                  background_color=Container.WHITE,
@@ -49,8 +49,8 @@ class FreeBox(Container):
             
             min_width = max(min_width, child_min_width)
             min_height = max(min_height, child_min_height)
-        # 如果rel_value为None则取0, 否则取rel_value
-        return (min_width+(self.rel_x or 0), min_height+(self.rel_y or 0))
+
+        return min_width+self.rel_x, min_height+self.rel_y
     
     @micropython.native
     def update_layout(self) -> None:
@@ -64,9 +64,8 @@ class FreeBox(Container):
         # 获取自己的最小所需尺寸
         min_width, min_height = self._get_min_size()
         # 确保容器有足够的空间,使用实际容器尺寸，而不是最小尺寸        
-        if (min_width > self.width) or (min_height > self.height):
-            raise ValueError(f'子元素尺寸大于容器尺寸，或有元素超出屏幕范围，请调整子元素的初始化参数。\n',
-                             f'容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')
+        if (min_width > self.width+self.rel_x) or (min_height > self.height+self.rel_y):
+            raise ValueError(f'子元素尺寸大于free容器尺寸,或有元素超出屏幕范围,请调整子元素的初始化参数.\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')
          
         for child in self.children:
             # 应用布局,元素的layout()会将元素自己_layout_dirty = False
