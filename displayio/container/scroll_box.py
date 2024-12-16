@@ -43,7 +43,7 @@ class ScrollBox(Container):
         self.scroll_range_x = 0
         self.scroll_range_y = 0
         # 事件监听器
-        self.event_listener = {EventType.CLICK:[self.scroll]}
+        self.event_listener = {EventType.SCROLL:[self.scroll]}
 
         super().__init__(abs_x = abs_x, abs_y = abs_y,
                          rel_x = rel_x, rel_y = rel_y,
@@ -91,20 +91,20 @@ class ScrollBox(Container):
             self.scroll_range_y = 0
             self.scroll_offset_y = 0
 
-        actual_width = max(self.width, child_min_width) if self.child.width_resizable else self.child.height
-        actual_height = max(self.height, child_min_height) if self.child.height_resizable else self.child.width
+        actual_width = max(self.width, child_min_width) if self.child.width_resizable else self.child.width
+        actual_height = max(self.height, child_min_height) if self.child.height_resizable else self.child.height
         # 根据滚动偏移量调整布局
         self.child.layout(dx=0 - self.scroll_offset_x, dy=0 - self.scroll_offset_y,
                           width=actual_width, height=actual_height)
                 
-    def scroll(self,x=None,y=None) -> None:
+    def scroll(self,event) -> None:
         """
-        滚动方法，x和y为滚动的增量
+        滚动方法, x和y为滚动的增量
         """
         if not self.children:
             raise ValueError("ScrollBox have no child")
-        x = x or 0
-        y = y or 0
+        x = event.data.get('x', 0)
+        y = event.data.get('y', 0)
         # 限制水平滚动
         if self.is_scrollable_x:
             self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + x))
@@ -136,21 +136,19 @@ class ScrollBox(Container):
         """
         if self._bitmap is None:
             self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-        
         if self.child._dirty:
             self._update_child_bitmap()
-
         self._bitmap.blit(self.child._bitmap, dx=(-1)*self.scroll_offset_x, dy=(-1)*self.scroll_offset_y)
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
         if self.child._bitmap is None:
             self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
-        self._render_child(self.child) # 获取到完整的child._bitmap        
+        self._render_child(self.child) # 获取到完整的child._bitmap
 
     def _render_child(self, widget):
         """绘制整个屏幕的buffer"""
-        if widget._dirty :
+        if widget._dirty:
             widget._dirty = False
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()

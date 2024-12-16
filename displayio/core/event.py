@@ -33,6 +33,8 @@ class EventType:
     ROTATE_TICK = 20      # 一个tick
     ROTATE_TICK_LEFT = 21 # 一个左旋tick
     ROTATE_TICK_RIGHT =22 # 一个右旋tick
+    # 滚动
+    SCROLL = 23
 
     CUSTOM = 99           # 自定义事件
 """
