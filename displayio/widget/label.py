@@ -137,7 +137,7 @@ class Label(Widget):
         if self.visibility: # 未隐藏
             if self._content_dirty: # 如果脏，则重绘bitmap
                 self._create_bitmap()
-                self._content_dirty = False 
+                self._content_dirty = False
             return self._bitmap
         else: # 隐藏
             self._empty_bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
