@@ -93,8 +93,8 @@ class MainLoop:
                     self.display.output.refresh(mem_view, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
                 return # 任何具有get_bitmap的组件将被视为组件树的末端
 
-        for child in widget.children:
-            self._render_widget(child)
+            for child in widget.children:
+                self._render_widget(child)
     
     def _update_display_fully(self):
         """全屏刷新"""
@@ -111,8 +111,8 @@ class MainLoop:
                 bitmap = widget.get_bitmap()
                 self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
                 return
-        for child in widget.children:
-            self._render_widget_fully(child)
+            for child in widget.children:
+                self._render_widget_fully(child)
 
     def _should_update_frame(self):
         """检查是否应该更新帧"""
