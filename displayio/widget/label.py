@@ -93,7 +93,6 @@ class Label(Widget):
             x = text_dx + i * self.font_width * self.font_scale
             self._text_bitmap.blit(char_bitmap, dx=x, dy=0)
         
-    
     @micropython.native
     def _calculate_text_position(self) -> tuple[int, int]:
         """

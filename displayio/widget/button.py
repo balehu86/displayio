@@ -85,10 +85,11 @@ class Button(Label):
         
         self.event_listener = {EventType.CLICK:[self.release],
                                EventType.PRESS:[self.press],
-                               EventType.RELEASE:[self.release],
-                               EventType.LONG_PRESS:[self.press],
+                            #    EventType.RELEASE:[self.release],
+                            #    EventType.LONG_PRESS:[self.press],
                                EventType.LONG_PRESS_RELEASE:[self.long_press_release],
-                               EventType.DOUBLE_CLICK:[self.release]}
+                            #    EventType.DOUBLE_CLICK:[self.release],
+                               }
         
     
     
@@ -133,10 +134,7 @@ class Button(Label):
             self.register_dirty()
 
     def press(self,event) -> None:
-        """
-        按钮按下
-        状态为STATE_PRESSED
-        """
+        """按钮按下,状态为STATE_PRESSED"""
         self.set_state(self.STATE_PRESSED)
 
     def release(self,event) -> None:
