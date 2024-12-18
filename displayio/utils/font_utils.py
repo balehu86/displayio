@@ -1,6 +1,7 @@
 import micropython # type: ignore
 @micropython.native
-def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False):
+def hex_font_to_bitmap(hex_data, width=16, height=16, scale=1,
+                       foreground=0xffff, rle=False):
     """将点阵数据转换为带透明背景的Bitmap
     
     Args:
@@ -19,15 +20,35 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
     
     if width % 8 != 0:
         raise ValueError("宽度必须是8的倍数")
-        
+    
+    if scale < 1:
+        raise ValueError("缩放倍数必须大于等于1")
+    
+    if foreground==0x0000:
+        raise ValueError("字体颜色不能为0x0000,因为无法和字符背景色区分")
+    
+    # 计算缩放后的宽度和高度
+    scaled_width = width * scale
+    scaled_height = height * scale    
+
     bytes_per_row = width // 8 # 每行需要的字节数
     expected_data_length = height * bytes_per_row
-    bitmap = Bitmap(width, height, format=Bitmap.RGB565)
+    bitmap = Bitmap(scaled_width, scaled_height, transparent_color=0x0000,
+                    format=Bitmap.RGB565)
     
+    def draw_scaled_pixel(x, y, color):
+        """在缩放后的位图上绘制像素块"""
+        start_x = x * scale
+        start_y = y * scale
+        for dy in range(scale):
+            for dx in range(scale):
+                bitmap.pixel(start_x + dx, start_y + dy, color)
+
     if not rle:
         # 原始数据模式
         if len(hex_data) != expected_data_length:
-            raise ValueError(f"hex_data必须是长度为{expected_data_length}的bytearray，每行需要{bytes_per_row}个字节表示{width}个像素")
+            raise ValueError(f"hex_data必须是长度为{expected_data_length}的bytearray\
+                             ,每行需要{bytes_per_row}个字节表示{width}个像素")
             
         for y in range(height):
             row_start = y * bytes_per_row
@@ -39,7 +60,7 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
                     for bit_pos in range(8):
                         if byte_value & (0x80 >> bit_pos):
                             x = byte_index * 8 + bit_pos
-                            bitmap.pixel(x, y, foreground, transparent=False)
+                            draw_scaled_pixel(x, y, foreground)
         return bitmap
     else:
         # RLE压缩数据模式
@@ -80,7 +101,7 @@ def hex_font_to_bitmap(hex_data, width=8, height=8, foreground=0xffff, rle=False
                         if byte_value & (0x80 >> bit_pos):
                             x = base_x + bit_pos
                             if x < width:
-                                bitmap.pixel(x, current_row, foreground, transparent=False)
+                                draw_scaled_pixel(x, current_row, foreground)
                 
                 i += 1
                 row_byte += 1

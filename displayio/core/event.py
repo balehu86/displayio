@@ -1,24 +1,42 @@
 # ./core/event.py
-import time
 
-class EventType():
+class EventType:
     """事件类型枚举"""
-    TOUCH_START = 0       # 触摸开始
-    TOUCH_MOVE = 1        # 触摸移动
-    TOUCH_END = 2         # 触摸结束
-    PRESS = 3             # 按下
-    RELEASE = 4           # 释放
-    CLICK = 5             # 点击
-    LONG_PRESS = 6        # 长按
-    DOUBLE_CLICK = 7      # 双击
-    DRAG_START = 8        # 拖动开始
-    DRAG_MOVE = 9         # 拖动中
-    DRAG_END = 10         # 拖动结束
-    FOCUS = 11            # 获得焦点
-    BLUR = 12             # 失去焦点
-    VALUE_CHANGE = 13     # 值改变
-    SELECTION_CHANGE = 14 # 选择改变
-    CUSTOM = 20           # 自定义事件
+    DEFAULT = 0           # No event
+    IDLE = 0
+
+    # 触摸相关事件
+    TOUCH_START = 1       # 触摸开始
+    TOUCH_MOVE = 2        # 触摸移动
+    TOUCH_END = 3         # 触摸结束
+    # 按键相关事件
+    PRESS = 4             # 按下
+    RELEASE = 5           # 释放
+    LONG_PRESS_RELEASE = 6 # 长按释放 
+    CLICK = 7             # 点击v
+    LONG_PRESS = 8        # 长按v
+    DOUBLE_CLICK = 9      # 双击v
+    # 拖动相关事件
+    DRAG_START = 10       # 拖动开始,检测逻辑类似长按
+    DRAG_MOVE = 11        # 拖动中
+    DRAG_END = 12         # 拖动结束
+    # 焦点相关事件
+    FOCUS = 13            # 获得焦点
+    BLUR = 14             # 失去焦点
+    # 值和选择相关事件
+    VALUE_CHANGE = 15     # 值改变
+    SELECTION_CHANGE = 16 # 选择改变
+    # 旋转编码器相关事件
+    ROTATE = 17           # 旋转
+    ROTATE_LEFT = 18      # 左旋
+    ROTATE_RIGHT = 19     # 右旋
+    ROTATE_TICK = 20      # 一个tick
+    ROTATE_TICK_LEFT = 21 # 一个左旋tick
+    ROTATE_TICK_RIGHT =22 # 一个右旋tick
+    # 滚动
+    SCROLL = 23
+
+    CUSTOM = 99           # 自定义事件
 """
 [Initializing] -> [Pending] -> [Scheduled] -> [Processing] -> [Completed]
                                 ↘ [Cancelled]
@@ -38,13 +56,23 @@ class Event:
     Timed_Out = 999   # 超时
 
     """事件基类"""
-    def __init__(self, event_type: EventType, data=None, target_position=[0,0], target_widget=None):
+    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None):
         self.type: EventType = event_type    # 事件类型
+        if target_position is None and target_widget is None:
+            raise ValueError("事件必须指定目标位置或目标组件")
         self.target_widget = target_widget   # 事件目标对象
         self.target_position = target_position    # 事件目标位置
         self.data = data or {}              # 事件相关数据
         self.timestamp = 0                   # 事件发生时间戳
         self.status_code = self.Initializing
 
-
+    def is_handled(self) -> bool:
+        """ 返回event是否已被处理 """
+        if self.status_code == self.Completed:
+            return True
+        else:
+            return False
+    def done(self) -> None:
+        if self.status_code != self.Completed:
+            self.status_code = self.Completed 
 

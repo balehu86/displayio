@@ -1,5 +1,15 @@
 # ./core/bitmap.py
 import framebuf # type: ignore
+import micropython # type: ignore
+
+@micropython.viper
+def _swap_rgb565(color: int) -> int:
+    """交换颜色值的高低字节
+        因为framebuf.FrameBuffer的序列为小端序,
+        而驱动一般采用大端序
+        所以在这里先做个交换第一第二字节的处理，
+        可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
+    return ((color >> 8) | (color << 8)) & 0xFFFF
 
 class Bitmap:
     # 支持的颜色格式
@@ -11,159 +21,51 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, width=0, height=0, format=framebuf.RGB565):
+    def __init__(self, width:int=0, height:int=0, transparent_color:int=0xf81f, format=framebuf.RGB565,):
         self.width = width
         self.height = height
-        self.format=format
+        self.transparent_color = transparent_color
+        self.format = format
+
         buffer_size = width * height
         if format == framebuf.RGB565:
             buffer_size *= 2
         self.buffer = bytearray(buffer_size)
         self.fb = framebuf.FrameBuffer(self.buffer, width, height, format)
-        
-        # 使用bytearray存储透明度信息，每个字节存储8个像素
-        self._mask = bytearray((width * height + 7) // 8)
-        # 缓存常用的掩码值
-        self._bit_masks = [1 << i for i in range(8)]
-
-    def _swap_rgb565(self, color):
-        """交换颜色值的高低字节
-            因为framebuf.FrameBuffer的序列为小端序,
-            而驱动一般采用大端序
-            所以在这里先做个交换第一第二字节的处理，
-            可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
-        return ((color >> 8) | (color << 8)) & 0xFFFF
-        
-    def _get_mask_index(self, x, y):
-        """获取遮罩的字节索引和位索引"""
-        pos = y * self.width + x
-        return pos >> 3, pos & 0x07
     
-    def pixel(self, x, y, color=None, transparent=False):
+    @micropython.native
+    def pixel(self, x:int, y:int, color:int=None):
         """获取或设置像素点"""
         # 若超出位图范围，直接返回
         if not (0 <= x < self.width and 0 <= y < self.height):
             return
         
-        byte_idx, bit_idx = self._get_mask_index(x, y)
-        bit_mask = self._bit_masks[bit_idx]
-        
         if color is None:
-            if self._mask[byte_idx] & bit_mask:  # 不透明
-                value = self.fb.pixel(x, y)
-                return self._swap_rgb565(value) if self.format == framebuf.RGB565 else value
-            return None   
-             
+            value = self.fb.pixel(x, y)
+            return _swap_rgb565(value) if self.format == framebuf.RGB565 else value
+        
         # 设置像素时转换颜色 
         if self.format == framebuf.RGB565:
-            color = self._swap_rgb565(color)    
+            color = _swap_rgb565(color)    
         self.fb.pixel(x, y, color)
 
-        if transparent:
-            self._mask[byte_idx] &= ~bit_mask
-        else:
-            self._mask[byte_idx] |= bit_mask
-
-    def fill_rect(self, x, y, width, height, color, transparent=False):
+    @micropython.native
+    def fill_rect(self, x:int, y:int, width:int, height:int, color:int):
         """填充矩形区域"""
         # 使用FrameBuffer的原生fill_rect进行填充
-        if self.format == framebuf.RGB565:
-            color = self._swap_rgb565(color)
+        if self.format == framebuf.RGB565:  
+            color = _swap_rgb565(color)
         self.fb.fill_rect(x, y, width, height, color)
         
-        # 批量设置透明度
-        start_x = max(0, x)
-        start_y = max(0, y)
-        end_x = min(self.width, x + width)
-        end_y = min(self.height, y + height)
+    @micropython.native
+    def blit(self, source, dx:int=0, dy:int=0):
+        """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
+        # 如果源和目标的颜色格式不同，转换颜色
+        key = source.transparent_color
+        if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
+            key = _swap_rgb565(key) if source.transparent_color != -1 else -1
+        elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
+            key = _swap_rgb565(key) if source.transparent_color != -1 else -1
         
-        if transparent:
-            # 如果是透明的，直接将对应区域的位清零
-            for cy in range(start_y, end_y):
-                row_start = (cy * self.width + start_x) >> 3
-                row_end = (cy * self.width + end_x - 1) >> 3
-                start_bit = start_x & 0x07
-                end_bit = (end_x - 1) & 0x07
-                
-                if row_start == row_end:
-                    # 同一个字节内
-                    mask = ((1 << (end_bit - start_bit + 1)) - 1) << start_bit
-                    self._mask[row_start] &= ~mask
-                else:
-                    # 第一个字节
-                    self._mask[row_start] &= ~(0xFF << start_bit)
-                    # 中间的字节
-                    for i in range(row_start + 1, row_end):
-                        self._mask[i] = 0
-                    # 最后一个字节
-                    self._mask[row_end] &= ~((1 << (end_bit + 1)) - 1)
-        else:
-            # 如果是不透明的，直接将对应区域的位置1
-            for cy in range(start_y, end_y):
-                row_start = (cy * self.width + start_x) >> 3
-                row_end = (cy * self.width + end_x - 1) >> 3
-                start_bit = start_x & 0x07
-                end_bit = (end_x - 1) & 0x07
-                
-                if row_start == row_end:
-                    # 同一个字节内
-                    mask = ((1 << (end_bit - start_bit + 1)) - 1) << start_bit
-                    self._mask[row_start] |= mask
-                else:
-                    # 第一个字节
-                    self._mask[row_start] |= (0xFF << start_bit)
-                    # 中间的字节
-                    for i in range(row_start + 1, row_end):
-                        self._mask[i] = 0xFF
-                    # 最后一个字节
-                    self._mask[row_end] |= ((1 << (end_bit + 1)) - 1)
-
-    def blit(self, source, sx=0, sy=0, sw=None, sh=None, dx=0, dy=0):
-        """将源bitmap复制到当前bitmap"""
-        if sw is None:
-            sw = source.width
-        if sh is None:
-            sh = source.height
-            
-        # 计算有效的复制区域
-        src_start_x = max(0, -sx)
-        src_start_y = max(0, -sy)
-        src_end_x = min(sw, source.width - sx)
-        src_end_y = min(sh, source.height - sy)
-        
-        dst_start_x = max(0, dx)
-        dst_start_y = max(0, dy)
-        dst_end_x = min(self.width, dx + sw)
-        dst_end_y = min(self.height, dy + sh)
-        
-        # 计算实际要复制的宽度和高度
-        copy_width = min(src_end_x - src_start_x, dst_end_x - dst_start_x)
-        copy_height = min(src_end_y - src_start_y, dst_end_y - dst_start_y)
-        
-        if copy_width <= 0 or copy_height <= 0:
-            return
-            
-        # 按行复制像素和透明度信息
-        for y in range(copy_height):
-            src_y = sy + src_start_y + y
-            dst_y = dy + y
-            
-            for x in range(copy_width):
-                src_x = sx + src_start_x + x
-                dst_x = dx + x
-                
-                # 检查源像素是否透明
-                src_byte_idx, src_bit_idx = source._get_mask_index(src_x, src_y)
-                if source._mask[src_byte_idx] & source._bit_masks[src_bit_idx]:
-                    # 如果源像素不透明，则复制
-                    color = source.fb.pixel(src_x, src_y)
-                     # 如果源和目标的格式都是RGB565，不需要转换
-                    if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
-                        color = self._swap_rgb565(color)
-                    elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
-                        color = source._swap_rgb565(color)
-                    self.fb.pixel(dst_x, dst_y, color)
-                    
-                    # 设置目标像素为不透明
-                    dst_byte_idx, dst_bit_idx = self._get_mask_index(dst_x, dst_y)
-                    self._mask[dst_byte_idx] |= self._bit_masks[dst_bit_idx]
+        # 使用framebuf的blit方法，传入透明色键值
+        self.fb.blit(source.fb, dx, dy, key)

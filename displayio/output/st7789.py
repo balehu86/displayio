@@ -258,11 +258,6 @@ class ST7789:
         self._set_rows(y0, y1)
         self.write_cmd(ST77XX_RAMWR)
 
-    def blit_buffer(self, buffer, x, y, width, height):
-        self.set_window(x, y, x + width - 1, y + height - 1)
-        self.write_data(buffer)
-
-
     def fill_rect(self, x, y, width, height, color):
         self.set_window(x, y, x + width - 1, y + height - 1)
         chunks, rest = divmod(width * height, _BUFFER_SIZE)
@@ -278,24 +273,26 @@ class ST7789:
         self.fill_rect(0, 0, self.width, self.height, color)
 
     def refresh(self, bitmap_memview, dx=0, dy=0, width=0, height=0):
-        """将位图数据刷新到显示屏"""
-        # if width is None:
-        #     width = bitmap.width
-        # if height is None:
-        #     height = bitmap.height
-        
-        self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-        
-        # mv = memoryview(bitmap.buffer)
+        """将位图数据刷新到显示屏"""  
+        self.set_window(dx, dy, dx + width - 1, dy + height - 1)     
         self.write_data(bitmap_memview)
 
-
-    def thread_refresh(self, bitmap, dx, dy, width, height,
-                       lock):
-        while True:
-            lock.acquire()
-            try:
-                """将位图数据刷新到显示屏"""                   
-                self.set_window(dx, dy, dx + width - 1, dy + height - 1)
-                self.write_data(bitmap.buffer)
-            finally:lock.release()
+    def _thread_refresh_wrapper(self, args, lock):
+        """线程刷新的包装器，增加线程生命周期管理"""
+        old_buffer = None
+        try:
+            while args['thread_running']:
+                # 使用实例方法和实例属性
+                if old_buffer != args['bitmap_memview']:
+                    with lock:
+                        self.set_window(
+                            args['dx'], args['dy'], 
+                            args['dx'] + args['width'] - 1, 
+                            args['dy'] + args['height'] - 1)
+                        self.write_data(args['bitmap_memview'])
+                        old_buffer = args['bitmap_memview']
+                time.sleep_ms(3)
+        except Exception as e:
+            print(f"Thread refresh error: {e}")
+        finally:
+            print("Display refresh thread terminated")
