@@ -88,7 +88,7 @@ class Button(Label):
                             #    EventType.RELEASE:[self.release],
                             #    EventType.LONG_PRESS:[self.press],
                                EventType.LONG_PRESS_RELEASE:[self.long_press_release],
-                            #    EventType.DOUBLE_CLICK:[self.release],
+                               EventType.DOUBLE_CLICK:[self.release],
                                }
         
     
