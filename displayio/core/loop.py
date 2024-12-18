@@ -26,11 +26,6 @@ class MainLoop:
         self.last_fps_time = time.ticks_ms()  # 新增：上次计算FPS的时间
         # 检查输入的定时器
         self.input_timer = Timer(0)
-        # 确认 局部刷新还是全局刷新
-        if self.display.partly_refresh:
-            self.update_display = self._update_display
-        else:
-            self.update_display = self._update_display_fully
         
     def start(self,func):
         """启动事件循环"""
@@ -125,10 +120,20 @@ class MainLoop:
             return True
         return False
         
+    def update_display(self):
+        # 确认 局部刷新还是全局刷新
+        if self.display.partly_refresh:
+            self._update_display()
+        else:
+            self._update_display_fully()
+        # 新增：帧数计数和FPS计算
+        if self.display.show_fps:
+            self.frame_count += 1
+            self._calculate_fps()
+            
     def _run(self,func):        
         """运行事件循环"""
         func()
-        show_fps = self.display.show_fps
         while self.running:
             # 处理事件
             self._process_events()
@@ -138,10 +143,6 @@ class MainLoop:
                 self._update_layout()
                 # 更新显示
                 self.update_display()
-                # 新增：帧数计数和FPS计算
-                if show_fps:
-                    self.frame_count += 1
-                    self._calculate_fps()
 
     def _calculate_fps(self):
         """计算并打印每秒帧数"""
@@ -155,31 +156,33 @@ class MainLoop:
             self.frame_count = 0
             self.last_fps_time = current_time
 
-    def add_task(self, callback, period, priority=10, one_shot=False):
+    def add_task(self, callback, period=0, priority=10, one_shot=False, on_complete=None):
         """添加一个新任务"""
-        task = Task(callback, period, priority, one_shot)
+        task = Task(callback, period, priority, one_shot, on_complete)
         heappush(self.task_queue, task)
 
     def run(self):
         """运行调度器"""
+        self.add_task(self._process_events,period=2)
+        self.add_task(self._update_layout,period=self.frame_interval,priority=10)
+        self.add_task(self.update_display,period=self.frame_interval,priority=11)
         while self.running:
             current_time = time.ticks_ms()
             if self.task_queue:
                 task = self.task_queue[0]  # 查看队列中的最高优先级任务
                 if time.ticks_diff(task.next_run, current_time) <= 0:
                     heappop(self.task_queue)  # 移除任务
-                    if task.execute():  # 执行任务
-                        if not task.one_shot:
-                            task.next_run = current_time + task.period
-                            heappush(self.task_queue, task)  # 重新放入队列
+                    if task.execute():  # 执行任务,任务完成返回False，未完成返回True
+                        task.next_run = current_time + task.period
+                        heappush(self.task_queue, task)  # 重新放入队列
             time.sleep_ms(2)  # 短暂休眠以降低 CPU 占用率
 
 
 
 class Task:
     """表示一个任务"""
-    def __init__(self, callback, period, priority, one_shot=False):
-        if isinstance(callback, type((lambda: (yield))())):
+    def __init__(self, callback, period=0, priority=10, one_shot=False, on_complete=None):
+        if bool(callback.__code__.co_flags & 0x20):
             self.generator = callback  # 如果是生成器，保存生成器对象
             self.callback = None
         else:
@@ -189,6 +192,7 @@ class Task:
         self.period = period          # 任务的执行间隔（ms）
         self.priority = priority      # 优先级，数值越小优先级越高
         self.one_shot = one_shot      # 是否是单次任务
+        self.on_complete = on_complete # 任务完成执行的回调函数
         self.next_run = time.ticks_ms() + period  # 下次运行时间
 
     def __lt__(self, other):
@@ -198,13 +202,17 @@ class Task:
         return self.next_run < other.next_run
     
     def execute(self):
-        """执行任务"""
+        """执行任务,任务完成返回False,未完成返回True"""
         if self.generator:
             try:
                 next(self.generator)  # 执行生成器的下一步
             except StopIteration:
+                if self.on_complete:  # 任务完成后执行回调
+                    self.on_complete()
                 return False  # 生成器已完成，标记任务结束
         elif self.callback:
             self.callback()  # 执行普通回调
-        return True  # 任务未结束
+            if self.one_shot and self.on_complete:  # 单次任务完成后执行回调
+                self.on_complete()
+        return not self.one_shot  # 对于单次任务，标记结束
     

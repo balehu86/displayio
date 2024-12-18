@@ -1,5 +1,35 @@
 # ./core/render_task.py
 
+import time
+from heapq import heappush, heappop  # 用于优先级队列管理任务
+
+
+
+class TaskScheduler:
+    """任务调度器"""
+    def __init__(self):
+        self.task_queue = []  # 优先级队列存储任务
+
+    def add_task(self, callback, period, priority=10):
+        """添加一个新任务"""
+        task = Task(callback, period, priority)
+        heappush(self.task_queue, task)
+
+    def run(self):
+        """运行调度器"""
+        while True:
+            current_time = time.ticks_ms()
+            if self.task_queue:
+                task = self.task_queue[0]  # 查看队列中的最高优先级任务
+                if time.ticks_diff(task.next_run, current_time) <= 0:
+                    heappop(self.task_queue)  # 移除任务
+                    task.callback()          # 执行任务
+                    if not task.one_shot:    # 如果不是单次任务
+                        task.next_run = current_time + task.period
+                        heappush(self.task_queue, task)  # 重新放入队列
+            time.sleep_ms(2)  # 短暂休眠以降低 CPU 占用率
+
+
 class RenderTask:
     def __init__(self,chunk_size=10):
         """

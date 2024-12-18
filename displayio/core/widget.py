@@ -139,16 +139,16 @@ class Widget(Color, Style):
     
     def register_dirty(self) -> None:
         """向根方向汇报 脏"""
-        if not self._dirty:  # 只有在未被标记为脏时，才向上传递
-            self._dirty = True
-            if self.parent:
+        self._dirty = True
+        if self.parent:
+            if not self.parent._dirty: # 如果父节点为被标脏
                 self.parent.register_dirty()
 
     def register_layout_dirty(self) -> None:
         """向根方向传递 布局脏"""
-        if not self._layout_dirty:  # 只有在未被标记为布局脏时，才向上传递
-            self._layout_dirty = True
-            if self.parent:
+        self._layout_dirty = True
+        if self.parent:
+            if not self.parent._layout_dirty: # 如果父节点为被标脏
                 self.parent.register_layout_dirty()
 
     def mark_dirty(self) -> None:

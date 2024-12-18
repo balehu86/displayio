@@ -159,7 +159,6 @@ display.add_input_device(touch,encoder)
 
 def click_callback(widget,event):
     print('clicked!')
-    
     if label2 in hbox.children:
         hbox.remove(label2)
     else:
