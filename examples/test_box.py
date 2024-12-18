@@ -62,9 +62,6 @@ main_box = FlexBox(direction=Style.HORIZONTAL)
 vbox = FlexBox(direction=Style.VERTICAL,width=120,spacing = 10)
 main_box.add(vbox)
 
-hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
-vbox.add(hbox)
-
 fbox = FreeBox()
 main_box.add(fbox)
 
@@ -74,8 +71,11 @@ fbox.add(vbox_in_f)
 sbox=ScrollBox(background_color=0xffff)
 vbox.add(sbox)
 
+hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True,height=115,width=120)
+vbox.add(hbox)
+
 vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,
-                    height=240,
+                    height=300,
                   spacing = 10)
 sbox.add(vbox_in_s)
 # vbox_in_s.visibility=True
@@ -132,15 +132,19 @@ label5 = Label(
     rel_y = 10
     # background=0xffc0
 )
-button = Button(
-    text = 'b',
+button1 = Button(
+    text = 'b1',
     font = font,
-    font_scale = 3,
+    font_scale = 2,
 )
-
+button2 = Button(
+    text = 'b2',
+    font = font,
+    font_scale = 2,
+)
 hbox.add(label1, label2)
 
-vbox_in_f.add(label3, label4, button)
+vbox_in_f.add(button1,label3, label4, button2)
 fbox.add(label5)
 
 for w in range(10):
@@ -149,7 +153,7 @@ for w in range(10):
                         font=font,
                         background_color=random.getrandbits(16)))
 # 添加输入设备   
-touch=TouchPin(13,target_widget=button)
+touch=TouchPin(13,target_widget=button1)
 encoder = RotaryEncoder(pin_a=6, pin_b=5,strict=False,target_widget=sbox)
 display.add_input_device(touch,encoder)
 
@@ -157,12 +161,8 @@ def click_callback(event):
     print('clicked!')
     
     if label2 in hbox.children:
-        label1.set_text('out')
-        label1.set_color(background_color=0x54a0)
         hbox.remove(label2)
     else:
-        label1.set_text('in')
-        label1.set_color(background_color=0xd286)
         hbox.add(label2)
 def double_click_callback(event):
 #     if button.state==2:
@@ -183,12 +183,12 @@ def release_callback(event):
 def press_callback(event):
     print('press!')
     
-button.bind(EventType.PRESS, press_callback)
-button.bind(EventType.CLICK, click_callback)
-button.bind(EventType.DOUBLE_CLICK, double_click_callback)
-button.bind(EventType.LONG_PRESS, long_press_callback)
-button.bind(EventType.RELEASE, release_callback)
-button.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
+# button1.bind(EventType.PRESS, press_callback)
+button1.bind(EventType.CLICK, click_callback)
+# button1.bind(EventType.DOUBLE_CLICK, double_click_callback)
+# button1.bind(EventType.LONG_PRESS, long_press_callback)
+# button1.bind(EventType.RELEASE, release_callback)
+# button1.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
 
 def main():
