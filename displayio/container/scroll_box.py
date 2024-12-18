@@ -99,7 +99,7 @@ class ScrollBox(Container):
         self.child.layout(dx=0 - self.scroll_offset_x, dy=0 - self.scroll_offset_y,
                           width=actual_width, height=actual_height)
                 
-    def scroll(self,event) -> None:
+    def scroll(self,widget,event) -> None:
         """
         滚动方法, x和y为滚动的增量
         """

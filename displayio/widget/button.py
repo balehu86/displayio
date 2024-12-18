@@ -133,14 +133,14 @@ class Button(Label):
             self._content_dirty = True
             self.register_dirty()
 
-    def press(self,event) -> None:
+    def press(self,widget,event) -> None:
         """按钮按下,状态为STATE_PRESSED"""
         self.set_state(self.STATE_PRESSED)
 
-    def release(self,event) -> None:
+    def release(self,widget,event) -> None:
         self.set_state(self.STATE_DEFAULT)
     
-    def long_press_release(self,event) -> None:
+    def long_press_release(self,widget,event) -> None:
         self.set_state(self.STATE_DEFAULT)
     
 

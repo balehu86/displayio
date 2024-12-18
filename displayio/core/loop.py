@@ -1,8 +1,9 @@
 # ./core/loop.py
 from collections import deque
+from heapq import heappush, heappop  # 用于优先级队列管理任务
 import time
 from machine import Timer # type: ignore
-# from ..utils.decorator import fps, timeit, measure_iterations
+from ..utils.decorator import timeit
 
 class MainLoop:
     """事件循环类，管理布局、渲染和事件处理"""
@@ -12,6 +13,8 @@ class MainLoop:
         self.running = False
         # 事件队列，最多存10个事件
         self.event_queue = deque([],10,1)
+        # 优先级队列存储任务
+        self.task_queue = []
         # 检查是否到刷新屏幕的时间。
         if self.display.fps > 0 :
             self.frame_interval = 1/self.display.fps
@@ -33,7 +36,7 @@ class MainLoop:
         """启动事件循环"""
         self.running = True
         # 初始化输入检测定时器
-        self.input_timer.init(mode=Timer.PERIODIC,freq=500, callback=self._check_input)
+        self.input_timer.init(mode=Timer.PERIODIC,freq=550, callback=self._check_input)
         try:
             self._run(func)
         except KeyboardInterrupt:
@@ -151,28 +154,57 @@ class MainLoop:
             # 重置计数器
             self.frame_count = 0
             self.last_fps_time = current_time
+
+    def add_task(self, callback, period, priority=10, one_shot=False):
+        """添加一个新任务"""
+        task = Task(callback, period, priority, one_shot)
+        heappush(self.task_queue, task)
+
+    def run(self):
+        """运行调度器"""
+        while self.running:
+            current_time = time.ticks_ms()
+            if self.task_queue:
+                task = self.task_queue[0]  # 查看队列中的最高优先级任务
+                if time.ticks_diff(task.next_run, current_time) <= 0:
+                    heappop(self.task_queue)  # 移除任务
+                    if task.execute():  # 执行任务
+                        if not task.one_shot:
+                            task.next_run = current_time + task.period
+                            heappush(self.task_queue, task)  # 重新放入队列
+            time.sleep_ms(2)  # 短暂休眠以降低 CPU 占用率
+
+
+
+class Task:
+    """表示一个任务"""
+    def __init__(self, callback, period, priority, one_shot=False):
+        if isinstance(callback, type((lambda: (yield))())):
+            self.generator = callback  # 如果是生成器，保存生成器对象
+            self.callback = None
+        else:
+            self.generator = None
+            self.callback = callback  # 普通函数回调
+        self.callback = callback      # 任务的回调函数
+        self.period = period          # 任务的执行间隔（ms）
+        self.priority = priority      # 优先级，数值越小优先级越高
+        self.one_shot = one_shot      # 是否是单次任务
+        self.next_run = time.ticks_ms() + period  # 下次运行时间
+
+    def __lt__(self, other):
+        """比较任务，优先按时间排序；时间相同时按优先级排序。"""
+        if self.next_run == other.next_run:
+            return self.priority < other.priority
+        return self.next_run < other.next_run
     
-    # def widget_in_dirty_area(self, widget):
-    #     """
-    #     判断widget是否和dirty_area有重叠。
-    #     """
-    #     # 获取widget的边界
-    #     x2_min, y2_min, width2, height2 = widget.dx, widget.dy, widget.width, widget.height
-
-    #     for dirty_area in widget.parent.dirty_area_list:
-    #         # 获取dirty_area的边界
-    #         x1_min, y1_min, width1, height1 = dirty_area
-
-    #         x1_max = x1_min + width1 - 1  # 脏区域的右边界
-    #         y1_max = y1_min + height1 - 1 # 脏区域的上边界
-
-    #         x2_max = x2_min + width2 - 1  # widget的右边界
-    #         y2_max = y2_min + height2 - 1 # widget的上边界
-
-    #         # 检查是否有交集
-    #         if x1_min > x2_max or x2_min > x1_max:
-    #             return False  # 在水平轴上没有交集
-    #         if y1_min > y2_max or y2_min > y1_max:
-    #             return False  # 在垂直轴上没有交集
-
-    #         return True  # 存在交集
+    def execute(self):
+        """执行任务"""
+        if self.generator:
+            try:
+                next(self.generator)  # 执行生成器的下一步
+            except StopIteration:
+                return False  # 生成器已完成，标记任务结束
+        elif self.callback:
+            self.callback()  # 执行普通回调
+        return True  # 任务未结束
+    

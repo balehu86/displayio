@@ -183,7 +183,7 @@ class Widget(Color, Style):
         # 处理事件
         if event.type in self.event_listener:
             for callback_func in self.event_listener[event.type]:
-                callback_func(event)
+                callback_func(widget=self,event=event)
                 event.done()
         return event.is_handled()
 

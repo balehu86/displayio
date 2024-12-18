@@ -52,7 +52,7 @@ time.sleep(1)
 # 创建显示器
 display = Display(240, 240,output=output,
                   threaded=False,
-                  fps = 30,
+                  fps = 15,
                   show_fps = False,
                   partly_refresh = False
 )
@@ -149,38 +149,38 @@ fbox.add(label5)
 
 for w in range(10):
     vbox_in_s.add(Label(text=str(w)*5,
-                        height=15,
+                        height=10,
                         font=font,
                         background_color=random.getrandbits(16)))
 # 添加输入设备   
 touch=TouchPin(13,target_widget=button1)
-encoder = RotaryEncoder(pin_a=6, pin_b=5,strict=False,target_widget=sbox)
+encoder = RotaryEncoder(pin_a=5, pin_b=6,strict=False,target_widget=sbox)
 display.add_input_device(touch,encoder)
 
-def click_callback(event):
+def click_callback(widget,event):
     print('clicked!')
     
     if label2 in hbox.children:
         hbox.remove(label2)
     else:
         hbox.add(label2)
-def double_click_callback(event):
+def double_click_callback(widget,event):
 #     if button.state==2:
 #         button.set_enabled(True)
 #     else:
 #         button.set_enabled(False)
     print('double click!')
-def long_press_callback(event):
+def long_press_callback(widget,event):
     print('long press!')
 #     if label3.visibility:
 #         label3.hide()
 #     else:
 #         label3.unhide()
-def long_press_release_callback(event):
+def long_press_release_callback(widget,event):
     print('long press released!')
-def release_callback(event):
+def release_callback(widget,event):
     print('release!')
-def press_callback(event):
+def press_callback(widget,event):
     print('press!')
     
 # button1.bind(EventType.PRESS, press_callback)
