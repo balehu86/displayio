@@ -28,32 +28,37 @@ class Container(Widget):
                          transparent_color = transparent_color,
                          color_format = color_format)
         
-        # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
-        self.dirty_area_list = [[0,0,0,0]]
+        # # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
+        # self.dirty_area_list = [[0,0,0,0]]
         
     def add(self, *childs) -> None:
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
-            child.mark_dirty()
         self.children.extend(childs)
+
+        self.mark_dirty()
         self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
 
     def insert(self,index,child) -> None:
         """在指定位置插入元素"""
+        child.parent=self
         self.children.insert(index,child)
-        child.mark_dirty()
+        
+        self.mark_dirty()
         self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
 
     def replace(self,old_child,new_child) -> None:
         """将 old_child 替换换为 new_child"""
+        old_child.parent=None
+        new_child.parent=self
         self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
-        old_child.mark_dirty()
-        new_child.mark_dirty()
+        
+        self.mark_dirty()
         self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
@@ -64,16 +69,20 @@ class Container(Widget):
             child.parent = None
             if child in self.children:
                 self.children.remove(child)
-                child.mark_dirty()
+
+        self.mark_dirty()
         self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
 
     def clear(self) -> None:
         """清空容器中所有元素"""
+        for child in self.children:
+            child.parent = None
+        self.children.clear()
+
         self.mark_dirty()
         self.mark_content_dirty()
-        self.children.clear()
         self.register_dirty()
         self.register_layout_dirty()
 

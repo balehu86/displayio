@@ -81,8 +81,15 @@ class Widget(Color, Style):
         rel_y = self.rel_y
         # 处理绝对位置，它具有最高优先级
         # 没有绝对位置时，使用父容器位置加上相对偏移
-        self.dx = self.abs_x or (dx + rel_x)
-        self.dy = self.abs_y or (dy + rel_y)
+        actual_dx = self.abs_x or (dx + rel_x)
+        if self.dx != actual_dx:
+            self.dx = actual_dx
+            self.register_dirty()
+
+        actual_dy = self.abs_y or (dy + rel_y)
+        if self.dy != actual_dy:
+            self.dy = actual_dy
+            self.register_dirty()
 
         # 处理尺寸
         actual_width = (width-rel_x) if width is not None else 0
@@ -94,8 +101,7 @@ class Widget(Color, Style):
         if self.height != actual_height:
             self.height = actual_height
             self._content_dirty = True
-
-        self._dirty = True
+        # 重新layout结束,重置layout脏标记
         self._layout_dirty = False
     
     def resize(self, width = None, height = None):
@@ -133,15 +139,17 @@ class Widget(Color, Style):
     
     def register_dirty(self) -> None:
         """向根方向汇报 脏"""
-        self._dirty = True
-        if self.parent:
-            self.parent.register_dirty()
+        if not self._dirty:  # 只有在未被标记为脏时，才向上传递
+            self._dirty = True
+            if self.parent:
+                self.parent.register_dirty()
 
     def register_layout_dirty(self) -> None:
         """向根方向传递 布局脏"""
-        self._layout_dirty = True
-        if self.parent:
-            self.parent.register_layout_dirty()
+        if not self._layout_dirty:  # 只有在未被标记为布局脏时，才向上传递
+            self._layout_dirty = True
+            if self.parent:
+                self.parent.register_layout_dirty()
 
     def mark_dirty(self) -> None:
         self._dirty = True

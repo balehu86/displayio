@@ -55,10 +55,14 @@ class ScrollBox(Container):
                                EventType.ROTATE_TICK:[self.scroll],}
 
     def add(self, child) -> None:
-        """向容器中添加元素"""
+        """向滚动容器中添加元素"""
+        assert self.child is None, "scroll must have one child"
+        child.parent=self
         self.children.append(child)
         self.child = child
+
         self.mark_dirty()
+        self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
 
@@ -70,9 +74,6 @@ class ScrollBox(Container):
         """
         if not self.children:
             return
-
-        if len(self.children) != 1:
-            raise ValueError("ScrollBox must have exactly one child and be a Container")
 
         # 获取子元素的最小尺寸
         child_min_width, child_min_height = self.child._get_min_size()
@@ -102,12 +103,11 @@ class ScrollBox(Container):
         """
         滚动方法, x和y为滚动的增量
         """
-        print('hellp')
         if not self.children:
             raise ValueError("ScrollBox have no child")
-        x = event.data.get('rotate_direction', 0)
-        y = event.data.get('rotate_direction', 0)
-        print(x,y)
+        # x = event.data.get('rotate_direction', 0)
+        x=0
+        y = event.data.get('rotate_direction', 0) * 5
         # 限制水平滚动
         if self.is_scrollable_x:
             self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + x))
@@ -134,20 +134,18 @@ class ScrollBox(Container):
         
     @micropython.native
     def _crop_bitmap(self) -> None:
-        """
-        裁剪child的完整位图的对应区域
-        """
+        """裁剪child的完整位图的对应区域"""
         if self._bitmap is None:
             self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-        if self.child._dirty:
-            self._update_child_bitmap()
+        self._update_child_bitmap()
         self._bitmap.blit(self.child._bitmap, dx=(-1)*self.scroll_offset_x, dy=(-1)*self.scroll_offset_y)
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
-        if self.child._bitmap is None:
-            self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
-        self._render_child(self.child) # 获取到完整的child._bitmap
+        if self.child._dirty:
+            if self.child._bitmap is None:
+                self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
+            self._render_child(self.child) # 获取到完整的child._bitmap
 
     def _render_child(self, widget):
         """绘制整个屏幕的buffer"""
@@ -156,9 +154,9 @@ class ScrollBox(Container):
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
                 self.child._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
-                return    
-        for child in widget.children:
-            self._render_child(child)
+                return
+            for child in widget.children:
+                self._render_child(child)
 
     def hide(self):
         """重写 隐藏部件方法"""
