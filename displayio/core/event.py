@@ -56,14 +56,14 @@ class Event:
     Timed_Out = 999   # 超时
 
     """事件基类"""
-    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None):
+    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None, timestamp=0):
         self.type: EventType = event_type    # 事件类型
         if target_position is None and target_widget is None:
             raise ValueError("事件必须指定目标位置或目标组件")
         self.target_widget = target_widget   # 事件目标对象
         self.target_position = target_position    # 事件目标位置
         self.data = data or {}              # 事件相关数据
-        self.timestamp = 0                   # 事件发生时间戳
+        self.timestamp = timestamp                   # 事件发生时间戳
         self.status_code = self.Initializing
 
     def is_handled(self) -> bool:

@@ -31,7 +31,7 @@ class TouchPin(Input):
                 self.state = self.PRESS
                 self.press_start_time = current_time
                 return Event(self.PRESS, target_widget=self.target_widget,
-                             target_position=self.target_position)
+                             target_position=self.target_position, timestamp=current_time)
             
             # 检查长按
             press_duration = time.ticks_diff(current_time,self.press_start_time)
@@ -39,7 +39,7 @@ class TouchPin(Input):
                 if self.state != self.LONG_PRESS:
                     self.state = self.LONG_PRESS
                     return Event(self.LONG_PRESS, target_widget=self.target_widget,
-                                target_position=self.target_position)
+                                target_position=self.target_position, timestamp=current_time)
             
         else:# 触摸释放
             if self.state == self.IDLE:
@@ -49,7 +49,7 @@ class TouchPin(Input):
                 self.last_release_time = current_time
                 self.state = self.IDLE
                 return Event(self.LONG_PRESS_RELEASE, target_widget=self.target_widget,
-                             target_position=self.target_position)
+                             target_position=self.target_position, timestamp=current_time)
 
             if self.state == self.PRESS:
                 # 触摸持续时间
@@ -64,10 +64,10 @@ class TouchPin(Input):
                     # 先判断是否为双击
                     if click_interval <= self.double_click_max_interval:# 是双击
                         return Event(self.DOUBLE_CLICK, target_widget=self.target_widget, 
-                                     target_position=self.target_position)
+                                     target_position=self.target_position, timestamp=current_time)
                     else:# 不是双击
                         return Event(self.CLICK, target_widget=self.target_widget, 
-                                     target_position=self.target_position)
+                                     target_position=self.target_position, timestamp=current_time)
                 else: # 持续时长 (超过短按,不足长按) 或 (不足短按)
                     return Event(self.RELEASE, target_widget=self.target_widget, 
-                                     target_position=self.target_position)
+                                     target_position=self.target_position, timestamp=current_time)

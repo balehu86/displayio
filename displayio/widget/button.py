@@ -85,7 +85,7 @@ class Button(Label):
         
         self.event_listener = {EventType.CLICK:[self.release],
                                EventType.PRESS:[self.press],
-                            #    EventType.RELEASE:[self.release],
+                               EventType.RELEASE:[self.release],
                             #    EventType.LONG_PRESS:[self.press],
                                EventType.LONG_PRESS_RELEASE:[self.long_press_release],
                                EventType.DOUBLE_CLICK:[self.release],
@@ -104,7 +104,7 @@ class Button(Label):
         # 创建新的位图
         self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
         # 填充背景
-        self._bitmap.fill_rect(0, 0, self.width, self.height, style['background_color'])        
+        self._bitmap.fill(style['background_color'])
         # 绘制文本部分
         # 临时保存原来的颜色
         original_text_color = self.text_color
