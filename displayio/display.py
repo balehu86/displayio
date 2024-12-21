@@ -4,9 +4,24 @@ from .core.bitmap import Bitmap
 import time
 
 class Display:
-    def __init__(self, width, height, root=None,
+    def __init__(self, width:int, height:int, root=None,
                  output=None, inputs=[], fps=0, soft_timer=True,
                  show_fps=False, partly_refresh=True, threaded=True):
+        """显示器主程序
+
+        Args:
+            width (int): 显示器宽度
+            height (int): 显示器高度
+            root (_type_, optional): 元素树的根节点,通常为容器. Defaults to None.
+            output (_type_, optional): 输出驱动程序接口,将调用output.refresh()刷新buffer. Defaults to None.
+            inputs (list, optional): 输入设备,将调用input.check_input()检查输入设备状态. Defaults to [].
+            fps (int, optional): 目标FPS大小,fps <=0 时,不限制刷新速度. Defaults to 0.
+            soft_timer (bool, optional): 是否采用软件计时器调用输入设备检测. Defaults to True.
+            show_fps (bool, optional): 是否print FPS 和 IPS(input per second). Defaults to False.
+            partly_refresh (bool, optional): 是否开启局部刷新. Defaults to True.
+            threaded (bool, optional): 是否开启多线程将buffer写入显示器. Defaults to True.
+        """
+
         # 屏幕尺寸和根节点
         self.width = width
         self.height = height
