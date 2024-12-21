@@ -5,7 +5,7 @@ import time
 
 class Display:
     def __init__(self, width, height, root=None,
-                 output=None, inputs=[], fps=0,
+                 output=None, inputs=[], fps=0, soft_timer=True,
                  show_fps=False, partly_refresh=True, threaded=True):
         # 屏幕尺寸和根节点
         self.width = width
@@ -14,6 +14,8 @@ class Display:
         # 输入输出设备
         self.output = output
         self.inputs = inputs
+        # 输入设备是否采用软件定时器
+        self.soft_timer = soft_timer
         # 刷新频率和出否在命令行输出fps信息
         self.fps = fps # 默认0，不限制刷新频率
         self.show_fps = show_fps # 是否显示刷新率
