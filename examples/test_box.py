@@ -52,8 +52,9 @@ time.sleep(1)
 # 创建显示器
 display = Display(240, 240,output=output,
                   threaded=False,
-                  fps = 15,
-                  show_fps = False,
+                  fps = 30,
+                  show_fps = True,
+                  soft_timer = True,
                   partly_refresh = False
 )
 # 创建垂直布局容器
@@ -153,8 +154,8 @@ for w in range(10):
                         font=font,
                         background_color=random.getrandbits(16)))
 # 添加输入设备   
-touch=TouchPin(13,target_widget=vbox_in_s.children[0])
-encoder = RotaryEncoder(pin_a=5, pin_b=6,strict=False,target_widget=sbox)
+touch=TouchPin(4,target_widget=vbox_in_s.children[0])
+encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=False,target_widget=sbox)
 display.add_input_device(touch,encoder)
 
 def click_callback(widget,event):
