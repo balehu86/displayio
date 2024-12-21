@@ -56,7 +56,14 @@ class Bitmap:
         if self.format == framebuf.RGB565:  
             color = _swap_rgb565(color)
         self.fb.fill_rect(x, y, width, height, color)
-        
+
+    @micropython.native
+    def fill(self, color:int):
+        """填充整个区域"""
+        if self.format == framebuf.RGB565:  
+            color = _swap_rgb565(color)
+        self.fb.fill(color)
+ 
     @micropython.native
     def blit(self, source, dx:int=0, dy:int=0):
         """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""

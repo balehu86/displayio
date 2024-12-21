@@ -51,6 +51,7 @@ class RotaryEncoder(Input):
         
         :return: Event或None
         """
+        current_time = time.ticks_ms()
         # 获取当前状态
         new_code = (self.pin_a.value() << 1) | self.pin_b.value()
         if self.code == new_code: # 位置未发生改变，直接返回None
@@ -70,7 +71,7 @@ class RotaryEncoder(Input):
                          data={'rotate_direction': self.direction,
                                'rotate_tick_position': self.tick_position,
                                'rotate_position': self.position},
-                         target_widget=self.target_widget, target_position=self.target_position)
+                         target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
 
         # 如果有方向变化，则触发旋转事件
         # if self.direction == -1:
@@ -78,12 +79,12 @@ class RotaryEncoder(Input):
         #                  data={'rotate_direction': self.direction,
         #                        'rotate_tick_position': self.tick_position,
         #                        'rotate_position': self.position},
-        #                  target_widget=self.target_widget, target_position=self.target_position)
+        #                  target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
         # if self.direction == 1:
         #     return Event(self.ROTATE_RIGHT,
         #                  data={'rotate_direction': self.direction,
         #                        'rotate_tick_position': self.tick_position,
         #                        'rotate_position': self.position},
-        #                  target_widget=self.target_widget, target_position=self.target_position)
+        #                  target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
         # else: # 这个分支大概率不会执行,因为之前如果状态未改变或无效转移,函数会提前返回None
         #     return None

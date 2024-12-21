@@ -44,7 +44,7 @@ class Bar(Widget):
         bitmap = Bitmap(self.width, self.height)
         
         # 填充背景
-        bitmap.fill_rect(0, 0, self.width, self.height, self.background)
+        bitmap.fill(self.background)
         
         if self.text and self.font:
             # 计算文本总宽度

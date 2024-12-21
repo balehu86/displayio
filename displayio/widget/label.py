@@ -121,7 +121,7 @@ class Label(Widget):
         # 创建新的位图
         self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
         # 填充背景
-        self._bitmap.fill_rect(0, 0, self.width, self.height, self.background_color)
+        self._bitmap.fill(self.background_color)
         # 绘制文字
         self._create_text_bitmap()
         # 计算文本位置
@@ -141,7 +141,7 @@ class Label(Widget):
             return self._bitmap
         else: # 隐藏
             self._empty_bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-            self._empty_bitmap.fill_rect(0,0,self.width,self.height,self.background_color)
+            self._empty_bitmap.fill(self.background_color)
             return self._empty_bitmap
     
     def set_text(self, text) -> None:

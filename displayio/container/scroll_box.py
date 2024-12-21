@@ -129,7 +129,7 @@ class ScrollBox(Container):
         else:
             if self._empty_bitmap is None:
                 self._empty_bitmap = Bitmap(self.width,self.height, transparent_color=self.transparent_color, format=self.color_format)
-                self._empty_bitmap.fill_rect(0,0,self.width,self.height,self.background_color)
+                self._empty_bitmap.fill(self.background_color)
             return self._empty_bitmap
         
     @micropython.native
@@ -157,6 +157,21 @@ class ScrollBox(Container):
                 return
             for child in widget.children:
                 self._render_child(child)
+
+    def register_dirty(self) -> None:
+        """向根方向汇报 脏"""
+        self._dirty = True
+        self._content_dirty = True
+        if self.parent:
+            if not self.parent._dirty: # 如果父节点为被标脏
+                self.parent.register_dirty()
+
+    def mark_dirty(self) -> None:
+        """向末梢传递 脏"""
+        self._dirty = True
+        self._content_dirty = True
+        for child in self.children:
+            child.mark_dirty()
 
     def hide(self):
         """重写 隐藏部件方法"""
