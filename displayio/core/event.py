@@ -34,7 +34,7 @@ class EventType:
     ROTATE_TICK_LEFT = 21 # 一个左旋tick
     ROTATE_TICK_RIGHT =22 # 一个右旋tick
     # 滚动
-    SCROLL = 23
+    SCROLL = 23           # 滚动
 
     CUSTOM = 99           # 自定义事件
 """
@@ -64,6 +64,7 @@ class Event:
         self.target_position = target_position    # 事件目标位置
         self.data = data or {}              # 事件相关数据
         self.timestamp = timestamp                   # 事件发生时间戳
+        self.priority = 10  # 事件优先级
         self.status_code = self.Initializing
 
     def is_handled(self) -> bool:
@@ -75,4 +76,10 @@ class Event:
     def done(self) -> None:
         if self.status_code != self.Completed:
             self.status_code = self.Completed 
+    
+    def __lt__(self, other):
+        """比较任务，优先按时间排序；时间相同时按优先级排序。"""
+        if self.timestamp == other.timestamp:
+            return self.priority < other.priority
+        return self.timestamp < other.timestamp
 

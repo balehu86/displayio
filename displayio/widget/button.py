@@ -10,8 +10,8 @@ def _darken_color(color, factor):
     将16位RGB颜色调暗
     
     参数:
-        color: 原始颜色（16位RGB）
-        factor: 暗化因子（0-1）
+        color: 原始颜色(16位RGB)
+        factor: 暗化因子(0-1)
     """
     # 提取RGB分量
     r = (color >> 11) & 0x1F

@@ -4,14 +4,16 @@ from .base_input import Input
 from ..core.event import Event
 
 class Switch(Input):
-    def __init__(self, pin, mode='pull_up',
+    PULL_UP = Pin.PULL_UP
+    PULL_DOWN = Pin.PULL_DOWN
+    def __init__(self, pin, mode=PULL_UP,
                  
                  target_widget=None, target_position=None):
 
         super().__init__(target_widget=target_widget,target_position=target_position)
-        self.mode = Pin.PULL_UP if mode == 'pull_up' else Pin.PULL_DOWN
-        self.threshold = 0 if mode == 'pull_up' else 1
-        self.pin = Pin(pin, Pin.IN, self.mode)
+        self.mode = mode # 开关的上拉下拉模式
+        self.threshold = 0 if mode == self.PULL_UP else 1
+        self.pin = Pin(pin, Pin.IN, mode)
         self.press_start_time = 0 # 按下的时间
         self.last_release_time = 0 # 上一次确认触摸释放的时间，用于检测双击
         # 触摸时间参数
@@ -58,7 +60,9 @@ class Switch(Input):
                 # 触摸间隔
                 click_interval = time.ticks_diff(self.press_start_time, self.last_release_time)
                 # 有效单次点击检测
-                if self.click_min_duration < press_duration < self.click_max_duration:
+                if press_duration <= self.click_min_duration : # 持续时长 (不足短按)
+                    return
+                elif self.click_min_duration < press_duration < self.click_max_duration:
                     # 重置状态
                     self.last_release_time = current_time
                     self.state = self.IDLE
@@ -69,8 +73,6 @@ class Switch(Input):
                     else:# 不是双击
                         return Event(self.CLICK, target_widget=self.target_widget, 
                                      target_position=self.target_position, timestamp=current_time)
-                elif press_duration <= self.click_min_duration : # 持续时长 (不足短按)
-                    return
                 else:# 超过短按,不足长按
                     # 重置状态
                     self.last_release_time = current_time
