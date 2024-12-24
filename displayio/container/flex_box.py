@@ -12,7 +12,7 @@ class FlexBox(Container):
                  direction=Container.HORIZONTAL, spacing=0, align=Container.ALIGN_START, reverse=False,
 
                  abs_x=None, abs_y=None,
-                 rel_x=0, rel_y=0,
+                 rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
                  background_color=Container.WHITE,
@@ -28,7 +28,7 @@ class FlexBox(Container):
             reverse: 元素排列顺序,False 为顺序排列,True为倒序
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
+                         rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,

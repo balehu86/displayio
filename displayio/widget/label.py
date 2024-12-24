@@ -20,7 +20,7 @@ class Label(Widget):
                  padding=(2, 2, 2, 2),  # 文字边距,(左,上,右,下)
 
                  abs_x=None, abs_y=None,
-                 rel_x=0,rel_y=0,
+                 rel_x=0,rel_y=0, dz=0,
                  width=None,height=None,
                  visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=Widget.Label_GREEN, # 背景色（默认绿色）
@@ -38,7 +38,7 @@ class Label(Widget):
             padding: 内边距，格式为(左,上,右,下)
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
+                         rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,

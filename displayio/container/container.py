@@ -1,6 +1,8 @@
 # ./core/container.py
 from ..core.widget import Widget
 
+from heapq import heappush
+
 class Container(Widget):
     """
     容器基类
@@ -8,7 +10,7 @@ class Container(Widget):
     """
     def __init__(self,
                  abs_x=None, abs_y=None,
-                 rel_x=0, rel_y=0,
+                 rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Widget.STATE_DEFAULT,
                  background_color=Widget.WHITE,
@@ -21,7 +23,7 @@ class Container(Widget):
             pass
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
+                         rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,
@@ -29,39 +31,39 @@ class Container(Widget):
                          color_format = color_format)
         
         # # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
-        # self.dirty_area_list = [[0,0,0,0]]
+        self.dirty_area_list = [[0,0,0,0]]
         
     def add(self, *childs) -> None:
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
-        self.children.extend(childs)
+            heappush(self.children, child)
 
         self.mark_dirty()
         self.mark_content_dirty()
         self.register_dirty()
         self.register_layout_dirty()
 
-    def insert(self,index,child) -> None:
-        """在指定位置插入元素"""
-        child.parent=self
-        self.children.insert(index,child)
+    # def insert(self,index,child) -> None:
+    #     """在指定位置插入元素"""
+    #     child.parent=self
+    #     self.children.insert(index,child)
         
-        self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+    #     self.mark_dirty()
+    #     self.mark_content_dirty()
+    #     self.register_dirty()
+    #     self.register_layout_dirty()
 
-    def replace(self,old_child,new_child) -> None:
-        """将 old_child 替换换为 new_child"""
-        old_child.parent=None
-        new_child.parent=self
-        self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
+    # def replace(self,old_child,new_child) -> None:
+    #     """将 old_child 替换换为 new_child"""
+    #     old_child.parent=None
+    #     new_child.parent=self
+    #     self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
         
-        self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+    #     self.mark_dirty()
+    #     self.mark_content_dirty()
+    #     self.register_dirty()
+    #     self.register_layout_dirty()
 
     def remove(self, *childs) -> None:
         """从容器中移除元素"""

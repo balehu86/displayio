@@ -40,7 +40,7 @@ class Button(Label):
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
                  
                  abs_x=None, abs_y=None,
-                 rel_x=0,rel_y=0,
+                 rel_x=0,rel_y=0, dz=0,
                  width=None,height=None,
                  visibility=True, state=Label.STATE_DEFAULT,
                  background_color= Label.Button_BLUE, # 默认蓝色背景
@@ -60,7 +60,7 @@ class Button(Label):
                          padding = padding,
 
                          abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
+                         rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,

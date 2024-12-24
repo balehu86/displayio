@@ -12,7 +12,7 @@ class ScrollBox(Container):
     """
     def __init__(self,                 
                  abs_x=None, abs_y=None,
-                 rel_x=0, rel_y=0,
+                 rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
                  background_color=Container.WHITE,
@@ -32,7 +32,7 @@ class ScrollBox(Container):
             pass
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
-                         rel_x = rel_x, rel_y = rel_y,
+                         rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
                          background_color = background_color,
