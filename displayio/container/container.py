@@ -133,18 +133,6 @@ class Container(Widget):
         for child in self.children:
             child.hide().unhide()
 
-    def mark_dirty(self) -> None:
-        """向末梢传递 脏"""
-        self._dirty = True
-        for child in self.children:
-            child.mark_dirty()
-
-    def mark_content_dirty(self) -> None:
-        """向末梢传递 内容脏"""
-        self._content_dirty = True
-        for child in self.children:
-            child.mark_content_dirty()
-
     def event_handler(self, event) -> None:
         """处理事件
         首先检查容器自己是否有对应的处理器，如果有则看自己是否处理，不处理则传递给子组件

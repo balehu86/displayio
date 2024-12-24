@@ -205,7 +205,7 @@ class ST7789:
         self.soft_reset()
         # 退出睡眠模式
         self.set_sleep_mode(False)
-        time.sleep_ms(120)
+        time.sleep_ms(10)
         # 设置颜色模式
         self.set_color_mode(color_mode)
         delay_ms(50)
@@ -229,7 +229,7 @@ class ST7789:
         self.fill(0)
         # 打开显示
         self.write(ST77XX_DISPON)
-        delay_ms(500)
+        delay_ms(50)
 
     def _encode_pos(self, x, y):
         """Encode a postion into bytes."""
@@ -272,10 +272,10 @@ class ST7789:
     def fill(self, color):
         self.fill_rect(0, 0, self.width, self.height, color)
 
-    def refresh(self, bitmap_memview, dx=0, dy=0, width=0, height=0):
+    def refresh(self, buffer, dx=0, dy=0, width=0, height=0):
         """将位图数据刷新到显示屏"""  
         self.set_window(dx, dy, dx + width - 1, dy + height - 1)     
-        self.write_data(bitmap_memview)
+        self.write_data(buffer)
 
     def _thread_refresh_wrapper(self, args, lock):
         """线程刷新的包装器，增加线程生命周期管理"""
@@ -283,14 +283,14 @@ class ST7789:
         try:
             while args['thread_running']:
                 # 使用实例方法和实例属性
-                if old_buffer != args['bitmap_memview']:
+                if old_buffer != args['buffer']:
                     with lock:
                         self.set_window(
                             args['dx'], args['dy'], 
                             args['dx'] + args['width'] - 1, 
                             args['dy'] + args['height'] - 1)
-                        self.write_data(args['bitmap_memview'])
-                        old_buffer = args['bitmap_memview']
+                        self.write_data(args['buffer'])
+                        old_buffer = args['buffer']
                 time.sleep_ms(3)
         except Exception as e:
             print(f"Thread refresh error: {e}")

@@ -15,7 +15,7 @@ class Widget(Color, Style):
 
     def __init__(self,
                  abs_x=None, abs_y=None,
-                 rel_x=0, rel_y=0,
+                 rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=STATE_DEFAULT,
                  background_color=Color.WHITE, # 默认白色
@@ -28,6 +28,8 @@ class Widget(Color, Style):
         # 目标位置，由布局系统确定
         self.dx = abs_x if abs_x is not None else 0
         self.dy = abs_y if abs_y is not None else 0
+        # 部件在z轴方向上的深度
+        self.dz = dz
         # widget 是否可见
         self.visibility = visibility
         self.width, self.height = width, height
@@ -152,10 +154,16 @@ class Widget(Color, Style):
                 self.parent.register_layout_dirty()
 
     def mark_dirty(self) -> None:
+        """向末梢传递 脏"""
         self._dirty = True
+        for child in self.children:
+            child.mark_dirty()
     
     def mark_content_dirty(self) -> None:
+        """向末梢传递 内容脏"""
         self._content_dirty = True
+        for child in self.children:
+            child.mark_content_dirty()
 
     def event_handler(self, event) -> bool:
         """处理事件
@@ -223,3 +231,7 @@ class Widget(Color, Style):
         """析构函数,在部件被销毁时被调用"""
         if self.parent is not None:
             self.parent.children.remove(self)
+
+    def __lt__(self, other):
+        """比较图层，按优先级排序。"""
+        return self.dz < other.dz

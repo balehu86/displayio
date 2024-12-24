@@ -53,7 +53,7 @@ class Display:
             self.lock=_thread.allocate_lock()
             self.thread_running = True
             # 传递给线程的可变类型参数
-            self.thread_args = {'bitmap_memview':memoryview(init_buffer),\
+            self.thread_args = {'buffer':init_buffer,\
                                 'thread_running':self.thread_running,
                                 'dx':0, 'dy':0, 'width':self.width,\
                                 'height':self.height}
@@ -70,9 +70,7 @@ class Display:
         self.root.height_resizable = False
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
-            self.root._bitmap = Bitmap(self.root.width,self.root.height,
-                                       transparent_color=self.root.transparent_color,
-                                       format=Bitmap.RGB565)
+            self.root._bitmap = Bitmap(self.root.width,self.root.height, transparent_color=self.root.transparent_color, format=Bitmap.RGB565)
     
     def add_event(self, event):
         """添加事件到事件循环"""
