@@ -4,11 +4,14 @@ from heapq import heappush, heappop  # 用于优先级队列管理任务
 import time
 from machine import Timer # type: ignore
 from ..utils.decorator import timeit
+from .widget import DirtySystem
 
 class MainLoop:
     """事件循环类，管理布局、渲染和事件处理"""
     def __init__(self, display):
         self.display = display
+        # 脏区域全局共享实例
+        self.dirty_system = DirtySystem()
         # 标记是否运行
         self.running = False
         # 事件队列，最多存10个事件
@@ -83,21 +86,23 @@ class MainLoop:
 
     def _update_layout(self):
         """更新布局"""
-        if self.display.root._layout_dirty:
+        if self.dirty_system.layout_dirty:
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
-
+        self.dirty_system.layout_dirty = False
+        
     def _update_display(self):
         """更新显示"""
-        if self.display.root._dirty:
+        if self.dirty_system.area != [[0,0,0,0]]:
             self._render_widget(self.display.root)
+            self.dirty_system.clear()
 
     def _render_widget(self, widget):
         """递归渲染widget及其子组件
                 任何具有get_bitmap的组件将被视为组件树的末端
         """
-        if widget._dirty or self.widget_in_dirty_area(widget):
-            widget._dirty = False
-            if hasattr(widget, 'get_bitmap'):
+        if widget.widget_in_dirty_area():
+            # 任何具有get_bitmap的组件将被视为组件树的末端
+            if hasattr(widget, 'get_bitmap'):# 如果具有git_bitmap()
                 bitmap = widget.get_bitmap()
                 if self.display.threaded:
                     with self.display.lock:
@@ -107,27 +112,27 @@ class MainLoop:
                         self.display.thread_args['width'] = widget.width
                         self.display.thread_args['height'] = widget.height   
                 else:
-                    self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
-                return # 任何具有get_bitmap的组件将被视为组件树的末端
-            for child in widget.children:
-                self._render_widget(child)
+                    self.display.output.refresh(bitmap.buffer, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
+            else:# 如果没有git_bitmap()
+                for child in widget.children:
+                    self._render_widget(child)
     
     def _update_display_fully(self):
         """全屏刷新"""
-        if self.display.root._dirty:
-            self._render_widget(self.display.root)
+        if self.dirty_system.area != [[0,0,0,0]]:
+            self._render_widget_fully(self.display.root)
+            self.dirty_system.clear()
             self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
 
     def _render_widget_fully(self, widget):
         """绘制整个屏幕的buffer"""
-        if widget._dirty or self.widget_in_dirty_area(widget):
-            widget._dirty = False
+        if  widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
                 self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
-                return
-            for child in widget.children:
-                self._render_widget_fully(child)
+            else:
+                for child in widget.children:
+                    self._render_widget_fully(child)
 
     def update_display(self):
         # 确认 局部刷新还是全局刷新
@@ -180,26 +185,6 @@ class MainLoop:
                 task.next_run = time.ticks_add(current_time, task.period)
                 heappush(self.task_queue, task)  # 重新放入队列
 
-    def widget_in_dirty_area(self, widget):
-        """判断widget是否和dirty_area有重叠。"""
-        # 获取widget的边界
-        x2_min, y2_min, width2, height2 = widget.dx, widget.dy, widget.width, widget.height
-        if widget.parent is None: # 如果没有父节点,则直接返回
-            return False
-        for dirty_area in widget.parent.dirty_area_list:
-            # 获取dirty_area的边界
-            x1_min, y1_min, width1, height1 = dirty_area
-            x1_max = x1_min + width1 - 1  # 脏区域的右边界
-            y1_max = y1_min + height1 - 1 # 脏区域的上边界
-            x2_max = x2_min + width2 - 1  # widget的右边界
-            y2_max = y2_min + height2 - 1 # widget的上边界
-            # 检查是否有交集
-            if x1_min > x2_max or x2_min > x1_max:
-                return False  # 在水平轴上没有交集
-            if y1_min > y2_max or y2_min > y1_max:
-                return False  # 在垂直轴上没有交集
-            return True  # 存在交集
-
 class Task:
     """表示一个任务"""
     def __init__(self, callback, period=0, priority=10, one_shot=False, on_complete=None):
@@ -235,4 +220,3 @@ class Task:
             if self.one_shot and self.on_complete:  # 单次任务完成后执行回调
                 self.on_complete()
         return not self.one_shot  # 对于单次任务，标记结束
-    

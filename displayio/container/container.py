@@ -30,9 +30,6 @@ class Container(Widget):
                          transparent_color = transparent_color,
                          color_format = color_format)
         
-        # # 脏区域列表,用来处理遮挡问题,每个列表为 [x, y, width, height]
-        self.dirty_area_list = [[0,0,0,0]]
-        
     def add(self, *childs) -> None:
         """向容器中添加元素"""
         for child in childs:
@@ -40,9 +37,7 @@ class Container(Widget):
             heappush(self.children, child)
 
         self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+        self.dirty_system.layout_dirty = True
 
     # def insert(self,index,child) -> None:
     #     """在指定位置插入元素"""
@@ -73,9 +68,7 @@ class Container(Widget):
                 self.children.remove(child)
 
         self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+        self.dirty_system.layout_dirty = True
 
     def clear(self) -> None:
         """清空容器中所有元素"""
@@ -84,9 +77,7 @@ class Container(Widget):
         self.children.clear()
 
         self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+        self.dirty_system.layout_dirty = True
 
     def layout(self, dx=0, dy=0, width=None, height=None) -> None:
         """在这里重写布局方法,确保先更新自身位置和大小"""
@@ -122,16 +113,16 @@ class Container(Widget):
     def hide(self) -> None:
         """隐藏容器"""
         self.visibility = False
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
             child.hide()
 
     def unhide(self) -> None:
         """取消隐藏容器"""
         self.visibility = True
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
-            child.hide().unhide()
+            child.unhide()
 
     def event_handler(self, event) -> None:
         """处理事件
@@ -147,4 +138,3 @@ class Container(Widget):
                     break
                 else: # 已处理
                     child.event_handler(event)
-    

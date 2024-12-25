@@ -68,14 +68,12 @@ class FreeBox(Container):
             raise ValueError(f'子元素尺寸大于free容器尺寸,或有元素超出屏幕范围,请调整子元素的初始化参数.\n    容器宽高{self.width} {self.height},组件所需尺寸{min_width} {min_height}')
          
         for child in self.children:
-            # 应用布局,元素的layout()会将元素自己_layout_dirty = False
             child_min_width, child_min_height = child._get_min_size()
-
             # 确定实际使用的宽度,如果灵活尺寸则取灵活尺寸，否则取child_min_width固定尺寸
             actual_width = self.width if child.width_resizable else child_min_width
             # 确定实际使用的高度
             actual_height = self.height if child.height_resizable else child_min_height
-
+            # 应用布局
             child.layout(dx = self.dx, dy = self.dy, 
                          width = actual_width, height = actual_height)
     

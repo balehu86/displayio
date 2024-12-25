@@ -1,5 +1,6 @@
 # ./core/widget.py
 from .style import Color, Style
+from .dirty import DirtySystem
 
 class Widget(Color, Style):
     # widget状态枚举
@@ -45,22 +46,13 @@ class Widget(Color, Style):
         self._bitmap = None
         self._empty_bitmap = None
         """脏标记解释：    警告:任何具有get_bitmap的组件将被视为组件树的末端
-        _dirty: 部件是否需要重绘,只用于发起重绘,
-            是否重绘缓存的bitmap取决于_content_dirty.
-            在调用Widget的部分设置函数时标记,并向根部传递,
+        _dirty: 部件是否需要重绘,用于发起重绘,
             在Display的事件循环render_widget()中调用get_bitmap()后取消标记。
-        _content_dirty: 部件的内容是否需要重绘,用于重绘部件实例缓存的bitmap,
-            在调用Widget的部分设置函数时标记,  不会传递！！！
-            在Display的事件循环render_widget()中调用get_bitmap()后取消标记。
-        _layout_dirty: 部件的布局是否需要重新计算,并重新布局,
-            在调用widget的部分设置和container的布局树结构发生改变时标记,并向根部传递,
-            在Widget的layout()中,重新布局后取消。
         """
         # 绘制系统的脏标记
-        self._dirty = True # 触发刷新检查
-        self._content_dirty = True # 触发重绘
-        # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
-        self._layout_dirty = True
+        self._dirty = True # 存在本地，触发触发重绘
+        # 脏区域系统
+        self.dirty_system = DirtySystem()
         # 部件继承关系
         self.parent = None
         # 容器的子元素
@@ -79,32 +71,39 @@ class Widget(Color, Style):
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
         如果位置或大小发生变化，标记需要重绘
         """
-        rel_x = self.rel_x
-        rel_y = self.rel_y
+        # 将初始区域记录
+        original_dx, original_dy = self.dx, self.dy
+        original_width = self.width if self.width is not None else 0
+        original_height = self.height if self.height is not None else 0
+        # 标记布局是否发生改变
+        changed = False
+        rel_x, rel_y = self.rel_x, self.rel_y
         # 处理绝对位置，它具有最高优先级
         # 没有绝对位置时，使用父容器位置加上相对偏移
         actual_dx = self.abs_x or (dx + rel_x)
+        actual_dy = self.abs_y or (dy + rel_y)
         if self.dx != actual_dx:
             self.dx = actual_dx
-            self.register_dirty()
-
-        actual_dy = self.abs_y or (dy + rel_y)
+            changed = True
         if self.dy != actual_dy:
             self.dy = actual_dy
-            self.register_dirty()
-
+            changed = True
+        
         # 处理尺寸
         actual_width = (width-rel_x) if width is not None else 0
+        actual_height = (height-rel_y) if height is not None else 0
         if self.width != actual_width:
             self.width = actual_width
-            self._content_dirty = True
-
-        actual_height = (height-rel_y) if height is not None else 0
+            changed = True
+            self._dirty = True
         if self.height != actual_height:
             self.height = actual_height
-            self._content_dirty = True
-        # 重新layout结束,重置layout脏标记
-        self._layout_dirty = False
+            changed = True
+            self._dirty = True
+
+        if changed: # 如果发生改变，则将原始区域和重新布局后的区域标脏
+            self.dirty_system.add(original_dx, original_dy, original_width, original_height)
+            self.dirty_system.add(self.dx, self.dy, self.width, self.height)
     
     def resize(self, width = None, height = None):
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
@@ -115,18 +114,18 @@ class Widget(Color, Style):
         """
         self.width = width if self.width_resizable and self.width != width and width !=None else self.width
         self.height = height if self.height_resizable and self.height != height and height != None else self.height
-        self._content_dirty = True
-        self.register_layout_dirty()
+        self._dirty = True
+        self.dirty_system.layout_dirty = True
 
     def hide(self) -> None:
         """隐藏部件"""
         self.visibility = False
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         
     def unhide(self) -> None:
         """取消隐藏部件"""
         self.visibility = True
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         
     def _get_min_size(self) -> tuple[int, int]:
         """
@@ -138,32 +137,12 @@ class Widget(Color, Style):
         height = self.height if not self.height_resizable else 0
 
         return width+self.rel_x, height+self.rel_y
-    
-    def register_dirty(self) -> None:
-        """向根方向汇报 脏"""
-        self._dirty = True
-        if self.parent:
-            if not self.parent._dirty: # 如果父节点为被标脏
-                self.parent.register_dirty()
-
-    def register_layout_dirty(self) -> None:
-        """向根方向传递 布局脏"""
-        self._layout_dirty = True
-        if self.parent:
-            if not self.parent._layout_dirty: # 如果父节点为被标脏
-                self.parent.register_layout_dirty()
 
     def mark_dirty(self) -> None:
         """向末梢传递 脏"""
         self._dirty = True
         for child in self.children:
             child.mark_dirty()
-    
-    def mark_content_dirty(self) -> None:
-        """向末梢传递 内容脏"""
-        self._content_dirty = True
-        for child in self.children:
-            child.mark_content_dirty()
 
     def event_handler(self, event) -> bool:
         """处理事件
@@ -235,3 +214,15 @@ class Widget(Color, Style):
     def __lt__(self, other):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
+
+    def widget_in_dirty_area(self):
+        """检查widget是否和脏区域有交集"""
+        x2_min, y2_min, x2_max, y2_max = self.dx, self.dy, self.dx+self.width-1, self.dy+self.height-1
+        for dirty_area in self.dirty_system.area:
+            x1_min, y1_min, x1_max, y1_max = dirty_area
+            # 检查是否有交集
+            if x1_min > x2_max or x2_min > x1_max:
+                return False  # 在水平轴上没有交集
+            if y1_min > y2_max or y2_min > y1_max:
+                return False  # 在垂直轴上没有交集
+            return True  # 存在交集

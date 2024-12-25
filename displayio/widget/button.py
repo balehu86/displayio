@@ -91,8 +91,6 @@ class Button(Label):
                                EventType.DOUBLE_CLICK:[self.release],
                                }
         
-    
-    
     @micropython.native
     def _create_bitmap(self) -> None:
         """
@@ -124,14 +122,14 @@ class Button(Label):
         if new_state != self.state:
             self.enabled = enabled
             self.state = new_state
-            self._content_dirty = True
-            self.register_dirty()
+            self._dirty = True
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     def set_state(self, state) -> None:
         if state in self.styles and self.state != state:
             self.state = state
-            self._content_dirty = True
-            self.register_dirty()
+            self._dirty = True
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     def press(self,widget,event) -> None:
         """按钮按下,状态为STATE_PRESSED"""

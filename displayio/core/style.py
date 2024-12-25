@@ -37,11 +37,3 @@ class Style:
     # 方向
     HORIZONTAL = 0
     VERTICAL = 1
-
-    # def __init__(self, abs_x = None, abs_y = None,
-    #              rel_x = None, rel_y = None,
-    #              width = None, height = None,
-    #              visibility = True, state = Container.STATE_DEFAULT,
-    #              background_color = 0xffff,
-    #              transparent_color = PINK):
-    #     pass

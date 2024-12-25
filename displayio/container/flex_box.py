@@ -156,7 +156,7 @@ class FlexBox(Container):
 
             if self.reverse:
                 dx -= (actual_width + self.spacing)
-            # 应用布局,元素的layout()会将元素自己_layout_dirty = False
+            # 应用布局
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)           
             if not self.reverse:
@@ -202,7 +202,7 @@ class FlexBox(Container):
 
             if self.reverse:
                 dy -= (actual_height + self.spacing)
-            # 应用布局,元素的layout()会将元素自己_layout_dirty = False
+            # 应用布局
             child.layout(dx = dx, dy = dy,
                          width = actual_width, height = actual_height)
             if not self.reverse:

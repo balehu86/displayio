@@ -33,7 +33,7 @@ class Label(Widget):
             text: 显示的文本内容
             font: 字体数据对象，包含点阵信息
             font_scale: 字体放大系数
-            text_color: 文字颜色（16位RGB颜色）
+            text_color: 文字颜色(16位RGB颜色)
             align: 文本对齐方式
             padding: 内边距，格式为(左,上,右,下)
         """
@@ -135,9 +135,9 @@ class Label(Widget):
         如果需要重绘，先创建新的位图
         """
         if self.visibility: # 未隐藏
-            if self._content_dirty: # 如果脏，则重绘bitmap
+            if self._dirty: # 如果脏，则重绘bitmap
                 self._create_bitmap()
-                self._content_dirty = False
+                self._dirty = False
             return self._bitmap
         else: # 隐藏
             self._empty_bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
@@ -149,16 +149,16 @@ class Label(Widget):
         if self.text != text:
             self.text = text
             self.text_width = self.font_width * len(text) * self.font_scale
-            self._content_dirty = True
-            self.register_dirty()
+            self._dirty = True
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_color(self, text_color=None, background_color=None) -> None:
         """设置文本和背景颜色"""
         if text_color is not None:
             self.text_color = text_color
         if background_color is not None:
             self.background_color = background_color
-        self._content_dirty = True
-        self.register_dirty()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_font(self,font) -> None:
         """设置字体"""
         self.font = font
@@ -168,18 +168,18 @@ class Label(Widget):
         self.font_rle = font[b'RLE'][0]
         self.text_width = self.font_width * len(self.text) * self.font_scale
         self.text_height = self.font_height * self.font_scale
-        self._content_dirty = True
-        self.register_dirty()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_align(self,align) -> None:
         """设置文本对齐"""
         self.align = align
-        self._content_dirty = True
-        self.register_dirty()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_padding(self,padding) -> None:
         """设置文本边距"""
         self.padding = padding
-        self._content_dirty = True
-        self.register_dirty()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     def focus(self):
         pass
