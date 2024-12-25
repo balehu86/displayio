@@ -43,9 +43,8 @@ output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
 """演示标签和按钮的使用"""
-touch=TouchPin(12,target_position=[239,239])
 # 创建显示器
-display = Display(240, 240,output=output,inputs=[touch],
+display = Display(240, 240,output=output,
                   threaded=False,
                   fps = 30,
                   show_fps = True,
@@ -106,32 +105,35 @@ box2.add(button)
 box2.add(label3)
 box2.add(label4)
 
-def click_callback(event):
+# 添加输入设备  
+touch=TouchPin(4,target_widget = button)
+display.add_input_device(touch)
+def click_callback(widget,event):
     print('clicked!')
     
-#     if box1 in main_box.children:
-#         label1.set_text('in')
-#         main_box.remove(box1)
-#     else:
-#         label1.set_text('#')
-#         main_box.add(box1)
-def double_click_callback(event):
+    if box1 in main_box.children:
+        label1.set_text('in')
+        main_box.remove(box1)
+    else:
+        label1.set_text('#')
+        main_box.add(box1)
+def double_click_callback(widget,event):
 #     if button.state==2:
 #         button.set_enabled(True)
 #     else:
 #         button.set_enabled(False)
     print('double click!')
-def long_press_callback(event):
+def long_press_callback(widget,event):
     print('long press!')
     
 #     if label3.visibility:
 #         label3.hide()
 #     else:
 #         label3.unhide()
-def long_press_release_callback(event):
+def long_press_release_callback(widget,event):
     print('long press released!')
 
-def release_callback(event):
+def release_callback(widget,event):
     print('release!')
 button.bind(EventType.CLICK, click_callback)
 button.bind(EventType.DOUBLE_CLICK, double_click_callback)
