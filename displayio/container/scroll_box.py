@@ -2,6 +2,7 @@
 from .container import Container
 from ..core.bitmap import Bitmap
 from ..core.event import EventType
+from ..core.dirty import DirtySystem
 
 import micropython # type: ignore
 
@@ -58,13 +59,21 @@ class ScrollBox(Container):
         """向滚动容器中添加元素"""
         assert self.child is None, "scroll must have one child"
         child.parent=self
-        self.children.append(child)
+        child.dirty_system = DirtySystem(name='scroll')
+        # self.children.append(child)
         self.child = child
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+        self.dirty_system.layout_dirty = True
 
-        self.mark_dirty()
-        self.mark_content_dirty()
-        self.register_dirty()
-        self.register_layout_dirty()
+
+    def remove(self, child):
+        """从滚动容器中移除元素"""
+        if child == self.child:
+            self.child = None
+            child.parent = None
+            child.dirty_system = DirtySystem()
+        # self.dirty_system.layout_dirty = True
 
     @micropython.native
     def update_layout(self) -> None:
@@ -115,16 +124,16 @@ class ScrollBox(Container):
         if self.is_scrollable_y:
             self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + y))
 
-        self._content_dirty = True
-        self.register_dirty()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     @micropython.native
     def get_bitmap(self):
         """在这维护一个整体buffer。不再单独刷新此滚动容器的子元素,将子元素合并成整体刷新。"""
         if self.visibility:
-            if self._content_dirty:
+            if self._dirty:
                 self._crop_bitmap() # 裁剪child的对应区域
-                self._content_dirty = False
+                self._dirty = False
             return self._bitmap
         else:
             if self._empty_bitmap is None:
@@ -142,45 +151,30 @@ class ScrollBox(Container):
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
-        if self.child._dirty:
+        if self.child.dirty_system.area != [[0,0,0,0]]:
             if self.child._bitmap is None:
                 self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
             self._render_child(self.child) # 获取到完整的child._bitmap
+            self.child.dirty_system.clear()
 
     def _render_child(self, widget):
         """绘制整个屏幕的buffer"""
-        if widget._dirty:
-            widget._dirty = False
+        if widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
                 self.child._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
-                return
-            for child in widget.children:
-                self._render_child(child)
-
-    def register_dirty(self) -> None:
-        """向根方向汇报 脏"""
-        self._dirty = True
-        self._content_dirty = True
-        if self.parent:
-            if not self.parent._dirty: # 如果父节点为被标脏
-                self.parent.register_dirty()
-
-    def mark_dirty(self) -> None:
-        """向末梢传递 脏"""
-        self._dirty = True
-        self._content_dirty = True
-        for child in self.children:
-            child.mark_dirty()
+            else:
+                for child in widget.children:
+                    self._render_child(child)
 
     def hide(self):
         """重写 隐藏部件方法"""
         self.visibility = False
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     
     def unhide(self):
         self.visibility = True
-        self.register_dirty()
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器
