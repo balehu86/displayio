@@ -92,7 +92,7 @@ class MainLoop:
         
     def _update_display(self):
         """更新显示"""
-        if self.dirty_system.area != [[0,0,0,0]]:
+        if self.dirty_system.area != []:
             self._render_widget(self.display.root)
             self.dirty_system.clear()
 
@@ -119,7 +119,7 @@ class MainLoop:
     
     def _update_display_fully(self):
         """全屏刷新"""
-        if self.dirty_system.area != [[0,0,0,0]]:
+        if self.dirty_system.area != []:
             self._render_widget_fully(self.display.root)
             self.dirty_system.clear()
             self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)

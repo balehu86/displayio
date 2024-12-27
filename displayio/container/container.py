@@ -1,6 +1,9 @@
 # ./core/container.py
 from ..core.widget import Widget
 
+# 类型提示
+from ..core.event import Event
+
 from heapq import heappush
 
 class Container(Widget):
@@ -30,43 +33,22 @@ class Container(Widget):
                          transparent_color = transparent_color,
                          color_format = color_format)
         
-    def add(self, *childs) -> None:
+    def add(self, *childs: Widget) -> None:
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
+            child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
             heappush(self.children, child)
 
         self.mark_dirty()
         self.dirty_system.layout_dirty = True
 
-    # def insert(self,index,child) -> None:
-    #     """在指定位置插入元素"""
-    #     child.parent=self
-    #     self.children.insert(index,child)
-        
-    #     self.mark_dirty()
-    #     self.mark_content_dirty()
-    #     self.register_dirty()
-    #     self.register_layout_dirty()
-
-    # def replace(self,old_child,new_child) -> None:
-    #     """将 old_child 替换换为 new_child"""
-    #     old_child.parent=None
-    #     new_child.parent=self
-    #     self.children=list(map(lambda child: new_child if child==old_child else child, self.children))
-        
-    #     self.mark_dirty()
-    #     self.mark_content_dirty()
-    #     self.register_dirty()
-    #     self.register_layout_dirty()
-
-    def remove(self, *childs) -> None:
+    def remove(self, *childs: Widget) -> None:
         """从容器中移除元素"""
         for child in childs:
-            child.parent = None
             if child in self.children:
+                child.parent = None
                 self.children.remove(child)
-
         self.mark_dirty()
         self.dirty_system.layout_dirty = True
 
@@ -89,6 +71,12 @@ class Container(Widget):
     def update_layout(self) -> None:
         """在子类型里会重写这个方法,这里只做声明"""
         pass
+
+    def mark_dirty(self) -> None:
+        """向末梢传递 脏"""
+        self._dirty = True
+        for child in self.children:
+            child.mark_dirty()
 
     def bind(self,event_type, callback_func) -> None:
         """事件委托,由容器为每个子元素绑定事件监听
@@ -124,7 +112,7 @@ class Container(Widget):
         for child in self.children:
             child.unhide()
 
-    def event_handler(self, event) -> None:
+    def event_handler(self, event: Event) -> None:
         """处理事件
         首先检查容器自己是否有对应的处理器，如果有则看自己是否处理，不处理则传递给子组件
         Args:
@@ -133,7 +121,7 @@ class Container(Widget):
         resault = super().event_handler(event)
         # 如果事件未被处理，传递给子组件
         if not resault:
-            for child in reversed(self.children): # 从上到下传递
+            for child in self.children: # 从上到下传递
                 if event.is_handled(): # 未被处理
                     break
                 else: # 已处理

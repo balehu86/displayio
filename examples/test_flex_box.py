@@ -111,12 +111,12 @@ display.add_input_device(touch)
 def click_callback(widget,event):
     print('clicked!')
     
-    if box1 in main_box.children:
-        label1.set_text('in')
-        main_box.remove(box1)
-    else:
-        label1.set_text('#')
-        main_box.add(box1)
+#     if label1.text != 'in':
+#         label1.set_text('in')
+#         main_box.remove(box1)
+#     else:
+#         label1.set_text('#')
+#         main_box.add(box1)
 def double_click_callback(widget,event):
 #     if button.state==2:
 #         button.set_enabled(True)

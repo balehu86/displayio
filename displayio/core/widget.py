@@ -105,17 +105,21 @@ class Widget(Color, Style):
             self.dirty_system.add(original_dx, original_dy, original_width, original_height)
             self.dirty_system.add(self.dx, self.dy, self.width, self.height)
     
-    def resize(self, width = None, height = None):
+    def resize(self, width=None, height=None, force=False):
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
         Args:
             width (_type_, optional): _description_. Defaults to None.
             height (_type_, optional): _description_. Defaults to None.
         """
-        self.width = width if self.width_resizable and self.width != width and width !=None else self.width
-        self.height = height if self.height_resizable and self.height != height and height != None else self.height
+        self.width = width if (force or self.width_resizable) and width != None else self.width
+        self.height = height if (force or self.height_resizable) and height != None else self.height
         self._dirty = True
         self.dirty_system.layout_dirty = True
+        original_width = self.width if self.width is not None else 0
+        original_height = self.height if self.height is not None else 0
+        self.dirty_system.add(self.dx, self.dy, original_width, original_height)
+        self.dirty_system.add(self.dx, self.dy, self.width, self.height)
 
     def hide(self) -> None:
         """隐藏部件"""
@@ -141,8 +145,12 @@ class Widget(Color, Style):
     def mark_dirty(self) -> None:
         """向末梢传递 脏"""
         self._dirty = True
+
+    def set_dirty_system(self, dirty_system):
+        """递归设置脏区域管理器"""
+        self.dirty_system = dirty_system
         for child in self.children:
-            child.mark_dirty()
+            child.set_dirty_system(dirty_system)
 
     def event_handler(self, event) -> bool:
         """处理事件
@@ -194,12 +202,9 @@ class Widget(Color, Style):
         """
         if event_type in self.event_listener:
             if callback_func is None:
-                self.event_listener[event_type] = []
-            else:
-                self.event_listener[event_type] = [
-                    cb for cb in self.event_listener[event_type] 
-                    if cb != callback_func
-                ]
+                self.event_listener[event_type].clear()
+            elif callback_func in self.event_listener[event_type]:
+                self.event_listener[event_type].remove(callback_func)
 
     def index(self) -> int:
         """返回部件在父容器中的位置,从0开始"""
@@ -220,9 +225,8 @@ class Widget(Color, Style):
         x2_min, y2_min, x2_max, y2_max = self.dx, self.dy, self.dx+self.width-1, self.dy+self.height-1
         for dirty_area in self.dirty_system.area:
             x1_min, y1_min, x1_max, y1_max = dirty_area
-            # 检查是否有交集
-            if x1_min > x2_max or x2_min > x1_max:
-                return False  # 在水平轴上没有交集
-            if y1_min > y2_max or y2_min > y1_max:
-                return False  # 在垂直轴上没有交集
-            return True  # 存在交集
+            # 判断两个区域是否有交集
+            if not (x1_min > x2_max or x2_min > x1_max or 
+                    y1_min > y2_max or y2_min > y1_max):
+                return True  # 发现交集，直接返回 True
+        return False  # 遍历完所有区域，没有交集

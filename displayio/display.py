@@ -64,10 +64,10 @@ class Display:
 
     def set_root(self, widget):
         """设置根组件"""
+        widget.dx, widget.dy= 0, 0
+        widget.resize(width=self.width, height=self.height, force=True)
+        widget.width_resizable, widget.height_resizable = False, False
         self.root = widget
-        self.root.layout(dx=0, dy=0, width=self.width, height=self.height)
-        self.root.width_resizable = False
-        self.root.height_resizable = False
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             self.root._bitmap = Bitmap(self.root.width,self.root.height, transparent_color=self.root.transparent_color, format=Bitmap.RGB565)
@@ -76,7 +76,7 @@ class Display:
         """添加事件到事件循环"""
         self.loop.post_event(event)
 
-    def add_input_device(self,*device):
+    def add_input_device(self,*device: list):
         self.inputs.extend(device)
 
     def run(self,func):

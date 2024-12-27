@@ -3,6 +3,8 @@ from .container import Container
 from ..core.bitmap import Bitmap
 from ..core.event import EventType
 from ..core.dirty import DirtySystem
+# 类型提示
+from ..core.widget import Widget
 
 import micropython # type: ignore
 
@@ -41,6 +43,10 @@ class ScrollBox(Container):
                          color_format = color_format)
         
         self.child = None
+        # 使用实例ID作为唯一标识
+        self.scroll_id = id(self)
+        # 创建独立的脏区域管理器
+        self.scroll_dirty_system = DirtySystem(name=f'scroll_{self.scroll_id}')
         # 滚动相关的属性
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0
@@ -55,25 +61,28 @@ class ScrollBox(Container):
         self.event_listener = {EventType.SCROLL:[self.scroll],
                                EventType.ROTATE_TICK:[self.scroll],}
 
-    def add(self, child) -> None:
+    def add(self, child: Container) -> None:
         """向滚动容器中添加元素"""
         assert self.child is None, "scroll must have one child"
-        child.parent=self
-        child.dirty_system = DirtySystem(name='scroll')
+        child.parent = self
+        # 递归设置独立的脏区域管理器
+        child.set_dirty_system(self.scroll_dirty_system)
         # self.children.append(child)
         self.child = child
+        self.children.append(child) # 因为事件传递需要，所以保留此项
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         self.dirty_system.layout_dirty = True
 
-
-    def remove(self, child):
+    def remove(self, child: Container):
         """从滚动容器中移除元素"""
         if child == self.child:
             self.child = None
+            self.children.remove(child) # 因为事件传递需要，所以保留此项
             child.parent = None
-            child.dirty_system = DirtySystem()
-        # self.dirty_system.layout_dirty = True
+            # 恢复默认的脏区域管理器
+            child.set_dirty_system(DirtySystem())
+        self.dirty_system.layout_dirty = True
 
     @micropython.native
     def update_layout(self) -> None:
@@ -81,9 +90,6 @@ class ScrollBox(Container):
         更新容器的布局
         处理子元素的位置和大小
         """
-        if not self.children:
-            return
-
         # 获取子元素的最小尺寸
         child_min_width, child_min_height = self.child._get_min_size()
 
@@ -112,8 +118,6 @@ class ScrollBox(Container):
         """
         滚动方法, x和y为滚动的增量
         """
-        if not self.children:
-            raise ValueError("ScrollBox have no child")
         # x = event.data.get('rotate_direction', 0)
         x=0
         y = event.data.get('rotate_direction', 0) * 5
@@ -144,6 +148,7 @@ class ScrollBox(Container):
     @micropython.native
     def _crop_bitmap(self) -> None:
         """裁剪child的完整位图的对应区域"""
+        print('crop_bitmap')
         if self._bitmap is None:
             self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
         self._update_child_bitmap()
@@ -151,13 +156,20 @@ class ScrollBox(Container):
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
-        if self.child.dirty_system.area != [[0,0,0,0]]:
+        if self.scroll_dirty_system.area != []:
+            print('update_child_bitmap')
+            print('scroll_dirty_system.name', self.scroll_dirty_system.name)
+            print('scroll_dirty_system.area',self.scroll_dirty_system.area)
             if self.child._bitmap is None:
                 self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
-            self._render_child(self.child) # 获取到完整的child._bitmap
-            self.child.dirty_system.clear()
+            self._render_child_tree(self.child) # 获取到完整的child._bitmap
+            
+            self._dirty = True
+            self.dirty_system.add(self.dx, self.dy, self.width, self.height)
+            
+            self.scroll_dirty_system.clear()
 
-    def _render_child(self, widget):
+    def _render_child_tree(self, widget: Widget):
         """绘制整个屏幕的buffer"""
         if widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
@@ -165,7 +177,7 @@ class ScrollBox(Container):
                 self.child._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
             else:
                 for child in widget.children:
-                    self._render_child(child)
+                    self._render_child_tree(child)
 
     def hide(self):
         """重写 隐藏部件方法"""
@@ -196,9 +208,10 @@ class ScrollBox(Container):
         """
         if event_type in self.event_listener:
             if callback_func is None:
-                self.event_listener[event_type] = []
-            else:
-                self.event_listener[event_type] = [
-                    cb for cb in self.event_listener[event_type] 
-                    if cb != callback_func
-                ]
+                self.event_listener[event_type].clear()
+            elif callback_func in self.event_listener[event_type]:
+                self.event_listener[event_type].remove(callback_func)
+
+    def set_dirty_system(self, dirty_system):
+        """重写set_dirty_system,以适应scroll_box"""
+        self.dirty_system = dirty_system

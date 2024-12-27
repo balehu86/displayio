@@ -54,25 +54,25 @@ display = Display(240, 240,output=output,
                   threaded=False,
                   fps = 30,
                   show_fps = False,
-                  partly_refresh = False
+                  partly_refresh = True
 )
 # 创建垂直布局容器
-main_box = FreeBox()
-sbox = ScrollBox(width=100,height=100)
-box1 = FlexBox(direction=Style.VERTICAL,width=300,height=300,spacing = 10)
+main_box = ScrollBox()
+box1 = FlexBox(direction=Style.VERTICAL,width=240,height=400,spacing = 10)
 
 # # 设置根控件并刷新
 display.set_root(main_box)
 # 创建标签
 
 button1 = Button(
-    text = 'butttt',
+    text = 'butttt11',
+    width = 120,
     font = font,
     font_scale = 1,
     align=Label.ALIGN_RIGHT
 )
 button2 = Button(
-    text = 'butttt',
+    text = 'butttt22',
     font = font,
     font_scale = 1,
     align=Label.ALIGN_RIGHT
@@ -85,35 +85,51 @@ button = Button(
     font_scale = 1,
     align=Label.ALIGN_LEFT
 )
-box1.add(button1,button2)
-for w in range(10):
-    box1.add(Label(text=str(w)*5,
-                        height=15,
-                        font=font,
-                        background_color=random.getrandbits(16)))
+box1.add(button1,button2,button)
+# for w in range(3):
+#     box1.add(Label(text=str(w)*5,
+#                         height=15,
+#                         font=font,
+#                         background_color=random.getrandbits(16)))
     
-touch1=TouchPin(12,target_widget=button)
-touch2=TouchPin(13,target_widget=button2)
-encoder = RotaryEncoder(pin_a=6, pin_b=5,strict=False,target_widget=sbox)
-display.add_input_device(touch1,touch2,encoder)
+touch1=TouchPin(4,target_widget=button1)
+# touch2=TouchPin(13,target_widget=button2)
+encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=False,target_widget=main_box)
+display.add_input_device(touch1,encoder)
+main_box.add(box1)
 
-main_box.add(sbox)
-sbox.add(box1)
-main_box.add(button)
-
-def click_callback1(event):
-    print('1 clicked!')
-
-def click_callback2(event):
-    print('2 clicked!')
-def click(e):
+def click_callback(widget,event):
     print('clicked!')
-def press(e):
-    print('pres')
+#     if label2 in hbox.children:
+#         hbox.remove(label2)
+#     else:
+#         hbox.add(label2)
+def double_click_callback(widget,event):
+#     if button.state==2:
+#         button.set_enabled(True)
+#     else:
+#         button.set_enabled(False)
+    print('double click!')
+def long_press_callback(widget,event):
+    print('long press!')
+#     if label3.visibility:
+#         label3.hide()
+#     else:
+#         label3.unhide()
+def long_press_release_callback(widget,event):
+    print('long press released!')
+def release_callback(widget,event):
+    print('release!')
+def press_callback(widget,event):
+    print('press!')
 
-button1.bind(EventType.CLICK, click_callback1)
-button2.bind(EventType.CLICK, click_callback2)
-button.bind(EventType.CLICK, click)
+
+button1.bind(EventType.PRESS, press_callback)
+button1.bind(EventType.CLICK, click_callback)
+button1.bind(EventType.DOUBLE_CLICK, double_click_callback)
+button1.bind(EventType.LONG_PRESS, long_press_callback)
+button1.bind(EventType.RELEASE, release_callback)
+button1.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
 def main():
     pass
