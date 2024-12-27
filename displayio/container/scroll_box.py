@@ -134,7 +134,6 @@ class ScrollBox(Container):
     def get_bitmap(self):
         """在这维护一个整体buffer。不再单独刷新此滚动容器的子元素,将子元素合并成整体刷新。"""
         if self.visibility:
-            # print('scroll_dirty_system.dirty',self.scroll_dirty_system.dirty)
             if self._dirty or self.scroll_dirty_system.dirty:
                 self._crop_bitmap() # 裁剪child的对应区域
                 self._dirty = False
@@ -148,7 +147,6 @@ class ScrollBox(Container):
     @micropython.native
     def _crop_bitmap(self) -> None:
         """裁剪child的完整位图的对应区域"""
-        print('scroll box crop bitmap')
         if self._bitmap is None:
             self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
         self._update_child_bitmap()
@@ -157,7 +155,6 @@ class ScrollBox(Container):
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
         if self.scroll_dirty_system.dirty:
-            print('update_child_bitmap')
             if self.child._bitmap is None:
                 self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
             self._render_child_tree(self.child) # 获取到完整的child._bitmap

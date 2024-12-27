@@ -5,21 +5,27 @@ class DirtySystem:
     """
     _instances = {}  # 存储所有命名实例
     
-    def __new__(cls, name='default',**kwargs):
+    def __new__(cls, name='default', **kwargs):
         if name not in cls._instances:
             cls._instances[name] = super().__new__(cls)
         return cls._instances[name]
     
-    def __init__(self, name='default',widget=None):
+    def __init__(self, name='default', widget=None):
+        if name != 'default' and widget is None:
+            raise ValueError('dirty_system初始化错误,\n\t非默认dirty_system缺少关键字参数: widget')
         if not hasattr(self, 'initialized'):  # 检查是否已初始化
-            # 绘制系统的脏标记区域,用来触发触发遍历组件树刷新。
+            # 管理器的名称,默认为default
             self.name = name
+            # 绘制系统的脏区域,用来触发组件刷新
             self.area = []
+            # 绘制系统的脏标记,用来出发遍历组件树刷新
             self.dirty = False
-            self.widget=widget
+            # 引用Widget(那些维护自己独立的bitmap(同时也会使用独立的脏系统)的widget,例如scroll_box)
+            self.widget=widget if name != 'default' else None
             # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
             self._layout_dirty = True
-            self.initialized = True  # 标记已初始化
+            # 标记默认的管理器已初始化,防止重复实例
+            self.initialized = True
 
     def add(self, x2_min, y2_min, width2, height2):
         """添加脏区域"""
@@ -45,9 +51,9 @@ class DirtySystem:
         # 这是因为需要传递脏信息,否则会导致dirty_system的脏区域只作用于局部,不会影响到默认dirty_system
         self.dirty = True
         if self.widget:
-            print(self.widget.child.children)
-            self.widget.dirty_system.dirty = True
-            self.widget.dirty_system.add(self.widget.dx, self.widget.dy, self.widget.width, self.widget.height)
+            parent_system = self.widget.dirty_system
+            parent_system.dirty = True
+            parent_system.add(self.widget.dx, self.widget.dy, self.widget.width, self.widget.height)
 
     def _intersects(self, area1, x2_min, y2_min, x2_max, y2_max) -> bool:
         """检查两个区域是否有重叠"""
@@ -80,10 +86,9 @@ class DirtySystem:
         """设置 layout_dirty 属性，并同步到默认实例"""
         self._layout_dirty = value
         # 如果当前实例不是默认实例且被赋值为True，则更新默认实例
-        if value and self.name != 'default':
-            default_instance = DirtySystem._instances.get('default')
-            if default_instance:
-                default_instance._layout_dirty = True
+        if value and self.widget:
+            parent_system = self.widget.dirty_system
+            parent_system.layout = True
 
 class QuadTreeNode:
     """四叉树节点"""
