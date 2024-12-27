@@ -5,16 +5,18 @@ class DirtySystem:
     """
     _instances = {}  # 存储所有命名实例
     
-    def __new__(cls, name='default'):
+    def __new__(cls, name='default',**kwargs):
         if name not in cls._instances:
             cls._instances[name] = super().__new__(cls)
         return cls._instances[name]
     
-    def __init__(self, name='default'):
+    def __init__(self, name='default',widget=None):
         if not hasattr(self, 'initialized'):  # 检查是否已初始化
             # 绘制系统的脏标记区域,用来触发触发遍历组件树刷新。
             self.name = name
             self.area = []
+            self.dirty = False
+            self.widget=widget
             # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
             self._layout_dirty = True
             self.initialized = True  # 标记已初始化
@@ -39,6 +41,14 @@ class DirtySystem:
         if not merged:
             self.area.append([x2_min, y2_min, x2_max, y2_max])
 
+        # 如果这个dirty_system不是默认实例,则需要将self.widget.dirty_system为脏
+        # 这是因为需要传递脏信息,否则会导致dirty_system的脏区域只作用于局部,不会影响到默认dirty_system
+        self.dirty = True
+        if self.widget:
+            print(self.widget.child.children)
+            self.widget.dirty_system.dirty = True
+            self.widget.dirty_system.add(self.widget.dx, self.widget.dy, self.widget.width, self.widget.height)
+
     def _intersects(self, area1, x2_min, y2_min, x2_max, y2_max) -> bool:
         """检查两个区域是否有重叠"""
         x1_min, y1_min, x1_max, y1_max = area1
@@ -58,6 +68,7 @@ class DirtySystem:
     def clear(self):
         """重置脏区域"""
         self.area.clear()
+        self.dirty = False
 
     @property
     def layout_dirty(self):

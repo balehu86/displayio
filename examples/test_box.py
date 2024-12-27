@@ -149,7 +149,7 @@ for w in range(10):
                         font=font,
                         background_color=random.getrandbits(16)))
 # 添加输入设备   
-touch=TouchPin(4,target_widget=button1)#vbox_in_s.children[0])
+touch=TouchPin(4,target_widget=vbox_in_s.children[0])
 encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=False,target_widget=sbox)
 display.add_input_device(touch,encoder)
 
@@ -179,7 +179,7 @@ def press_callback(widget,event):
     print('press!')
     
 button1.bind(EventType.PRESS, press_callback)
-# vbox_in_s.children[0].bind(EventType.CLICK, click_callback)
+vbox_in_s.children[0].bind(EventType.CLICK, click_callback)
 button1.bind(EventType.CLICK, click_callback)
 button1.bind(EventType.DOUBLE_CLICK, double_click_callback)
 button1.bind(EventType.LONG_PRESS, long_press_callback)

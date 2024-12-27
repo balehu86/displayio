@@ -46,7 +46,7 @@ class ScrollBox(Container):
         # 使用实例ID作为唯一标识
         self.scroll_id = id(self)
         # 创建独立的脏区域管理器
-        self.scroll_dirty_system = DirtySystem(name=f'scroll_{self.scroll_id}')
+        self.scroll_dirty_system = DirtySystem(name=f'scroll_{self.scroll_id}',widget=self)
         # 滚动相关的属性
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0
@@ -67,7 +67,6 @@ class ScrollBox(Container):
         child.parent = self
         # 递归设置独立的脏区域管理器
         child.set_dirty_system(self.scroll_dirty_system)
-        # self.children.append(child)
         self.child = child
         self.children.append(child) # 因为事件传递需要，所以保留此项
         self._dirty = True
@@ -135,7 +134,8 @@ class ScrollBox(Container):
     def get_bitmap(self):
         """在这维护一个整体buffer。不再单独刷新此滚动容器的子元素,将子元素合并成整体刷新。"""
         if self.visibility:
-            if self._dirty:
+            # print('scroll_dirty_system.dirty',self.scroll_dirty_system.dirty)
+            if self._dirty or self.scroll_dirty_system.dirty:
                 self._crop_bitmap() # 裁剪child的对应区域
                 self._dirty = False
             return self._bitmap
@@ -148,7 +148,7 @@ class ScrollBox(Container):
     @micropython.native
     def _crop_bitmap(self) -> None:
         """裁剪child的完整位图的对应区域"""
-        print('crop_bitmap')
+        print('scroll box crop bitmap')
         if self._bitmap is None:
             self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
         self._update_child_bitmap()
@@ -156,10 +156,8 @@ class ScrollBox(Container):
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
-        if self.scroll_dirty_system.area != []:
+        if self.scroll_dirty_system.dirty:
             print('update_child_bitmap')
-            print('scroll_dirty_system.name', self.scroll_dirty_system.name)
-            print('scroll_dirty_system.area',self.scroll_dirty_system.area)
             if self.child._bitmap is None:
                 self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
             self._render_child_tree(self.child) # 获取到完整的child._bitmap
