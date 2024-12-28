@@ -207,11 +207,6 @@ class BaseWidget(Color, Style):
         if self.parent is not None:
             return self.parent.index(self)
 
-    def __del__(self):
-        """析构函数,在部件被销毁时被调用"""
-        if self.parent is not None:
-            self.parent.children.remove(self)
-
     def __lt__(self, other):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
