@@ -120,7 +120,7 @@ class ScrollBox(Container):
         滚动方法, x和y为滚动的增量
         """
         # x = event.data.get('rotate_direction', 0)
-        x=0
+        x = 0
         y = event.data.get('rotate_direction', 0) * 5
         # 限制水平滚动
         if self.is_scrollable_x:
