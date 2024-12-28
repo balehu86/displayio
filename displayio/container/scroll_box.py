@@ -113,8 +113,7 @@ class ScrollBox(Container):
         actual_width = child_min_width if self.child.width_resizable else self.child.width
         actual_height = self.height if self.child.height_resizable else self.child.height
         # 根据滚动偏移量调整布局
-        self.child.layout(dx=0 - self.scroll_offset_x, dy=0 - self.scroll_offset_y,
-                          width=actual_width, height=actual_height)
+        self.child.layout(dx=0, dy=0, width=actual_width, height=actual_height)
                 
     def scroll(self, widget, event) -> None:
         """
