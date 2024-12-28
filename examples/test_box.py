@@ -53,7 +53,7 @@ display = Display(240, 240,output=output,
                   thread=False,
                   fps = 30,
                   show_fps = True,
-                  soft_timer = False,
+                  soft_timer = True,
                   partly_refresh = False
 )
 # 创建垂直布局容器
