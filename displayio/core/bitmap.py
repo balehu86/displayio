@@ -30,6 +30,8 @@ class Bitmap:
         self.color = widget.background_color if widget else 0x0000
 
         self.size_changed = False
+        self.buffer = None
+        self.fb = None
     
     def init(self, width=0, height=0, transparent_color=None, color=None):
         """bitmap初始化
@@ -50,7 +52,16 @@ class Bitmap:
 
         if transparent_color is not None:
             self.transparent_color = transparent_color
-
+        
+        # 检查颜色更新
+        if color is not None and not self.size_changed:
+            if self.color != color:  # 尺寸不变但颜色变化，直接填充
+                self.color = color
+                if self.fb:  # 确保已初始化FrameBuffer
+                    self.fill(color)
+            return
+        
+        # 尺寸变化或首次初始化时重新创建Framebuf
         if self.size_changed:
             buffer_size = self.width * self.height
             if self.color_format == self.RGB565:
@@ -58,12 +69,13 @@ class Bitmap:
             self.buffer = bytearray(buffer_size)
             self.fb = framebuf.FrameBuffer(self.buffer, self.width, self.height, self.color_format)
             self.size_changed = False
-            if self.color != 0x0000:
+            # 初始化颜色填充，跳过纯黑色填充
+            if color is not None and color != 0x0000:
+                self.fill(color)
+            elif self.color != 0x0000 and color is None:
                 self.fill(self.color)
         
-        if color is not None and self.color != color:
-            self.color=color
-            self.fill(color)
+        
         
         
 
