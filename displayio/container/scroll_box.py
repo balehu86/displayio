@@ -3,8 +3,7 @@ from .container import Container
 from ..core.bitmap import Bitmap
 from ..core.event import EventType
 from ..core.dirty import DirtySystem
-# 类型提示
-from ..core.widget import Widget
+from ..widget.widget import Widget # type hint
 
 import micropython # type: ignore
 
@@ -61,7 +60,7 @@ class ScrollBox(Container):
         self.event_listener = {EventType.SCROLL:[self.scroll],
                                EventType.ROTATE_TICK:[self.scroll],}
 
-    def add(self, child: Container) -> None:
+    def add(self, child:Container) -> None:
         """向滚动容器中添加元素"""
         assert self.child is None, "scroll must have one child"
         child.parent = self
@@ -73,7 +72,7 @@ class ScrollBox(Container):
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         self.dirty_system.layout_dirty = True
 
-    def remove(self, child: Container):
+    def remove(self, child:Container):
         """从滚动容器中移除元素"""
         if child == self.child:
             self.child = None
@@ -113,7 +112,7 @@ class ScrollBox(Container):
         self.child.layout(dx=0 - self.scroll_offset_x, dy=0 - self.scroll_offset_y,
                           width=actual_width, height=actual_height)
                 
-    def scroll(self,widget,event) -> None:
+    def scroll(self, widget, event) -> None:
         """
         滚动方法, x和y为滚动的增量
         """
@@ -164,7 +163,7 @@ class ScrollBox(Container):
             
             self.scroll_dirty_system.clear()
 
-    def _render_child_tree(self, widget: Widget):
+    def _render_child_tree(self, widget:Widget):
         """绘制整个屏幕的buffer"""
         if widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
@@ -183,7 +182,7 @@ class ScrollBox(Container):
         self.visibility = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
-    def bind(self, event_type, callback_func: function) -> None:
+    def bind(self, event_type, callback_func:function) -> None:
         """绑定事件处理器
         
         Args:
@@ -194,7 +193,7 @@ class ScrollBox(Container):
             self.event_listener[event_type] = []
         self.event_listener[event_type].append(callback_func)
 
-    def unbind(self, event_type, callback_func: function=None) -> None:
+    def unbind(self, event_type, callback_func:function=None) -> None:
         """解绑事件处理器
         
         Args:
@@ -207,6 +206,7 @@ class ScrollBox(Container):
             elif callback_func in self.event_listener[event_type]:
                 self.event_listener[event_type].remove(callback_func)
 
-    def set_dirty_system(self, dirty_system):
+    def set_dirty_system(self, dirty_system:DirtySystem):
         """重写set_dirty_system,以适应scroll_box"""
         self.dirty_system = dirty_system
+    

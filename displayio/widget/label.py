@@ -1,8 +1,8 @@
 # ./widget/label.py
-from ..core.widget import Widget
 from ..core.bitmap import Bitmap
-
 from ..utils.font_utils import hex_font_to_bitmap
+
+from .widget import Widget
 
 import micropython # type: ignore
 
@@ -159,7 +159,7 @@ class Label(Widget):
             self.background_color = background_color
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    def set_font(self,font) -> None:
+    def set_font(self, font) -> None:
         """设置字体"""
         self.font = font
         self.font_width = font[b'WIDTH'][0]
@@ -170,12 +170,12 @@ class Label(Widget):
         self.text_height = self.font_height * self.font_scale
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    def set_align(self,align) -> None:
+    def set_align(self, align) -> None:
         """设置文本对齐"""
         self.align = align
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    def set_padding(self,padding) -> None:
+    def set_padding(self, padding) -> None:
         """设置文本边距"""
         self.padding = padding
         self._dirty = True

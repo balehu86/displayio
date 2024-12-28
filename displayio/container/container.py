@@ -1,28 +1,28 @@
 # ./core/container.py
-from ..core.widget import Widget
-
-# 类型提示
-from ..core.event import Event
+from ..core.base_widget import BaseWidget
+from ..core.event import Event # type hint
+from ..core.dirty import DirtySystem # type hint
+from ..core.event import EventType
 
 from heapq import heappush
 
-class Container(Widget):
+class Container(BaseWidget):
     """
     容器基类
-    继承自Widget
+    继承自BaseWidget
     """
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
-                 visibility=True, state=Widget.STATE_DEFAULT,
-                 background_color=Widget.WHITE,
-                 transparent_color=Widget.PINK,
-                 color_format=Widget.RGB565):
+                 visibility=True, state=BaseWidget.STATE_DEFAULT,
+                 background_color=BaseWidget.WHITE,
+                 transparent_color=BaseWidget.PINK,
+                 color_format=BaseWidget.RGB565):
         """
         初始化按钮控件
         
-        继承Widget的所有参数,额外添加:
+        继承BaseWidget的所有参数,额外添加:
             pass
         """
         super().__init__(abs_x = abs_x, abs_y = abs_y,
@@ -32,8 +32,10 @@ class Container(Widget):
                          background_color = background_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
+        # 容器的子元素
+        self.children = []
         
-    def add(self, *childs: Widget) -> None:
+    def add(self, *childs: BaseWidget|'Container') -> None:
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
@@ -43,7 +45,7 @@ class Container(Widget):
         self.mark_dirty()
         self.dirty_system.layout_dirty = True
 
-    def remove(self, *childs: Widget) -> None:
+    def remove(self, *childs: BaseWidget|'Container') -> None:
         """从容器中移除元素"""
         for child in childs:
             if child in self.children:
@@ -78,7 +80,7 @@ class Container(Widget):
         for child in self.children:
             child.mark_dirty()
 
-    def bind(self,event_type, callback_func) -> None:
+    def bind(self, event_type:EventType, callback_func:function) -> None:
         """事件委托,由容器为每个子元素绑定事件监听
 
         Args:
@@ -88,7 +90,7 @@ class Container(Widget):
         for child in self.children:
             child.bind(event_type, callback_func)
 
-    def unbind(self, event_type, callback_func=None) -> None:
+    def unbind(self, event_type:EventType, callback_func=None) -> None:
         """事件委托,由容器为每个子元素解除绑定事件监听
 
         Args:
@@ -112,17 +114,24 @@ class Container(Widget):
         for child in self.children:
             child.unhide()
 
-    def event_handler(self, event: Event) -> None:
-        """处理事件
+    def bubble(self, event:Event) -> None:
+        """事件冒泡
         首先检查容器自己是否有对应的处理器，如果有则看自己是否处理，不处理则传递给子组件
         Args:
             event: Event类实例
         """
-        resault = super().event_handler(event)
+        # 尝试捕获
+        resault = self.catch(event)
         # 如果事件未被处理，传递给子组件
         if not resault:
             for child in self.children: # 从上到下传递
-                if event.is_handled(): # 未被处理
+                if event.is_handled(): # 已被处理
                     break
-                else: # 已处理
-                    child.event_handler(event)
+                else: # 未处理
+                    child.bubble(event)
+
+    def set_dirty_system(self, dirty_system:DirtySystem):
+        """递归设置脏区域管理器"""
+        self.dirty_system = dirty_system
+        for child in self.children:
+            child.set_dirty_system(dirty_system)

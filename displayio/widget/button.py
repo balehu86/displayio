@@ -116,7 +116,7 @@ class Button(Label):
         # 恢复原来的颜色
         self.text_color = original_text_color
       
-    def set_enabled(self, enabled) -> None:
+    def set_enabled(self, enabled:bool) -> None:
         """设置按钮是否可用"""
         new_state = self.STATE_DEFAULT if enabled else self.STATE_DISABLED
         if new_state != self.state:

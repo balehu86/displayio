@@ -8,7 +8,7 @@ def _swap_rgb565(color: int) -> int:
         因为framebuf.FrameBuffer的序列为小端序,
         而驱动一般采用大端序
         所以在这里先做个交换第一第二字节的处理，
-        可使驱动直接将整个buffer一次性写入屏幕，而不需要使用迭代循环"""
+        可使驱动直接将整个buffer一次性写入屏幕,而不需要使用迭代循环"""
     return ((color >> 8) | (color << 8)) & 0xFFFF
 
 class Bitmap:
@@ -34,7 +34,7 @@ class Bitmap:
         self.fb = framebuf.FrameBuffer(self.buffer, width, height, format)
     
     @micropython.native
-    def pixel(self, x:int, y:int, color:int=None):
+    def pixel(self, x:int, y:int, color:int|None=None):
         """获取或设置像素点"""
         # 若超出位图范围，直接返回
         if not (0 <= x < self.width and 0 <= y < self.height):
@@ -65,7 +65,7 @@ class Bitmap:
         self.fb.fill(color)
  
     @micropython.native
-    def blit(self, source, dx:int=0, dy:int=0):
+    def blit(self, source:'Bitmap', dx:int=0, dy:int=0):
         """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
         # 如果源和目标的颜色格式不同，转换颜色
         key = source.transparent_color

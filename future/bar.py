@@ -1,6 +1,6 @@
 # ./widget/bar.py
 
-from ..displayio.core.widget import Widget
+from ..displayio.core.base_widget import Widget
 from ..displayio.core.bitmap import Bitmap
 
 from ..displayio.utils.font_utils import hex_font_to_bitmap
