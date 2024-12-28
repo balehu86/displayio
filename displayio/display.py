@@ -51,8 +51,9 @@ class Display:
         self.root = widget
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
-            self.root._bitmap = Bitmap(self.root.width,self.root.height, transparent_color=self.root.transparent_color, format=Bitmap.RGB565)
-    
+            widget._bitmap = Bitmap(widget)
+            widget._bitmap.init(width=self.width, height=self.height)
+
     def add_event(self, event:Event):
         """添加事件到事件循环"""
         self.loop._post_event(event)
@@ -183,7 +184,7 @@ class MainLoop:
         current_time = time.ticks_ms()
         elapsed_time = time.ticks_diff(current_time, self.last_input_time)
         if elapsed_time >= 1000:  # 每秒计算一次
-            ips = 1000 * self.input_count / elapsed_time
+            ips = 1000 * self.input_count / elapsed_time / len(self.display.inputs)
             print(f"IPS: {ips:.1f}")
             # 重置计数器
             self.input_count = 0
@@ -280,9 +281,9 @@ class MainLoop:
             print("捕获到键盘中断，正在退出...")
             self.stop()
             print("已退出。")
-        except Exception as e:
-            print(f"Error in main loop: {e}")
-            self.stop()
+        # except Exception as e:
+        #     print(f"Error in main loop: {e}")
+        #     self.stop()
 
     def _init_tasks(self, func:function):
         """初始化所有任务"""

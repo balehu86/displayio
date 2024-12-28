@@ -7,6 +7,7 @@ class Color:
     BLUE  = 0x001f
     PINK  = 0xf81f
     WHITE = 0xffff
+    DARK  = 0x0000
     Label_GREEN = 0x7f34
     Button_BLUE = 0x001f
     GREY = 0x7BEF

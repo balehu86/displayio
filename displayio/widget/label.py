@@ -61,11 +61,10 @@ class Label(Widget):
         self.text_height = self.font_height * font_scale
             
         self.text_color = text_color
-        self.background_color = background_color
         self.align = align
         self.padding = padding
         # 文字位图缓存
-        self._text_bitmap = None
+        self._text_bitmap = Bitmap()
 
     @micropython.native
     def _create_text_bitmap(self) -> None:
@@ -77,7 +76,7 @@ class Label(Widget):
             raise ValueError("未知的字体库")
 
         # 创建新的位图
-        self._text_bitmap = Bitmap(self.text_width, self.text_height, transparent_color=0x0000, format=self.color_format)
+        self._text_bitmap.init(width=self.text_width,height=self.text_height,transparent_color=0x0000)
         # 渲染每个字符
         text_dx = 0
         for i, char in enumerate(self.text):
@@ -118,10 +117,8 @@ class Label(Widget):
         创建控件的位图
         包含背景和文本渲染
         """
-        # 创建新的位图
-        self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-        # 填充背景
-        self._bitmap.fill(self.background_color)
+        # 创建和填充新的位图
+        self._bitmap.init(color=self.background_color)
         # 绘制文字
         self._create_text_bitmap()
         # 计算文本位置
@@ -140,8 +137,7 @@ class Label(Widget):
                 self._dirty = False
             return self._bitmap
         else: # 隐藏
-            self._empty_bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-            self._empty_bitmap.fill(self.background_color)
+            self._empty_bitmap.init(color=0xffff)
             return self._empty_bitmap
     
     def set_text(self, text) -> None:
@@ -151,6 +147,7 @@ class Label(Widget):
             self.text_width = self.font_width * len(text) * self.font_scale
             self._dirty = True
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+            self._text_bitmap = Bitmap()
     def set_color(self, text_color=None, background_color=None) -> None:
         """设置文本和背景颜色"""
         if text_color is not None:
@@ -170,6 +167,7 @@ class Label(Widget):
         self.text_height = self.font_height * self.font_scale
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+        self._text_bitmap = Bitmap()
     def set_align(self, align) -> None:
         """设置文本对齐"""
         self.align = align

@@ -17,7 +17,7 @@ class ScrollBox(Container):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=Container.WHITE,
+                 background_color=Container.DARK,
                  transparent_color=Container.PINK,
                  color_format=Container.RGB565):
         """
@@ -40,9 +40,11 @@ class ScrollBox(Container):
                          background_color = background_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
-        
-        self.child = None
+        # 预创建bitmap对象
+        self._bitmap = Bitmap(self)
+        self._empty_bitmap = Bitmap(self)
         # 使用实例ID作为唯一标识
+        self.child = None
         self.scroll_id = id(self)
         # 创建独立的脏区域管理器
         self.scroll_dirty_system = DirtySystem(name=f'scroll_{self.scroll_id}',widget=self)
@@ -64,6 +66,7 @@ class ScrollBox(Container):
         """向滚动容器中添加元素"""
         assert self.child is None, "scroll must have one child"
         child.parent = self
+        child._bitmap = Bitmap(child)
         # 递归设置独立的脏区域管理器
         child.set_dirty_system(self.scroll_dirty_system)
         self.child = child
@@ -72,14 +75,15 @@ class ScrollBox(Container):
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         self.dirty_system.layout_dirty = True
 
-    def remove(self, child:Container):
+    def remove(self, child:Container=None):
         """从滚动容器中移除元素"""
-        if child == self.child:
-            self.child = None
-            self.children.remove(child) # 因为事件传递需要，所以保留此项
-            child.parent = None
+        if child == self.child or child == None:
+            self.child._bitmap=None
+            self.children.clear() # 因为事件传递需要，所以保留此项
+            self.child.parent = None
             # 恢复默认的脏区域管理器
-            child.set_dirty_system(DirtySystem())
+            self.child.set_dirty_system(DirtySystem())
+            self.child = None
         self.dirty_system.layout_dirty = True
 
     @micropython.native
@@ -138,24 +142,20 @@ class ScrollBox(Container):
                 self._dirty = False
             return self._bitmap
         else:
-            if self._empty_bitmap is None:
-                self._empty_bitmap = Bitmap(self.width,self.height, transparent_color=self.transparent_color, format=self.color_format)
-                self._empty_bitmap.fill(self.background_color)
+            self._empty_bitmap.init(color=0xffff)
             return self._empty_bitmap
         
     @micropython.native
     def _crop_bitmap(self) -> None:
         """裁剪child的完整位图的对应区域"""
-        if self._bitmap is None:
-            self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
+        self._bitmap.init()
         self._update_child_bitmap()
         self._bitmap.blit(self.child._bitmap, dx=(-1)*self.scroll_offset_x, dy=(-1)*self.scroll_offset_y)
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
         if self.scroll_dirty_system.dirty:
-            if self.child._bitmap is None:
-                self.child._bitmap = Bitmap(self.child.width, self.child.height, transparent_color=self.transparent_color, format=self.color_format)
+            self.child._bitmap.init()
             self._render_child_tree(self.child) # 获取到完整的child._bitmap
             
             self._dirty = True
@@ -210,7 +210,7 @@ class ScrollBox(Container):
         """事件冒泡"""
         if self.catch(event):
             self.handle(event)
-            
+
     def set_dirty_system(self, dirty_system:DirtySystem):
         """重写set_dirty_system,以适应scroll_box"""
         self.dirty_system = dirty_system

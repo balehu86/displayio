@@ -1,4 +1,5 @@
 from ..core.base_widget import BaseWidget
+from ..core.bitmap import Bitmap
 
 class Widget(BaseWidget):
     """
@@ -26,5 +27,8 @@ class Widget(BaseWidget):
                          transparent_color = transparent_color,
                          color_format = color_format)
         
+        self._bitmap = Bitmap(self)
+        self._empty_bitmap = Bitmap(self)
+
     def get_bitmap(self):
         pass

@@ -21,18 +21,52 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, width:int=0, height:int=0, transparent_color:int=0xf81f, format=framebuf.RGB565,):
-        self.width = width
-        self.height = height
-        self.transparent_color = transparent_color
-        self.format = format
+    def __init__(self, widget=None):
+        self.widget = widget
+        self.width = None
+        self.height = None
+        self.transparent_color = widget.transparent_color if widget else 0xf81f
+        self.color_format = widget.color_format if widget else self.RGB565
+        self.color = widget.background_color if widget else 0x0000
 
-        buffer_size = width * height
-        if format == framebuf.RGB565:
-            buffer_size *= 2
-        self.buffer = bytearray(buffer_size)
-        self.fb = framebuf.FrameBuffer(self.buffer, width, height, format)
+        self.size_changed = False
     
+    def init(self, width=0, height=0, transparent_color=None, color=None):
+        """bitmap初始化
+        Args:
+            width: 宽度
+            height: 高度
+            transparent_color: 透明色
+        """
+        new_width = width or (self.widget.width if self.widget else 0)
+        if self.width != new_width:
+            self.width = new_width
+            self.size_changed = True
+
+        new_height = height or (self.widget.height if self.widget else 0)
+        if self.height != new_height:
+            self.height = new_height
+            self.size_changed = True
+
+        if transparent_color is not None:
+            self.transparent_color = transparent_color
+
+        if self.size_changed:
+            buffer_size = self.width * self.height
+            if self.color_format == self.RGB565:
+                buffer_size *= 2
+            self.buffer = bytearray(buffer_size)
+            self.fb = framebuf.FrameBuffer(self.buffer, self.width, self.height, self.color_format)
+            self.size_changed = False
+            if self.color != 0x0000:
+                self.fill(self.color)
+        
+        if color is not None and self.color != color:
+            self.color=color
+            self.fill(color)
+        
+        
+
     @micropython.native
     def pixel(self, x:int, y:int, color:int|None=None):
         """获取或设置像素点"""
@@ -42,10 +76,10 @@ class Bitmap:
         
         if color is None:
             value = self.fb.pixel(x, y)
-            return _swap_rgb565(value) if self.format == framebuf.RGB565 else value
+            return _swap_rgb565(value) if self.color_format == self.RGB565 else value
         
         # 设置像素时转换颜色 
-        if self.format == framebuf.RGB565:
+        if self.color_format == self.RGB565:
             color = _swap_rgb565(color)    
         self.fb.pixel(x, y, color)
 
@@ -53,14 +87,14 @@ class Bitmap:
     def fill_rect(self, x:int, y:int, width:int, height:int, color:int):
         """填充矩形区域"""
         # 使用FrameBuffer的原生fill_rect进行填充
-        if self.format == framebuf.RGB565:  
+        if self.color_format == self.RGB565:  
             color = _swap_rgb565(color)
         self.fb.fill_rect(x, y, width, height, color)
 
     @micropython.native
     def fill(self, color:int):
         """填充整个区域"""
-        if self.format == framebuf.RGB565:  
+        if self.color_format == self.RGB565:  
             color = _swap_rgb565(color)
         self.fb.fill(color)
  
@@ -69,9 +103,9 @@ class Bitmap:
         """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
         # 如果源和目标的颜色格式不同，转换颜色
         key = source.transparent_color
-        if self.format == framebuf.RGB565 and source.format != framebuf.RGB565:
+        if self.color_format == self.RGB565 and source.color_format != self.RGB565:
             key = _swap_rgb565(key) if source.transparent_color != -1 else -1
-        elif self.format != framebuf.RGB565 and source.format == framebuf.RGB565:
+        elif self.color_format != self.RGB565 and source.color_format == self.RGB565:
             key = _swap_rgb565(key) if source.transparent_color != -1 else -1
         
         # 使用framebuf的blit方法，传入透明色键值

@@ -99,10 +99,8 @@ class Button(Label):
         """
         # 获取当前状态的样式
         style = self.styles[self.state]
-        # 创建新的位图
-        self._bitmap = Bitmap(self.width, self.height, transparent_color=self.transparent_color, format=self.color_format)
-        # 填充背景
-        self._bitmap.fill(style['background_color'])
+        # 创建和填充新的位图
+        self._bitmap.init(color=style['background_color'])
         # 绘制文本部分
         # 临时保存原来的颜色
         original_text_color = self.text_color

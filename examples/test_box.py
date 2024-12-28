@@ -68,13 +68,13 @@ main_box.add(fbox)
 vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER,height= 220)
 fbox.add(vbox_in_f)
 
-sbox=ScrollBox(background_color=0xffff)
+sbox=ScrollBox()
 vbox.add(sbox)
 
 hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)#,height=115,width=120)
 vbox.add(hbox)
 
-vbox_in_s=FlexBox(direction=Style.VERTICAL,width=110,
+vbox_in_s=FlexBox(direction=Style.VERTICAL,width=100,
                     height=300,
                   spacing = 10)
 sbox.add(vbox_in_s)
@@ -90,7 +90,6 @@ label1 = Label(
     background_color=0xcdb0,
 #     width=40
 )
-
 label2 = Label(
     text="2",
     font=font,
@@ -145,13 +144,13 @@ fbox.add(label5)
 
 for w in range(10):
     vbox_in_s.add(Button(text=str(w)*5,
-                        height=10,
                         font=font,
                         background_color=random.getrandbits(16)))
 # 添加输入设备   
 touch=TouchPin(4,target_widget=vbox_in_s.children[0])
+touch1=TouchPin(1,target_widget=button1)
 encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=False,target_widget=sbox)
-display.add_input_device(touch,encoder)
+display.add_input_device(touch,touch1,encoder)
 
 def click_callback(widget,event):
     print('clicked!')

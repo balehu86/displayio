@@ -15,7 +15,7 @@ class FlexBox(Container):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=Container.WHITE,
+                 background_color=Container.DARK,
                  transparent_color=Container.PINK,
                  color_format=Container.RGB565):
         """
