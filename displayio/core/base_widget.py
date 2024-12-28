@@ -150,16 +150,24 @@ class BaseWidget(Color, Style):
 
     def bubble(self, event) -> None:
         """事件冒泡"""
-        self.catch(event)
+        if self.catch(event):
+            self.handle(event)
+
+    def handle(self, event) -> None:
+        """处理事件"""
+        if event.type in self.event_listener:
+            for callback_func in self.event_listener[event.type]:
+                callback_func(widget=self,event=event)
+                event.done()
+        return True # 返回事件捕获处理结果
 
     def catch(self, event) -> bool:
         """捕获事件
-        首先检查自己是否有对应的处理器,然后决定是否处理
+        首先检查自己是否有对应的处理器,然后返回是否被捕获
         """
         # 如果部件未启用，则不会处理事件
         if self.state == self.STATE_DISABLED:
             return False
-
         # 当 target_widget 不为 None 时，仅检查其是否为 self
         if event.target_widget is not None:
             if event.target_widget is not self:
@@ -170,32 +178,16 @@ class BaseWidget(Color, Style):
             if not (self.dx <= x < self.dx + self.width and 
                     self.dy <= y < self.dy + self.height):
                 return False
-        
-        # 处理事件
-        if event.type in self.event_listener:
-            for callback_func in self.event_listener[event.type]:
-                callback_func(widget=self,event=event)
-                event.done()
-        return event.is_handled() # 返回事件捕获处理结果
+        return True
 
     def bind(self, event_type, callback_func: function) -> None:
-        """绑定事件处理器
-        
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
+        """绑定事件处理器"""
         if event_type not in self.event_listener:
             self.event_listener[event_type] = []
         self.event_listener[event_type].append(callback_func)
 
     def unbind(self, event_type, callback_func: function=None) -> None:
-        """解绑事件处理器
-        
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
+        """解绑事件处理器"""
         if event_type in self.event_listener:
             if callback_func is None:
                 self.event_listener[event_type].clear()

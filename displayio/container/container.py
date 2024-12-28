@@ -80,25 +80,16 @@ class Container(BaseWidget):
         for child in self.children:
             child.mark_dirty()
 
-    def bind(self, event_type:EventType, callback_func:function) -> None:
-        """事件委托,由容器为每个子元素绑定事件监听
+    def bind(self, event_type:EventType) -> None:
+        """事件委托,接收事件并冒泡"""
+        if event_type not in self.event_listener:
+            self.event_listener[event_type] = [self.bubble]
+        self.event_listener[event_type].append(self.bubble)
 
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
-        for child in self.children:
-            child.bind(event_type, callback_func)
-
-    def unbind(self, event_type:EventType, callback_func=None) -> None:
-        """事件委托,由容器为每个子元素解除绑定事件监听
-
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
-        for child in self.children:
-            child.unbind(event_type, callback_func)
+    def unbind(self, event_type:EventType) -> None:
+        """事件委托"""
+        if event_type in self.event_listener:
+            self.event_listener.pop(event_type)
 
     def hide(self) -> None:
         """隐藏容器"""
@@ -121,10 +112,11 @@ class Container(BaseWidget):
             event: Event类实例
         """
         # 尝试捕获
-        resault = self.catch(event)
-        # 如果事件未被处理，传递给子组件
-        if not resault:
-            for child in self.children: # 从上到下传递
+        # 如果事件未被捕获，传递给子组件
+        if self.catch(event):
+            self.handle(event)
+        else:
+            for child in self.children: # 传递
                 if event.is_handled(): # 已被处理
                     break
                 else: # 未处理

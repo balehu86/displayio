@@ -46,7 +46,6 @@ class Display:
         
     def set_root(self, widget:Widget):
         """设置根组件"""
-        widget.dx, widget.dy= 0, 0
         widget.resize(width=self.width, height=self.height, force=True)
         widget.width_resizable, widget.height_resizable = False, False
         self.root = widget
@@ -56,14 +55,14 @@ class Display:
     
     def add_event(self, event:Event):
         """添加事件到事件循环"""
-        self.loop.post_event(event)
+        self.loop._post_event(event)
 
     def add_input_device(self,*device:Input):
         self.inputs.extend(device)
 
     def run(self,func:function):
         """启动显示循环"""
-        self.loop.start(func)
+        self.loop.run(func)
         
     def stop(self):
         """停止显示循环和线程"""
@@ -90,55 +89,58 @@ class MainLoop:
         self.event_queue = deque([],10,1)
         # 优先级队列存储任务
         self.task_queue = []
-        # 检查是否到刷新屏幕的时间。单位ms
-        if self.display.fps > 0 :
-            self.frame_interval = 1000//self.display.fps
-        else :
-            self.frame_interval = 1  # 1000 FPS
-        # 记录上次刷新屏幕的时间
-        self.last_frame_time = 0
-        self.frame_count = 0  # 新增：帧计数器
-        self.last_fps_time = time.ticks_ms()  # 新增：上次计算FPS的时间
-        self.input_count = 0 # 输入频率检测
-        self.last_input_time = time.ticks_ms()  # 新增：上次计算输入的时间
-        if not display.soft_timer:
-            # 检查输入的定时器
-            self.input_timer = Timer(0)
-        # 多线程
+
+        #FPS相关计算移到独立方法
+        self._init_fps_settings()
+        # 输入检测相关初始化移到独立方法
+        self._init_input_settings()
+        # 多线程相关初始化移到独立方法
         if display.thread and display.output is not None:
-            import _thread
-            # 坐标和尺寸参数 x,y,width,height
-            self.thread_dx = 0
-            self.thread_dy = 0
-            self.thread_width = display.width
-            self.thread_height = display.height
-            # 初始化一个bitmap，粉色背景
-            init_buffer = bytes(display.width * display.height * 2)
-            # 锁和运行控制
-            self.lock = _thread.allocate_lock()
-            self.thread_running = True
-            # 传递给线程的可变类型参数
-            self.thread_args = {'buffer':init_buffer,\
-                                'thread_running':self.thread_running,
-                                'dx':0, 'dy':0, 'width':display.width,\
-                                'height':display.height}
-            # 创建线程
-            self.thread = _thread.start_new_thread(
-                                                display.output._thread_refresh_wrapper,\
-                                                (self.thread_args,self.lock))
+            self._init_thread_settings()
+
+    def _init_fps_settings(self):
+        """初始化FPS相关设置"""
+        self.frame_interval = 1000 // self.display.fps if self.display.fps > 0 else 1
+        self.last_frame_time = time.ticks_ms()
+        self.frame_count = 0
+        self.last_fps_time = time.ticks_ms()
         
-    def start(self,func:function):
-        """启动事件循环"""
-        self.running = True
+    def _init_input_settings(self):
+        """初始化输入检测相关设置"""
+        self.input_count = 0
+        self.last_input_time = time.ticks_ms()
         if not self.display.soft_timer:
-            # 初始化输入检测定时器
-            self.input_timer.init(mode=Timer.PERIODIC,freq=550, callback=self._check_input)
-        try:
-            self.run(func)
-        except KeyboardInterrupt:
-            print("捕获到键盘中断，正在退出...")
-            self.stop()
-            print("已退出。")
+            self.input_timer = Timer(0)
+
+    def _init_thread_settings(self):
+        """初始化多线程相关设置"""
+        import _thread
+        self.thread_dx = 0
+        self.thread_dy = 0
+        self.thread_width = self.display.width
+        self.thread_height = self.display.height
+        
+        # 初始化buffer
+        init_buffer = bytes(self.display.width * self.display.height * 2)
+        
+        # 线程控制
+        self.lock = _thread.allocate_lock()
+        self.thread_running = True
+        
+        # 线程参数字典
+        self.thread_args = {
+            'buffer': init_buffer,
+            'thread_running': self.thread_running,
+            'dx': 0,
+            'dy': 0,
+            'width': self.display.width,
+            'height': self.display.height
+        }
+        
+        # 启动线程
+        self.thread = _thread.start_new_thread(
+            self.display.output._thread_refresh_wrapper,
+            (self.thread_args, self.lock))
     
     def stop(self):
         """停止事件循环"""
@@ -151,27 +153,32 @@ class MainLoop:
         if not self.display.soft_timer:
             self.input_timer.deinit()
         
-    def post_event(self, event:Event):
+    def _post_event(self, event:Event=None):
         """添加事件到队列"""
-        self.event_queue.append(event)
+        if event is not None:
+            self.event_queue.append(event)
 
-    def _process_events(self):
-        """处理所有待处理事件"""
-        while self.event_queue:
-            event = self.event_queue.popleft()
-            self.display.root.bubble(event)
-
-    def _check_input(self, *args):
-        # 如果采用硬件定时器,此函数需要接受一个timer的实例作为参数,如果采用软件定时器,则不需要.
-        for device in self.display.inputs:
-            event = device.check_input()
-            if event is not None:
-                self.post_event(event)
         # 新增：输入计数和IPS计算
         if self.display.show_fps:
             self._calculate_ips()
 
+    def process_event_queue(self):
+        """处理待处理事件"""
+        while self.event_queue:
+            event = self.event_queue.popleft()
+            if event.target_widget: # 有目标widget,则在目标widget开始冒泡
+                self.add_task(event.target_widget.bubble,one_shot=True,args=(event,))
+            else:
+                self.add_task(self.display.root.bubble,one_shot=True,args=(event,))
+
+    def _hardware_check_input(self, *args):
+        # 如果采用硬件定时器,此函数需要接受一个timer的实例作为参数,如果采用软件定时器,则不需要.
+        for device in self.display.inputs:
+            event = device.check_input()
+            self._post_event(event)
+
     def _calculate_ips(self):
+        """计算并打印每秒检查输入轮次数"""
         self.input_count += 1
         current_time = time.ticks_ms()
         elapsed_time = time.ticks_diff(current_time, self.last_input_time)
@@ -182,7 +189,7 @@ class MainLoop:
             self.input_count = 0
             self.last_input_time = current_time
 
-    def _update_layout(self):
+    def update_layout(self):
         """更新布局"""
         if self.dirty_system.layout_dirty:
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
@@ -238,7 +245,7 @@ class MainLoop:
             self._update_display()
         else:
             self._update_display_fully()
-        # 新增：帧数计数和FPS计算
+        # 帧数计数和FPS计算
         if self.display.show_fps:
             self._calculate_fps()
 
@@ -255,23 +262,48 @@ class MainLoop:
             self.frame_count = 0
             self.last_fps_time = current_time
 
-    def add_task(self, callback, period=0, priority=10, one_shot=False, on_complete=None):
+    def add_task(self, callback, period=0, priority=10, one_shot=False, on_complete=None, args=(), kwargs={}):
         """添加一个新任务"""
-        task = Task(callback, period, priority, one_shot, on_complete)
+        task = Task(callback, period, priority, one_shot, on_complete, args, kwargs)
         heappush(self.task_queue, task)
 
     def run(self,func:function):
         """运行调度器"""
-        self.add_task(func,one_shot=True)
+        try:
+            self.running = True
+            if not self.display.soft_timer:
+                # 初始化输入检测定时器
+                self.input_timer.init(mode=Timer.PERIODIC,freq=550, callback=self._hardware_check_input)
+            self._init_tasks(func) # 添加初始函数
+            self._main_loop()
+        except KeyboardInterrupt:
+            print("捕获到键盘中断，正在退出...")
+            self.stop()
+            print("已退出。")
+        except Exception as e:
+            print(f"Error in main loop: {e}")
+            self.stop()
+
+    def _init_tasks(self, func:function):
+        """初始化所有任务"""
+        # 添加初始函数
+        self.add_task(func, one_shot=True)
+        
+        # 添加输入检测任务
         if self.display.soft_timer:
-            # for device in self.display.inputs:
-            #     event = device.check_input()
-            #     if event is not None:
-            #         self.post_event(event)
-            self.add_task(self._check_input,period=1) # 软件定时器太慢了
-        self.add_task(self._process_events,period=3)
-        self.add_task(self._update_layout,period=self.frame_interval,priority=10)
-        self.add_task(self.update_display,period=self.frame_interval,priority=11)
+            for device in self.display.inputs:
+                self.add_task(device.check_input, period=2, on_complete=self._post_event)
+                
+        # 添加核心任务
+        # 添加事件冒泡 
+        self.add_task(self.process_event_queue, period=10)
+        # 添加布局系统
+        self.add_task(self.update_layout, period=self.frame_interval, priority=10)
+        # 添加刷新系统
+        self.add_task(self.update_display, period=self.frame_interval, priority=11)
+
+    def _main_loop(self):
+        """主循环实现"""
         while self.running:
             current_time = time.ticks_ms() # 获取当前时间
             task = self.task_queue[0] # 查看队列中的最高优先级任务
@@ -289,17 +321,34 @@ class MainLoop:
 
 class Task:
     """表示一个任务"""
-    def __init__(self, callback, period=0, priority=10, one_shot=False, on_complete=None):
+    def __init__(self, callback,
+                 period=0, priority=10,
+                 one_shot=False, on_complete=None,
+                 args=(), kwargs={}):
+        
+        """
+        Args:
+            callback (function): 任务回调
+            period (int, optional): 任务调用间隔,单位ms. Defaults to 0.
+            priority (int, optional): 任务优先级. Defaults to 10.
+            one_shot (bool, optional): 标记任务是否为单次任务. Defaults to False.
+            on_complete (_type_, optional): 任务回调执行完毕执行的回调,接受一个任务返回值的参数. Defaults to None.
+            args (tuple, optional): 任务启动时的参数. Defaults to None.
+            kwargs (dict, optional): 任务启动时的关键字参数. Defaults to None.
+        """
         if callback.__class__.__name__ == 'generator':
-            self.generator = callback  # 如果是生成器，保存生成器对象
+            self.generator = callback(*args,**kwargs)  # 如果是生成器，保存生成器对象
             self.callback = None
         else:
             self.generator = None
-            self.callback = callback  # 普通函数回调
-        self.period = period          # 任务的执行间隔（ms）
-        self.priority = priority      # 优先级，数值越小优先级越高
-        self.one_shot = one_shot      # 是否是单次任务
+            self.callback = callback   # 普通函数回调
+
+        self.period = period           # 任务的执行间隔（ms）
+        self.priority = priority       # 优先级，数值越小优先级越高
+        self.one_shot = one_shot       # 是否是单次任务
         self.on_complete = on_complete # 任务完成执行的回调函数
+        self.args = args               # 任务启动时的参数
+        self.kwargs = kwargs           # 任务启动时的关键字参数
         self.next_run = time.ticks_add(time.ticks_ms(), period)   # 下次运行时间
 
     def __lt__(self, other):
@@ -308,17 +357,20 @@ class Task:
             return self.priority < other.priority
         return self.next_run < other.next_run
     
-    def execute(self):
-        """执行任务,任务完成返回False,未完成返回True"""
+    def execute(self) -> bool:
+        """执行任务,任务是否需要继续执行。True表示继续,False表示结束"""
+        result = None  # 存储返回值
         if self.generator:
             try:
-                next(self.generator)  # 执行生成器的下一步
-            except StopIteration:
+                result = next(self.generator)  # 执行生成器的下一步
+            except StopIteration as e:
+                # 获取生成器的返回值
+                result = e.value
                 if self.on_complete:  # 任务完成后执行回调
-                    self.on_complete()
+                    self.on_complete(result)
                 return False  # 生成器已完成，标记任务结束
-        elif self.callback:
-            self.callback()  # 执行普通回调
-            if self.one_shot and self.on_complete:  # 单次任务完成后执行回调
-                self.on_complete()
+        else: # 执行普通回调
+            result = self.callback(*self.args,**self.kwargs)
+            if self.on_complete:  # 单次任务完成后执行回调
+                self.on_complete(result)
         return not self.one_shot  # 对于单次任务，标记结束

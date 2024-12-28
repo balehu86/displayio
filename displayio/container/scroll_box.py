@@ -206,6 +206,11 @@ class ScrollBox(Container):
             elif callback_func in self.event_listener[event_type]:
                 self.event_listener[event_type].remove(callback_func)
 
+    def bubble(self, event) -> None:
+        """事件冒泡"""
+        if self.catch(event):
+            self.handle(event)
+            
     def set_dirty_system(self, dirty_system:DirtySystem):
         """重写set_dirty_system,以适应scroll_box"""
         self.dirty_system = dirty_system
