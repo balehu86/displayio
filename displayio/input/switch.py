@@ -4,6 +4,10 @@ from .base_input import Input
 from ..core.event import Event
 
 class Switch(Input):
+    __slots__ = ('mode', 'threshold', 'pin', 'press_start_time'
+                 'last_release_time', 'click_min_duration', 'click_max_duration',
+                 'long_press_duration', 'double_click_max_interval')
+    
     PULL_UP = Pin.PULL_UP
     PULL_DOWN = Pin.PULL_DOWN
     def __init__(self, pin, mode=PULL_UP,

@@ -1,13 +1,18 @@
 # ./display.py
 from .core.bitmap import Bitmap
 from .core.event import Event # type hint
-from .widget.widget import Widget # type hint
+from .widget.widget import Widget
+from .container.container import Container # type hint
 from .input.base_input import Input # type hint
 
 import time
 
 class Display:
-    def __init__(self, width:int, height:int, root:Widget=None,
+    __slots__ = ('width', 'height', 'root', 'output', 'inputs',
+                 'soft_timer', 'fps', 'show_fps', 'partly_refresh',
+                 'thread', 'loop')
+
+    def __init__(self, width:int, height:int, root:Container=None,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
                  show_fps:bool=False, partly_refresh:bool=True, thread:bool=True):
         """显示器主程序
@@ -44,7 +49,7 @@ class Display:
         # 创建事件循环
         self.loop = MainLoop(self)
         
-    def set_root(self, widget:Widget):
+    def set_root(self, widget:Container):
         """设置根组件"""
         widget.resize(width=self.width, height=self.height, force=True)
         widget.width_resizable, widget.height_resizable = False, False
@@ -77,9 +82,13 @@ from collections import deque
 from heapq import heappush, heappop  # 用于优先级队列管理任务
 from machine import Timer # type: ignore
 from .utils.decorator import timeit
-from .container.container import Container # type hint
 
 class MainLoop:
+    __slots__ = ('display', 'dirty_system', 'running', 'event_queue', 'task_queue',
+                 'frame_interval', 'last_frame_time', 'frame_count', 'last_fps_time'
+                 'input_count', 'last_input_time', 'input_timer',
+                 'thread_dx', 'thread_dy', 'thread_width', 'thread_height', 'lock thread_running', 'thread_args', 'thread')
+    
     """事件循环类，管理布局、渲染和事件处理"""
     def __init__(self, display:Display):
         self.display = display
@@ -323,6 +332,8 @@ class MainLoop:
 
 class Task:
     """表示一个任务"""
+    __slots__ = ('generator', 'callback', 'period', 'priority', 'one_shot', 'on_complete', 'args', 'kwargs', 'next_run')
+    
     def __init__(self, callback,
                  period=0, priority=10,
                  one_shot=False, on_complete=None,

@@ -9,7 +9,8 @@ class Button(Label):
     按钮控件类
     继承自Label,添加了状态和交互功能
     """
-    
+    __slots__ = ('styles',)
+
     def __init__(self,
                  
                  text="",
@@ -118,5 +119,3 @@ class Button(Label):
     
     def long_press_release(self,widget,event) -> None:
         self.set_state(self.STATE_DEFAULT)
-    
-

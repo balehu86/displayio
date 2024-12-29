@@ -8,6 +8,8 @@ class FlexBox(Container):
     FlexBox弹性容器类
     继承自Container
     """
+    __slots__ = ('direction', 'spacing', 'align', 'reverse')
+
     def __init__(self,
                  direction=Container.HORIZONTAL, spacing=0, align=Container.ALIGN_START, reverse=False,
 

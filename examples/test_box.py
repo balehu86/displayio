@@ -133,6 +133,7 @@ button1 = Button(
     text = 'b1',
     font = font,
     font_scale = 2,
+    align= Style.ALIGN_RIGHT
 )
 button2 = Button(
     text = 'b2',
@@ -143,6 +144,7 @@ button2 = Button(
 hbox.add(label1, label2)
 vbox.add(label3, label4)
 fbox.add(label5)
+main_box.add(button1, row=2, col=3, col_span=3)
 
 
 gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=0,col=0)

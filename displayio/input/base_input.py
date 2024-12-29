@@ -5,6 +5,8 @@ class Input(EventType):
     """
     输入设备基类
     """
+    __slots__ = ('target_widget', 'target_position', 'state')
+    
     def __init__(self,target_widget=None, target_position=None):
         # 目标管理
         self.target_widget = target_widget

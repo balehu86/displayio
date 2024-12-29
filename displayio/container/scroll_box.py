@@ -12,6 +12,11 @@ class ScrollBox(Container):
     ScrollBox滚动容器类
     继承自Container
     """
+    __slots__ = ('scroll_dirty_system', 'child'
+                 'scroll_offset_x', 'scroll_offset_y',
+                 'is_scrollable_x', 'is_scrollable_y',
+                 'scroll_range_x', 'scroll_range_y')
+
     def __init__(self,                 
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,
@@ -45,9 +50,8 @@ class ScrollBox(Container):
         self._empty_bitmap = Bitmap(self)
         # 使用实例ID作为唯一标识
         self.child = None
-        self.scroll_id = id(self)
         # 创建独立的脏区域管理器
-        self.scroll_dirty_system = BoundBoxSystem(name=f'scroll_{self.scroll_id}',widget=self)
+        self.scroll_dirty_system = BoundBoxSystem(name=f'scroll_{id(self)}',widget=self)
         # 滚动相关的属性
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0

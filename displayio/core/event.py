@@ -2,6 +2,8 @@
 
 class EventType:
     """事件类型枚举"""
+    __slots__ = ()
+
     DEFAULT = 0           # No event
     IDLE = 0
 
@@ -22,7 +24,7 @@ class EventType:
     DRAG_END = 12         # 拖动结束
     # 焦点相关事件
     FOCUS = 13            # 获得焦点
-    UNFOCUS = 14             # 失去焦点
+    UNFOCUS = 14          # 失去焦点
     # 值和选择相关事件
     VALUE_CHANGE = 15     # 值改变
     SELECTION_CHANGE = 16 # 选择改变
@@ -44,6 +46,9 @@ class EventType:
                                 ↘ [Timed Out]
 """
 class Event:
+    __slots__ = ('type', 'target_widget', 'target_position', 'data',
+                'timestamp', 'priority', 'status_code')
+    
     Initializing = -1 # 初始化中
     Pending = 0       # 准备中 
     Scheduled = 1     # 已调度

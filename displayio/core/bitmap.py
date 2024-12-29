@@ -12,6 +12,9 @@ def _swap_rgb565(color: int) -> int:
     return ((color >> 8) | (color << 8)) & 0xFFFF
 
 class Bitmap:
+    __slots__ = ('widget', 'width', 'height', 'transparent_color', 'color_format',
+                'color', 'size_changed', 'buffer', 'fb')
+    
     # 支持的颜色格式
     MONO_VLSB = framebuf.MONO_VLSB
     MONO_HLSB = framebuf.MONO_HLSB
@@ -74,10 +77,6 @@ class Bitmap:
                 self.fill(color)
             elif self.color != 0x0000 and color is None:
                 self.fill(self.color)
-        
-        
-        
-        
 
     @micropython.native
     def pixel(self, x:int, y:int, color:int|None=None):

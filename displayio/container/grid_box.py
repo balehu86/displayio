@@ -9,6 +9,9 @@ class GridBox(Container):
     GridBox表格容器类
     继承自Container
     """
+    __slots__ = ('rows', 'cols', 'row_spacing', 'col_spacing',
+                'merged_cells', 'child_posi')
+    
     def __init__(self,
                  rows, cols, row_spacing=0, col_spacing=0,
 

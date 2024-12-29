@@ -4,6 +4,14 @@ from .dirty import MergeRegionSystem
 from .event import EventType
 
 class BaseWidget(Color, Style):
+
+    __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dz',
+                 'width', 'height', 'visibility', 'state',
+                 'width_resizable', 'height_resizable',
+                 'background_color', 'transparent_color', 'color_format',
+                 'background_color_cache', '_bitmap', '_empty_bitmap'
+                 '_dirty', 'dirty_system', 'parent', 'children', 'event_listener')
+    
     # widget状态枚举
     STATE_DEFAULT = 0   # 正常、释放状态
     STATE_CHECKED = 1   # 切换或选中状态
@@ -22,7 +30,7 @@ class BaseWidget(Color, Style):
                  visibility=True, state=STATE_DEFAULT,
                  background_color=Color.WHITE, # 默认白色
                  transparent_color=Color.PINK,
-                 color_format = Style.RGB565):
+                 color_format=Style.RGB565):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
         self.abs_x, self.abs_y = abs_x, abs_y
@@ -56,6 +64,8 @@ class BaseWidget(Color, Style):
         self.dirty_system = MergeRegionSystem()
         # 部件继承关系
         self.parent = None
+        # 容器的子元素
+        self.children = []
         # 背景色
         self.background_color = background_color
         # 没有缓存时应该保持为None
@@ -127,12 +137,16 @@ class BaseWidget(Color, Style):
         """隐藏部件"""
         self.visibility = False
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        
+        for child in self.children:
+            child.hide()
+
     def unhide(self) -> None:
         """取消隐藏部件"""
         self.visibility = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        
+        for child in self.children:
+            child.unhide()
+
     def _get_min_size(self) -> tuple[int, int]:
         """
         计算元素尺寸用。
@@ -147,23 +161,31 @@ class BaseWidget(Color, Style):
     def mark_dirty(self) -> None:
         """向末梢传递 脏"""
         self._dirty = True
+        for child in self.children:
+            child.mark_dirty()
 
     def set_dirty_system(self, dirty_system):
         """设置脏区域管理器"""
         self.dirty_system = dirty_system
+        for child in self.children:
+            child.set_dirty_system(dirty_system)
 
     def bubble(self, event) -> None:
-        """事件冒泡"""
+        """事件冒泡
+        首先检查容器自己是否有对应的处理器，如果有则看自己是否处理，不处理则传递给子组件
+        Args:
+            event: Event类实例
+        """
+        # 尝试捕获
+        # 如果事件未被捕获，传递给子组件
         if self.catch(event):
             self.handle(event)
-
-    def handle(self, event) -> None:
-        """处理事件"""
-        if event.type in self.event_listener:
-            for callback_func in self.event_listener[event.type]:
-                callback_func(widget=self,event=event)
-                event.done()
-        return True # 返回事件捕获处理结果
+        else:
+            for child in self.children: # 传递
+                if event.is_handled(): # 已被处理
+                    break
+                else: # 未处理
+                    child.bubble(event)
 
     def catch(self, event) -> bool:
         """捕获事件
@@ -184,6 +206,14 @@ class BaseWidget(Color, Style):
                 return False
         return True
 
+    def handle(self, event) -> None:
+        """处理事件"""
+        if event.type in self.event_listener:
+            for callback_func in self.event_listener[event.type]:
+                callback_func(widget=self,event=event)
+                event.done()
+        return True # 返回事件捕获处理结果
+    
     def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器"""
         if event_type not in self.event_listener:
@@ -216,6 +246,8 @@ class BaseWidget(Color, Style):
         self.background_color_cache = self.background_color
         self.background_color = self._darken_color(self.background_color,0.9)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+        for child in self.children:
+            child.focus()
 
     def unfocus(self):
         """取消元素聚焦"""
@@ -223,7 +255,9 @@ class BaseWidget(Color, Style):
             self.background_color = self.background_color_cache
             self.background_color_cache = None
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    
+        for child in self.children:
+            child.unfocus()
+
     def _darken_color(self, color, factor):
         """将16位RGB颜色调暗
         参数:

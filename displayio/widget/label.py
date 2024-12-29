@@ -10,7 +10,12 @@ class Label(Widget):
     """
     标签控件类
     用于显示文本内容，支持自定义颜色、对齐方式等
-    """    
+    """
+    __slots__ = ('font', 'font_scale', 'font_width', 'font_height',
+                 'font_default', 'font_rle',
+                 'text','text_width','text_height', 'text_color',
+                 'align', 'padding','_text_bitmap')
+
     def __init__(self, 
                  text="",
                  font=None,  # 字体字典数据

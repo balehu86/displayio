@@ -2,6 +2,7 @@
 from .bitmap import Bitmap
 
 class Color:
+    __slots__ = ()
     RED   = 0xf800
     GREEN = 0x07e0
     BLUE  = 0x001f
@@ -17,6 +18,7 @@ class Style:
     """
     样式枚举
     """
+    __slots__ = ()
     # 支持的颜色格式
     MONO_VLSB = Bitmap.MONO_VLSB
     MONO_HLSB = Bitmap.MONO_HLSB

@@ -50,7 +50,6 @@ class DirtySystem:
                 if name != 'default':
                     system.clear()
 
-
 class MergeRegionSystem(DirtySystem):
     """
     脏区域管理类,采用区域合并算法
@@ -136,13 +135,12 @@ class BoundBoxSystem(DirtySystem):
     边界框脏区域管理,采用包围盒算法
     适合处理单一矩形区域的大规模刷新。
     """
-    __slots__ = ('min_x', 'min_y', 'max_x', 'max_y', 'has_bounds')
+    __slots__ = ('min_x', 'min_y', 'max_x', 'max_y')
     
     def __init__(self, name='default', widget=None):
         super().__init__(name, widget)
         self.min_x, self.min_y = float('inf'), float('inf')
         self.max_x, self.max_y = float('-inf'), float('-inf')
-        self.has_bounds = False
 
     @property
     def area(self):
@@ -161,7 +159,6 @@ class BoundBoxSystem(DirtySystem):
         self.max_x = max(self.max_x, x2 + width2 - 1)
         self.max_y = max(self.max_y, y2 + height2 - 1)
 
-        self.has_bounds = True
         self.dirty = True
 
         # 传递 dirty state to parent system
@@ -188,7 +185,6 @@ class BoundBoxSystem(DirtySystem):
         
         self.min_x, self.min_y = float('inf'), float('inf')
         self.max_x, self.max_y = float('-inf'), float('-inf')
-        self.has_bounds = False
         self.dirty = False
 
 class GridSystem(DirtySystem):

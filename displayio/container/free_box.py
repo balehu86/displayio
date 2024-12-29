@@ -8,6 +8,8 @@ class FreeBox(Container):
     FreeBox滚动容器类
     继承自Container
     """
+    __slots__ = ()
+    
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,

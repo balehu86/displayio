@@ -4,7 +4,9 @@ from ..core.bitmap import Bitmap
 class Widget(BaseWidget):
     """
     控件基类
-    """    
+    """
+    __slots__ = ()
+    
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0,rel_y=0, dz=0,

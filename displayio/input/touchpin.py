@@ -4,6 +4,10 @@ from .base_input import Input
 from ..core.event import Event
 
 class TouchPin(Input):
+    __slots__ = ('touch_pin', 'press_start_time', 'last_release_time',
+                 'click_min_duration', 'click_max_duration', 'long_press_duration',
+                 'double_click_max_interval', 'touch_threshold')
+
     def __init__(self, pin, touch_threshold=100000,
                  
                  target_widget=None, target_position=None):

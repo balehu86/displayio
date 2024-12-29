@@ -4,6 +4,9 @@ from .base_input import Input
 from ..core.event import Event
 
 class RotaryEncoder(Input):
+    __slots__ = ('pin_a', 'pin_b', 'strict', 'steps_per_click',
+                 'code', 'position', 'tick_position', 'direction')
+
     def __init__(self, pin_a, pin_b, strict=False, steps_per_click=4, 
                  target_widget=None, target_position=None):
         """
