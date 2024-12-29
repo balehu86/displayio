@@ -2,7 +2,7 @@
 from .container import Container
 from ..core.bitmap import Bitmap
 from ..core.event import EventType
-from ..core.dirty import DirtySystem
+from ..core.dirty import MergeRegionSystem, BoundBoxSystem
 from ..widget.widget import Widget # type hint
 
 import micropython # type: ignore
@@ -47,7 +47,7 @@ class ScrollBox(Container):
         self.child = None
         self.scroll_id = id(self)
         # 创建独立的脏区域管理器
-        self.scroll_dirty_system = DirtySystem(name=f'scroll_{self.scroll_id}',widget=self)
+        self.scroll_dirty_system = BoundBoxSystem(name=f'scroll_{self.scroll_id}',widget=self)
         # 滚动相关的属性
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0
@@ -82,7 +82,7 @@ class ScrollBox(Container):
             self.children.clear() # 因为事件传递需要，所以保留此项
             self.child.parent = None
             # 恢复默认的脏区域管理器
-            self.child.set_dirty_system(DirtySystem())
+            self.child.set_dirty_system(MergeRegionSystem())
             self.child = None
         self.dirty_system.layout_dirty = True
 
@@ -110,7 +110,7 @@ class ScrollBox(Container):
             self.scroll_range_y = 0
             self.scroll_offset_y = 0
 
-        actual_width = child_min_width if self.child.width_resizable else self.child.width
+        actual_width = self.width if self.child.width_resizable else self.child.width
         actual_height = self.height if self.child.height_resizable else self.child.height
         # 根据滚动偏移量调整布局
         self.child.layout(dx=0, dy=0, width=actual_width, height=actual_height)
@@ -210,7 +210,7 @@ class ScrollBox(Container):
         if self.catch(event):
             self.handle(event)
 
-    def set_dirty_system(self, dirty_system:DirtySystem):
+    def set_dirty_system(self, dirty_system:MergeRegionSystem):
         """重写set_dirty_system,以适应scroll_box"""
         self.dirty_system = dirty_system
     

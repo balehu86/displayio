@@ -74,6 +74,5 @@ class FreeBox(Container):
             # 确定实际使用的高度
             actual_height = self.height if child.height_resizable else child_min_height
             # 应用布局
-            child.layout(dx = self.dx, dy = self.dy, 
-                         width = actual_width, height = actual_height)
+            child.layout(dx=self.dx, dy=self.dy, width=actual_width, height=actual_height)
     

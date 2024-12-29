@@ -1,6 +1,6 @@
 # ./core/widget.py
 from .style import Color, Style
-from .dirty import DirtySystem
+from .dirty import MergeRegionSystem
 
 class BaseWidget(Color, Style):
     # widget状态枚举
@@ -52,7 +52,7 @@ class BaseWidget(Color, Style):
         # 绘制系统的脏标记
         self._dirty = True # 存在本地，触发触发重绘
         # 脏区域系统
-        self.dirty_system = DirtySystem()
+        self.dirty_system = MergeRegionSystem()
         # 部件继承关系
         self.parent = None
         # 背景色
@@ -205,11 +205,4 @@ class BaseWidget(Color, Style):
 
     def widget_in_dirty_area(self):
         """检查widget是否和脏区域有交集"""
-        x2_min, y2_min, x2_max, y2_max = self.dx, self.dy, self.dx+self.width-1, self.dy+self.height-1
-        for dirty_area in self.dirty_system.area:
-            x1_min, y1_min, x1_max, y1_max = dirty_area
-            # 判断两个区域是否有交集
-            if not (x1_min > x2_max or x2_min > x1_max or 
-                    y1_min > y2_max or y2_min > y1_max):
-                return True  # 发现交集，直接返回 True
-        return False  # 遍历完所有区域，没有交集
+        return self.dirty_system.intersects(self.dx,self.dy,self.width,self.height)

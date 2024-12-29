@@ -203,7 +203,6 @@ class FlexBox(Container):
             if self.reverse:
                 dy -= (actual_height + self.spacing)
             # 应用布局
-            child.layout(dx = dx, dy = dy,
-                         width = actual_width, height = actual_height)
+            child.layout(dx=dx, dy=dy, width=actual_width, height=actual_height)
             if not self.reverse:
                 dy += actual_height + self.spacing

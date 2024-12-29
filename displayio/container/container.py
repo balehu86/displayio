@@ -1,7 +1,7 @@
 # ./core/container.py
 from ..core.base_widget import BaseWidget
 from ..core.event import Event # type hint
-from ..core.dirty import DirtySystem # type hint
+from ..core.dirty import MergeRegionSystem # type hint
 from ..core.event import EventType
 
 from heapq import heappush
@@ -122,7 +122,7 @@ class Container(BaseWidget):
                 else: # 未处理
                     child.bubble(event)
 
-    def set_dirty_system(self, dirty_system:DirtySystem):
+    def set_dirty_system(self, dirty_system:MergeRegionSystem):
         """递归设置脏区域管理器"""
         self.dirty_system = dirty_system
         for child in self.children:

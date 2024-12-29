@@ -49,6 +49,7 @@ class Display:
         widget.resize(width=self.width, height=self.height, force=True)
         widget.width_resizable, widget.height_resizable = False, False
         self.root = widget
+        self.loop.dirty_system=widget.dirty_system
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             widget._bitmap = Bitmap(widget)
@@ -59,6 +60,7 @@ class Display:
         self.loop._post_event(event)
 
     def add_input_device(self,*device:Input):
+        """添加输入设备"""
         self.inputs.extend(device)
 
     def run(self,func:function):
@@ -75,7 +77,6 @@ from collections import deque
 from heapq import heappush, heappop  # 用于优先级队列管理任务
 from machine import Timer # type: ignore
 from .utils.decorator import timeit
-from .core.dirty import DirtySystem
 from .container.container import Container # type hint
 
 class MainLoop:
@@ -83,7 +84,7 @@ class MainLoop:
     def __init__(self, display:Display):
         self.display = display
         # 脏区域全局共享实例
-        self.dirty_system = DirtySystem()
+        self.dirty_system = None
         # 标记是否运行
         self.running = False
         # 事件队列，最多存10个事件
@@ -293,7 +294,7 @@ class MainLoop:
         # 添加输入检测任务
         if self.display.soft_timer:
             for device in self.display.inputs:
-                self.add_task(device.check_input, period=2, on_complete=self._post_event)
+                self.add_task(device.check_input, period=2, priority=5, on_complete=self._post_event)
                 
         # 添加核心任务
         # 添加事件冒泡 
