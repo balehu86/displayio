@@ -1,6 +1,7 @@
 # ./core/widget.py
 from .style import Color, Style
 from .dirty import MergeRegionSystem
+from .event import EventType
 
 class BaseWidget(Color, Style):
     # widget状态枚举
@@ -57,10 +58,13 @@ class BaseWidget(Color, Style):
         self.parent = None
         # 背景色
         self.background_color = background_color
+        # 没有缓存时应该保持为None
+        self.background_color_cache = None
         # 透明色
         self.transparent_color = transparent_color
         # event监听器注册
-        self.event_listener = {}  # 事件处理器字典
+        self.event_listener = {EventType.FOCUS:[],
+                               EventType.UNFOCUS:[]}  # 事件处理器字典
             
     def layout(self, dx, dy, width=None, height=None) -> None:
         """
@@ -206,3 +210,33 @@ class BaseWidget(Color, Style):
     def widget_in_dirty_area(self):
         """检查widget是否和脏区域有交集"""
         return self.dirty_system.intersects(self.dx,self.dy,self.width,self.height)
+    
+    def focus(self):
+        """元素聚焦,会将元素内所有元素调暗0.1"""
+        self.background_color_cache = self.background_color
+        self.background_color = self._darken_color(self.background_color,0.9)
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+
+    def unfocus(self):
+        """取消元素聚焦"""
+        if self.background_color_cache is not None:
+            self.background_color = self.background_color_cache
+            self.background_color_cache = None
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+    
+    def _darken_color(self, color, factor):
+        """将16位RGB颜色调暗
+        参数:
+            color: 原始颜色(16位RGB)
+            factor: 暗化因子(0-1)
+        """
+        # 提取RGB分量
+        r = (color >> 11) & 0x1F
+        g = (color >> 5) & 0x3F
+        b = color & 0x1F
+        # 调整亮度
+        r = int(r * factor)
+        g = int(g * factor)
+        b = int(b * factor)
+        # 重新组装颜色
+        return (r << 11) | (g << 5) | b

@@ -22,7 +22,7 @@ class EventType:
     DRAG_END = 12         # 拖动结束
     # 焦点相关事件
     FOCUS = 13            # 获得焦点
-    BLUR = 14             # 失去焦点
+    UNFOCUS = 14             # 失去焦点
     # 值和选择相关事件
     VALUE_CHANGE = 15     # 值改变
     SELECTION_CHANGE = 16 # 选择改变

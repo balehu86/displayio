@@ -60,21 +60,29 @@ class GridBox(Container):
         # 标记合并信息
         self.merged_cells[(row, col)] = (row_span, col_span)
 
-    def add(self, widget: BaseWidget, row, col, row_span=1, col_span=1):
+    def add(self, widget: BaseWidget|Container, row, col, row_span=1, col_span=1):
         """添加子部件,可选span参数"""
         # 如果需要合并单元格，先合并
         if row_span > 1 or col_span > 1:
             self.merge_cells(row, col, row_span, col_span)
-
         # 将widget添加到指定位置
         # 在这里不检查cell是否已有widget,cell可以重复添加widget
         # 在已经span占用的单元格中同样不做检查,默认覆盖操作
         # 覆盖顺序可以用widget.dz属性确定
         self.child_posi[widget] = (row, col)
-
         # 添加到子元素
         super().add(widget)
-    
+
+    def remove(self, widget: BaseWidget|Container) -> None:
+        """移除子部件"""
+        self.child_posi.pop(widget, None)
+        super().remove(widget)
+
+    def clear(self) -> None:
+        """清空容器中所有元素"""
+        self.child_posi.clear()
+        super().clear()
+
     @micropython.native
     def update_layout(self):
         """

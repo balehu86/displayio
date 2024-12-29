@@ -127,3 +127,15 @@ class Container(BaseWidget):
         self.dirty_system = dirty_system
         for child in self.children:
             child.set_dirty_system(dirty_system)
+
+    def focus(self):
+        """元素聚焦,会将元素内所有元素调暗0.1"""
+        super().focus()
+        for child in self.children:
+            child.focus()
+    
+    def unfocus(self):
+        """取消元素聚焦"""
+        super().unfocus()
+        for child in self.children:
+            child.unfocus()

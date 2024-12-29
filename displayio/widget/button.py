@@ -1,28 +1,8 @@
 # ./widget/button.py
 from .label import Label
-from ..core.bitmap import Bitmap
 from ..core.event import EventType
-import micropython # type: ignore
 
-@micropython.native
-def _darken_color(color, factor):
-    """
-    将16位RGB颜色调暗
-    
-    参数:
-        color: 原始颜色(16位RGB)
-        factor: 暗化因子(0-1)
-    """
-    # 提取RGB分量
-    r = (color >> 11) & 0x1F
-    g = (color >> 5) & 0x3F
-    b = color & 0x1F
-    # 调整亮度
-    r = int(r * factor)
-    g = int(g * factor)
-    b = int(b * factor)
-    # 重新组装颜色
-    return (r << 11) | (g << 5) | b
+import micropython # type: ignore
 
 class Button(Label):
     """
@@ -74,7 +54,7 @@ class Button(Label):
                 'text_color': text_color
             },
             self.STATE_PRESSED: {
-                'background_color': _darken_color(background_color, 0.7),
+                'background_color': self._darken_color(background_color, 0.7),
                 'text_color': text_color
             },
             self.STATE_DISABLED: {

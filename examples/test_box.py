@@ -7,6 +7,7 @@ from displayio.display import Display
 from displayio.container.flex_box import FlexBox
 from displayio.container.free_box import FreeBox
 from displayio.container.scroll_box import ScrollBox
+from displayio.container.grid_box import GridBox
 from displayio.widget.label import Label
 from displayio.widget.button import Button
 
@@ -47,36 +48,37 @@ output.fill_rect(80,0,80,240,0x07e0)
 output.fill_rect(160,0,80,240,0x001f)
 time.sleep(1)
 
-"""演示标签和按钮的使用"""
+############演示标签和按钮的使用################################
 # 创建显示器
 display = Display(240, 240,output=output,
                   thread=False,
-                  fps = 0,
+                  fps = 30,
                   show_fps = True,
                   soft_timer = True,
                   partly_refresh = False
 )
 # 创建垂直布局容器
-main_box = FlexBox(direction=Style.HORIZONTAL)
-
-vbox = FlexBox(direction=Style.VERTICAL,width=120,spacing = 10)
-main_box.add(vbox)
-
-fbox = FreeBox()
-main_box.add(fbox)
-
-vbox_in_f=FlexBox(direction=Style.VERTICAL,rel_x = 10, rel_y = 20, align=Style.ALIGN_CENTER,height= 220)
-fbox.add(vbox_in_f)
+main_box =GridBox(rows=6,cols=6)
 
 sbox=ScrollBox()
-vbox.add(sbox)
+main_box.add(sbox,row=0,col=0,row_span=2,col_span=2)
 
-hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)#,height=115,width=120)
-vbox.add(hbox)
+vbox=FlexBox(direction=Style.VERTICAL,rel_x = 5, rel_y = 10, align=Style.ALIGN_CENTER)
+main_box.add(vbox,row=2,col=0,row_span=4,col_span=2)
+
+hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
+main_box.add(hbox,row=0,col=2,row_span=2,col_span=4)
+
+fbox = FreeBox()
+main_box.add(fbox,row=2,col=2,row_span=4)
+
+gbox_in_g=GridBox(rows=3,cols=3)
+main_box.add(gbox_in_g,row=3,col=3,row_span=3,col_span=3)
+
 
 vbox_in_s=FlexBox(direction=Style.VERTICAL,width=100,
-                    height=300,
-                  spacing = 10)
+                height=300,
+                spacing=10)
 sbox.add(vbox_in_s)
 
 # # 设置根控件并刷新
@@ -86,13 +88,15 @@ label1 = Label(
     text="1",
     text_color=0x0001,
     font=font,
-    align=Label.ALIGN_TOP,
+    font_scale=3,
+    align=Label.ALIGN_CENTER,
     background_color=0xcdb0,
 #     width=40
 )
 label2 = Label(
     text="2",
     font=font,
+    font_scale=3,
     align=Label.ALIGN_CENTER,
 #     width = 150,
 #     height = 30,
@@ -121,10 +125,8 @@ label5 = Label(
     text="5",
     font=font,
     align=Label.ALIGN_CENTER,
-    width = 50,
+    # width = 50,
 #     height = 30,
-    rel_x = 60,
-    rel_y = 10
     # background=0xffc0
 )
 button1 = Button(
@@ -137,10 +139,16 @@ button2 = Button(
     font = font,
     font_scale = 2,
 )
-hbox.add(label1, label2)
 
-vbox_in_f.add(button1,label3, label4, button2)
+hbox.add(label1, label2)
+vbox.add(label3, label4)
 fbox.add(label5)
+
+
+gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=0,col=0)
+gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=0,col=1,col_span=2)
+gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=1,col=0,row_span=2)
+gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=1,col=1,row_span=2,col_span=2)
 
 for w in range(10):
     vbox_in_s.add(Button(text=str(w)*5,

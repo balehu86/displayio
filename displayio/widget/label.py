@@ -178,6 +178,3 @@ class Label(Widget):
         self.padding = padding
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-
-    def focus(self):
-        pass
