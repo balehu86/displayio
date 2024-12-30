@@ -21,6 +21,7 @@ font=btree.open(f)
 from displayio.output.st7789 import ST7789
 from displayio.input.touchpin import TouchPin
 from displayio.input.encoder import RotaryEncoder
+from displayio.input.switch import Switch
 
 import time
 import machine # type: ignore
@@ -160,8 +161,17 @@ for w in range(10):
 # 添加输入设备   
 touch=TouchPin(4,target_widget=vbox_in_s.children[0])
 touch1=TouchPin(1,target_widget=button1)
+
+up=Switch(13,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_UP})
+dw=Switch(12,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_DOWN})
+le=Switch(11,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_LEFT})
+rt=Switch(10,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_RIGHT})
+md=Switch(9 ,mode=Switch.PULL_UP,target_position=[-1,-1])
+se=Switch(46,mode=Switch.PULL_UP,target_position=[-1,-1])
+rs=Switch(3 ,mode=Switch.PULL_UP,target_position=[-1,-1])
+
 encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
-display.add_input_device(touch,touch1,encoder)
+display.add_input_device(touch,touch1,up,dw,le,rt,md,se,rs)#,encoder)
 
 def click_callback(widget,event):
     print('clicked!')

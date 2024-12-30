@@ -8,7 +8,7 @@ class RotaryEncoder(Input):
                  'code', 'position', 'tick_position', 'direction')
 
     def __init__(self, pin_a, pin_b, strict=False, steps_per_click=4, 
-                 target_widget=None, target_position=None):
+                 target_widget=None, target_position=None, event_map={}):
         """
         初始化旋转编码器
         Args:
@@ -25,7 +25,7 @@ class RotaryEncoder(Input):
         self.steps_per_click = steps_per_click
         
         # 调用父类初始化
-        super().__init__(target_widget=target_widget, target_position=target_position)
+        super().__init__(target_widget=target_widget, target_position=target_position, event_map=event_map)
         
         #顺时针旋转：状态可能按 00 -> 01 -> 11 -> 10 -> 00 的顺序变化。
         #逆时针旋转：状态可能按 00 -> 10 -> 11 -> 01 -> 00 的顺序变化。
@@ -70,24 +70,24 @@ class RotaryEncoder(Input):
         # 检测是否完成一个click
         if self.position % self.steps_per_click == 0:
             self.tick_position = self.position // self.steps_per_click
-            return Event(self.ROTATE_TICK,
+            return Event(self.event_map.get(self.ROTATE_TICK, self.ROTATE_TICK),
                          data={'rotate_direction': self.direction,
                                'rotate_tick_position': self.tick_position,
                                'rotate_position': self.position},
                          target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
 
         # 如果有方向变化，则触发旋转事件
-        # if self.direction == -1:
-        #     return Event(self.ROTATE_LEFT,
-        #                  data={'rotate_direction': self.direction,
-        #                        'rotate_tick_position': self.tick_position,
-        #                        'rotate_position': self.position},
-        #                  target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
-        # if self.direction == 1:
-        #     return Event(self.ROTATE_RIGHT,
-        #                  data={'rotate_direction': self.direction,
-        #                        'rotate_tick_position': self.tick_position,
-        #                        'rotate_position': self.position},
-        #                  target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
-        # else: # 这个分支大概率不会执行,因为之前如果状态未改变或无效转移,函数会提前返回None
-        #     return None
+        if self.direction == -1:
+            return Event(self.event_map.get(self.ROTATE_LEFT, self.ROTATE_LEFT),
+                         data={'rotate_direction': self.direction,
+                               'rotate_tick_position': self.tick_position,
+                               'rotate_position': self.position},
+                         target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
+        if self.direction == 1:
+            return Event(self.event_map.get(self.ROTATE_RIGHT, self.ROTATE_RIGHT),
+                         data={'rotate_direction': self.direction,
+                               'rotate_tick_position': self.tick_position,
+                               'rotate_position': self.position},
+                         target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
+        else: # 这个分支大概率不会执行,因为之前如果状态未改变或无效转移,函数会提前返回None
+            return None

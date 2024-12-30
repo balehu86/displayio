@@ -9,10 +9,9 @@ class TouchPin(Input):
                  'double_click_max_interval', 'touch_threshold')
 
     def __init__(self, pin, touch_threshold=100000,
-                 
-                 target_widget=None, target_position=None):
+                 target_widget=None, target_position=None, event_map={}):
 
-        super().__init__(target_widget=target_widget,target_position=target_position)
+        super().__init__(target_widget=target_widget, target_position=target_position, event_map=event_map)
         self.touch_pin = TouchPad(Pin(pin))
         self.press_start_time = 0 # 按下的时间
         self.last_release_time = 0 # 上一次确认触摸释放的时间，用于检测双击
@@ -34,16 +33,16 @@ class TouchPin(Input):
             if self.state == self.IDLE:# 第一次检测到按下,将返回 PRESS event
                 self.state = self.PRESS
                 self.press_start_time = current_time
-                return Event(self.PRESS, target_widget=self.target_widget,
-                             target_position=self.target_position, timestamp=current_time)
+                return Event(self.event_map.get(self.PRESS, self.PRESS),
+                             target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
             
             # 检查长按
             press_duration = time.ticks_diff(current_time,self.press_start_time)
             if press_duration >= self.long_press_duration:
                 if self.state == self.PRESS:
                     self.state = self.LONG_PRESS
-                    return Event(self.LONG_PRESS, target_widget=self.target_widget,
-                                target_position=self.target_position, timestamp=current_time)
+                    return Event(self.event_map.get(self.LONG_PRESS, self.LONG_PRESS), 
+                                 target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
             
         else:# 触摸释放
             if self.state == self.IDLE:
@@ -52,8 +51,8 @@ class TouchPin(Input):
             if self.state == self.LONG_PRESS:
                 self.last_release_time = current_time
                 self.state = self.IDLE
-                return Event(self.LONG_PRESS_RELEASE, target_widget=self.target_widget,
-                             target_position=self.target_position, timestamp=current_time)
+                return Event(self.event_map.get(self.LONG_PRESS_RELEASE, self.LONG_PRESS_RELEASE),
+                             target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
 
             if self.state == self.PRESS:
                 # 触摸持续时间
@@ -67,11 +66,11 @@ class TouchPin(Input):
                 if self.click_min_duration < press_duration < self.click_max_duration:
                     # 先判断是否为双击
                     if click_interval <= self.double_click_max_interval:# 是双击
-                        return Event(self.DOUBLE_CLICK, target_widget=self.target_widget, 
-                                     target_position=self.target_position, timestamp=current_time)
+                        return Event(self.event_map.get(self.DOUBLE_CLICK, self.DOUBLE_CLICK),
+                                     target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
                     else:# 不是双击
-                        return Event(self.CLICK, target_widget=self.target_widget, 
-                                     target_position=self.target_position, timestamp=current_time)
+                        return Event(self.event_map.get(self.CLICK, self.CLICK),
+                                     target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)
                 else: # 持续时长 (超过短按,不足长按) 或 (不足短按)
-                    return Event(self.RELEASE, target_widget=self.target_widget, 
-                                     target_position=self.target_position, timestamp=current_time)
+                    return Event(self.event_map.get(self.RELEASE, self.RELEASE),
+                                 target_widget=self.target_widget, target_position=self.target_position, timestamp=current_time)

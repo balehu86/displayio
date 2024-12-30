@@ -51,7 +51,7 @@ class ScrollBox(Container):
         # 使用实例ID作为唯一标识
         self.child = None
         # 创建独立的脏区域管理器
-        self.scroll_dirty_system = BoundBoxSystem(name=f'scroll_{id(self)}',widget=self)
+        self.scroll_dirty_system = BoundBoxSystem(name=f'ScrollBox_{id(self)}',widget=self)
         # 滚动相关的属性
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0
@@ -63,8 +63,10 @@ class ScrollBox(Container):
         self.scroll_range_x = 0
         self.scroll_range_y = 0
         # 事件监听器
-        self.event_listener = {EventType.SCROLL:[self.scroll],
-                               EventType.ROTATE_TICK:[self.scroll],}
+        self.event_listener = {EventType.SCROLL_UP:[self.scroll],
+                               EventType.SCROLL_DOWN:[self.scroll],
+                               EventType.SCROLL_LEFT:[self.scroll],
+                               EventType.SCROLL_RIGHT:[self.scroll]}
 
     def add(self, child:Container) -> None:
         """向滚动容器中添加元素"""
@@ -123,15 +125,17 @@ class ScrollBox(Container):
         """
         滚动方法, x和y为滚动的增量
         """
-        # x = event.data.get('rotate_direction', 0)
-        x = 0
-        y = event.data.get('rotate_direction', 0) * 5
-        # 限制水平滚动
-        if self.is_scrollable_x:
-            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + x))
-        # 限制垂直滚动
-        if self.is_scrollable_y:
-            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + y))
+        print('scroll',event.type,)
+        
+        # 限制水平滚动和垂直滚动
+        if event.type == EventType.SCROLL_UP:
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + 10)) if self.is_scrollable_x else 0
+        if event.type == EventType.SCROLL_UP:
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x - 10)) if self.is_scrollable_x else 0
+        if event.type == EventType.SCROLL_UP:
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + 10)) if self.is_scrollable_y else 0
+        if event.type == EventType.SCROLL_UP:
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - 10)) if self.is_scrollable_y else 0
 
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)

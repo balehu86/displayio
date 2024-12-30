@@ -1,5 +1,25 @@
 # ./core/event.py
 
+class PhysicalEventType:
+    """物理设备事件类型枚举"""
+    __slots__ = ()
+
+    IDLE = 0
+    # 按钮
+    PRESS = 4             # 按下
+    RELEASE = 5           # 释放
+    LONG_PRESS_RELEASE = 6 # 长按释放 
+    CLICK = 7             # 点击v
+    LONG_PRESS = 8        # 长按v
+    DOUBLE_CLICK = 9      # 双击v
+    # 旋转编码器
+    ROTATE = 17           # 旋转
+    ROTATE_LEFT = 18      # 左旋
+    ROTATE_RIGHT = 19     # 右旋
+    ROTATE_TICK = 20      # 一个tick
+    ROTATE_TICK_LEFT = 21 # 一个左旋tick
+    ROTATE_TICK_RIGHT =22 # 一个右旋tick
+
 class EventType:
     """事件类型枚举"""
     __slots__ = ()
@@ -36,7 +56,11 @@ class EventType:
     ROTATE_TICK_LEFT = 21 # 一个左旋tick
     ROTATE_TICK_RIGHT =22 # 一个右旋tick
     # 滚动
-    SCROLL = 23           # 滚动
+    SCROLL_UP = 23        # 向上滚动
+    SCROLL_DOWN = 24      # 向下滚动
+    SCROLL_LEFT = 25      # 向左滚动
+    SCROLL_RIGHT = 26     # 向右滚动
+
 
     CUSTOM = 99           # 自定义事件
 """
