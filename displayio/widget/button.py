@@ -48,21 +48,8 @@ class Button(Label):
                          transparent_color = transparent_color,
                          color_format = color_format)
         
-        # 状态对应的样式
-        self.styles = {
-            self.STATE_DEFAULT: {
-                'background_color': background_color,
-                'text_color': text_color
-            },
-            self.STATE_PRESSED: {
-                'background_color': self._darken_color(background_color, 0.7),
-                'text_color': text_color
-            },
-            self.STATE_DISABLED: {
-                'background_color': Label.GREY,  # 灰色
-                'text_color': Label.DARK_GREY  # 暗灰色
-            }
-        }
+        # 设置状态对应色彩样式
+        self.set_styles()
         
         self.event_listener = {EventType.CLICK:[self.release],
                                EventType.PRESS:[self.press],
@@ -119,3 +106,23 @@ class Button(Label):
     
     def long_press_release(self,widget,event) -> None:
         self.set_state(self.STATE_DEFAULT)
+
+    def set_color(self, text_color=None, background_color=None) -> None:
+        """设置文本和背景颜色"""
+        if text_color is not None:
+            self.text_color = text_color
+        if background_color is not None:
+            self.background_color = background_color
+        self.set_styles()
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+
+    def set_styles(self):
+        # 状态对应的样式
+        self.styles = {
+            self.STATE_DEFAULT: {'background_color': self.background_color,
+                                 'text_color':       self.text_color},
+            self.STATE_PRESSED: {'background_color': self._darken_color(self.background_color, 0.7),
+                                 'text_color':       self.text_color},
+            self.STATE_DISABLED: {'background_color': Label.GREY,
+                                  'text_color':       Label.DARK_GREY}}

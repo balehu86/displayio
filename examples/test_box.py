@@ -160,7 +160,7 @@ for w in range(10):
 # 添加输入设备   
 touch=TouchPin(4,target_widget=vbox_in_s.children[0])
 touch1=TouchPin(1,target_widget=button1)
-encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=False,target_widget=sbox)
+encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
 display.add_input_device(touch,touch1,encoder)
 
 def click_callback(widget,event):
@@ -181,6 +181,7 @@ def long_press_callback(widget,event):
 #         label3.hide()
 #     else:
 #         label3.unhide()
+    label5.set_color(text_color=random.getrandbits(16),background_color=random.getrandbits(16))
 def long_press_release_callback(widget,event):
     print('long press released!')
 def release_callback(widget,event):
