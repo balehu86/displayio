@@ -56,10 +56,11 @@ class EventType:
     ROTATE_TICK_LEFT = 21 # 一个左旋tick
     ROTATE_TICK_RIGHT =22 # 一个右旋tick
     # 滚动
+    SCROLL = 23           # 滚动
     SCROLL_UP = 23        # 向上滚动
     SCROLL_DOWN = 24      # 向下滚动
-    SCROLL_LEFT = 25      # 向左滚动
-    SCROLL_RIGHT = 26     # 向右滚动
+    SCROLL_RIGHT = 25     # 向右滚动
+    SCROLL_LEFT= 26       # 向左滚动
 
 
     CUSTOM = 99           # 自定义事件

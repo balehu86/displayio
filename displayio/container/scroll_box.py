@@ -125,18 +125,16 @@ class ScrollBox(Container):
         """
         滚动方法, x和y为滚动的增量
         """
-        print('scroll',event.type,)
-        
         # 限制水平滚动和垂直滚动
         if event.type == EventType.SCROLL_UP:
-            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + 10)) if self.is_scrollable_x else 0
-        if event.type == EventType.SCROLL_UP:
-            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x - 10)) if self.is_scrollable_x else 0
-        if event.type == EventType.SCROLL_UP:
-            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + 10)) if self.is_scrollable_y else 0
-        if event.type == EventType.SCROLL_UP:
-            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - 10)) if self.is_scrollable_y else 0
-
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + 5)) if self.is_scrollable_x else 0
+        if event.type == EventType.SCROLL_DOWN:
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x - 5)) if self.is_scrollable_x else 0
+        if event.type == EventType.SCROLL_RIGHT:
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + 5)) if self.is_scrollable_y else 0
+        if event.type == EventType.SCROLL_LEFT:
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - 5)) if self.is_scrollable_y else 0
+        
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
