@@ -13,7 +13,7 @@ class DirtySystem:
         return cls._instances[name]
     
     def __init__(self, name='default', widget=None):
-        if hasattr(self, 'initialized'):  # 检查是否已初始化
+        if hasattr(self, 'initialized'):  # 检查是否已初始化,避免覆盖参数
             return
         if name != 'default' and widget is None:
             raise ValueError('dirty_system初始化错误,\n\t非默认dirty_system缺少关键字参数: widget')
