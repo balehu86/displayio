@@ -13,12 +13,12 @@ class DirtySystem:
         return cls._instances[name]
     
     def __init__(self, name='default', widget=None):
+        if hasattr(self, 'initialized'):  # 检查是否已初始化
+            return
         if name != 'default' and widget is None:
             raise ValueError('dirty_system初始化错误,\n\t非默认dirty_system缺少关键字参数: widget')
         if name == 'default' and widget is not None:
             raise ValueError('dirty_system初始化错误,\n\t默认dirty_system禁止关键字参数: widget')
-        if hasattr(self, 'initialized'):  # 检查是否已初始化
-            return
         # 管理器的名称,默认为default
         self.name = name
         # 绘制系统的脏标记,用来出发遍历组件树刷新
@@ -49,6 +49,8 @@ class DirtySystem:
             for name, system in self._instances.items():
                 if name != 'default':
                     system.clear()
+        
+        self.dirty = False
 
 class MergeRegionSystem(DirtySystem):
     """
@@ -139,8 +141,8 @@ class BoundBoxSystem(DirtySystem):
     
     def __init__(self, name='default', widget=None):
         super().__init__(name, widget)
-        self.min_x, self.min_y = float('inf'), float('inf')
-        self.max_x, self.max_y = float('-inf'), float('-inf')
+        self.min_x, self.min_y = 0, 0
+        self.max_x, self.max_y = 0, 0
 
     @property
     def area(self):
@@ -183,8 +185,8 @@ class BoundBoxSystem(DirtySystem):
         if not self.dirty:  # 如果没有脏区域，直接退出
             return
         
-        self.min_x, self.min_y = float('inf'), float('inf')
-        self.max_x, self.max_y = float('-inf'), float('-inf')
+        self.min_x, self.min_y = 0, 0
+        self.max_x, self.max_y = 0, 0
         self.dirty = False
 
 class GridSystem(DirtySystem):

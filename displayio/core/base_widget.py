@@ -73,8 +73,8 @@ class BaseWidget(Color, Style):
         # 透明色
         self.transparent_color = transparent_color
         # event监听器注册
-        self.event_listener = {EventType.FOCUS:[],
-                               EventType.UNFOCUS:[]}  # 事件处理器字典
+        self.event_listener = {EventType.FOCUS:[self.focus],
+                               EventType.UNFOCUS:[self.unfocus]}  # 事件处理器字典
             
     def layout(self, dx, dy, width=None, height=None) -> None:
         """
@@ -182,7 +182,7 @@ class BaseWidget(Color, Style):
             self.handle(event)
         else:
             for child in self.children: # 传递
-                if event.is_handled(): # 已被处理
+                if event.is_catched(): # 已被捕获
                     break
                 else: # 未处理
                     child.bubble(event)
@@ -211,8 +211,7 @@ class BaseWidget(Color, Style):
         if event.type in self.event_listener:
             for callback_func in self.event_listener[event.type]:
                 callback_func(widget=self,event=event)
-                event.done()
-        return True # 返回事件捕获处理结果
+                event.handle()
     
     def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器"""
@@ -233,27 +232,25 @@ class BaseWidget(Color, Style):
         if self.parent is not None:
             return self.parent.index(self)
 
-    def __lt__(self, other):
-        """比较图层，按优先级排序。"""
-        return self.dz < other.dz
-
     def widget_in_dirty_area(self):
         """检查widget是否和脏区域有交集"""
         return self.dirty_system.intersects(self.dx,self.dy,self.width,self.height)
     
-    def focus(self):
+    def focus(self, widget, event):
         """元素聚焦,会将元素内所有元素调暗0.1"""
         self.background_color_cache = self.background_color
         self.background_color = self._darken_color(self.background_color,0.9)
+        self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
             child.focus()
 
-    def unfocus(self):
+    def unfocus(self, widget, event):
         """取消元素聚焦"""
         if self.background_color_cache is not None:
             self.background_color = self.background_color_cache
             self.background_color_cache = None
+            self._dirty = True
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
             child.unfocus()
@@ -274,3 +271,10 @@ class BaseWidget(Color, Style):
         b = int(b * factor)
         # 重新组装颜色
         return (r << 11) | (g << 5) | b
+    
+    def __lt__(self, other):
+        """比较图层，按优先级排序。"""
+        return self.dz < other.dz
+    
+    def __repr__(self):
+        return f'<{self.__class__.__name__} object> \n\tdz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tbackground_color: {self.background_color}'

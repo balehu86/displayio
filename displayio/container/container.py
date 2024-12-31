@@ -1,8 +1,7 @@
 # ./core/container.py
 from ..core.base_widget import BaseWidget
-from ..core.event import Event # type hint
-from ..core.dirty import MergeRegionSystem # type hint
-from ..core.event import EventType
+from ..core.dirty import DirtySystem # type hint
+from ..core.event import EventType # type hint
 
 from heapq import heappush
 
@@ -50,6 +49,7 @@ class Container(BaseWidget):
         for child in childs:
             if child in self.children:
                 child.parent = None
+                child.set_dirty_system(DirtySystem(name='default'))
                 self.children.remove(child)
         self.mark_dirty()
         self.dirty_system.layout_dirty = True
@@ -58,6 +58,7 @@ class Container(BaseWidget):
         """清空容器中所有元素"""
         for child in self.children:
             child.parent = None
+            child.set_dirty_system(DirtySystem(name='default'))
         self.children.clear()
 
         self.mark_dirty()
@@ -78,9 +79,8 @@ class Container(BaseWidget):
         """事件委托,接收事件并冒泡"""
         if event_type not in self.event_listener:
             self.event_listener[event_type] = [self.bubble]
-        self.event_listener[event_type].append(self.bubble)
 
     def unbind(self, event_type:EventType) -> None:
         """事件委托"""
         if event_type in self.event_listener:
-            self.event_listener.pop(event_type)
+            self.event_listener.pop(event_type, None)

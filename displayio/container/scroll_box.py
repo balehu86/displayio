@@ -184,37 +184,9 @@ class ScrollBox(Container):
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     
     def unhide(self):
+        """重写 取消隐藏部件"""
         self.visibility = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-
-    def bind(self, event_type, callback_func:function) -> None:
-        """绑定事件处理器
-        
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
-        if event_type not in self.event_listener:
-            self.event_listener[event_type] = []
-        self.event_listener[event_type].append(callback_func)
-
-    def unbind(self, event_type, callback_func:function=None) -> None:
-        """解绑事件处理器
-        
-        Args:
-            event_type (_EventType_): 事件类型（EventType枚举值）
-            callback_func (_function_, optional): 事件处理函数，接收Event对象作为参数. Defaults to None.
-        """
-        if event_type in self.event_listener:
-            if callback_func is None:
-                self.event_listener[event_type].clear()
-            elif callback_func in self.event_listener[event_type]:
-                self.event_listener[event_type].remove(callback_func)
-
-    def bubble(self, event) -> None:
-        """事件冒泡"""
-        if self.catch(event):
-            self.handle(event)
 
     def set_dirty_system(self, dirty_system:MergeRegionSystem):
         """重写set_dirty_system,以适应scroll_box"""

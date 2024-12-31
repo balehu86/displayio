@@ -105,7 +105,7 @@ class Event:
         """返回event是否被捕获"""
         return self.status_code == self.Processing
     
-    def done(self) -> None:
+    def handle(self) -> None:
         """将事件标记为已完成"""
         self.status_code = self.Completed
 
