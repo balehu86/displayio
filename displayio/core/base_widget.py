@@ -2,6 +2,7 @@
 from .style import Color, Style
 from .dirty import MergeRegionSystem
 from .event import EventType
+from .logging import logger
 
 class BaseWidget(Color, Style):
 
@@ -182,7 +183,7 @@ class BaseWidget(Color, Style):
             self.handle(event)
         else:
             for child in self.children: # 传递
-                if event.is_catched(): # 已被捕获
+                if event.is_handled(): # 已被捕获
                     break
                 else: # 未处理
                     child.bubble(event)
