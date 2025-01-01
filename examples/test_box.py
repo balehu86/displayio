@@ -56,7 +56,7 @@ display = Display(240, 240,output=output,
                   show_fps = True,
                   soft_timer = True,
                   partly_refresh = False,
-                  log_level = 0
+                  log_level = 2
 )
 # 创建垂直布局容器
 main_box =GridBox(rows=6,cols=6)
@@ -166,9 +166,8 @@ rt=Switch(10,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: 
 md=Switch(9 ,mode=Switch.PULL_UP,target_widget=vbox_in_s.children[0])
 se=Switch(46,mode=Switch.PULL_UP,target_widget=button1)
 rs=Switch(3 ,mode=Switch.PULL_UP,target_position=[0,0])
-
 encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
-display.add_input_device(up,dw,le,rt,md,se,rs)#,encoder)
+display.add_input_device(up,dw,le,rt,md,se,rs,encoder)
 
 def click_callback(widget,event):
     print('clicked!')

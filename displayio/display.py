@@ -168,7 +168,7 @@ class MainLoop:
         if self.dirty_system.layout_dirty:
             logger.debug("Updating layout...")
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
-        self.dirty_system.layout_dirty = False
+            self.dirty_system.layout_dirty = False
         
     def _render_widget_partly(self, widget:Container|Widget):
         """ 递归渲染widget及其子组件
@@ -199,11 +199,10 @@ class MainLoop:
             logger.debug(f"Updating display...\n\t{self.dirty_system.__class__.__name__}\n\t{self.dirty_system.area}")
             if self.display.partly_refresh: # 确认 局部刷新还是全局刷新
                 self._render_widget_partly(self.display.root)
-                self.dirty_system.clear()
             else:
                 self._render_widget_fully(self.display.root)
-                self.dirty_system.clear()
                 self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
+            self.dirty_system.clear()
         # 帧数计数和FPS计算
         if self.display.show_fps:
             self._calculate_fps()
@@ -250,15 +249,15 @@ class MainLoop:
         # 添加输入检测任务
         if self.display.soft_timer:
             for device in self.display.inputs:
-                self.add_task(device.check_input, period=2, priority=5, on_complete=self._post_event)
+                self.add_task(device.check_input, period=2, priority=1, on_complete=self._post_event)
                 
         # 添加核心任务
         # 添加事件冒泡 
         self.add_task(self.process_event, period=10)
         # 添加布局系统
-        self.add_task(self.update_layout, period=self.frame_interval, priority=10)
+        self.add_task(self.update_layout, period=self.frame_interval, priority=9)
         # 添加刷新系统
-        self.add_task(self.update_display, period=self.frame_interval, priority=11)
+        self.add_task(self.update_display, period=self.frame_interval, priority=10)
 
     def _main_loop(self):
         """主循环实现"""
@@ -267,8 +266,6 @@ class MainLoop:
             task = self.task_queue[0] # 查看队列中的最高优先级任务
             time_to_next_run = time.ticks_diff(task.next_run, current_time) # 计算距离下次运行的时间
             if time_to_next_run > 0:
-                # # 距离下一次运行还有时间，动态休眠
-                # time.sleep_ms(min(time_to_next_run, 1))
                 continue
             # 移除任务并执行
             heappop(self.task_queue)
@@ -319,7 +316,6 @@ class Task:
     
     def execute(self) -> bool:
         """执行任务,任务是否需要继续执行。True表示继续,False表示结束"""
-        result = None  # 存储返回值
         if self.generator:
             try:
                 next(self.generator)  # 执行生成器的下一步
