@@ -72,7 +72,9 @@ class MergeRegionSystem(DirtySystem):
 
     def add(self, x2_min, y2_min, width2, height2):
         """添加脏区域"""
-        # 提前检查无效区域，减少后续计算开销        
+        # 提前检查无效区域，减少后续计算开销
+        print('before_add', self._area)
+        print('dirty system add', x2_min, y2_min, width2, height2)
         width2 = width2 or 0
         height2 = height2 or 0
         if width2 <= 0 or height2 <= 0:  # 检查无效区域
@@ -80,14 +82,22 @@ class MergeRegionSystem(DirtySystem):
         
         x2_max = x2_min + width2 - 1  # widget的右边界
         y2_max = y2_min + height2 - 1 # widget的上边界
+        new_region = [x2_min, y2_min, x2_max, y2_max]  # 新区域
 
+        # 查找所有与新区域相交的区域
+        intersecting_indices = []
         for i, area1 in enumerate(self._area): # 如果发现交集，则合并
             if self._intersects(area1, x2_min, y2_min, x2_max, y2_max):
-                self._area[i] = self._union(area1, x2_min, y2_min, x2_max, y2_max)
-                break
-        else: # 如果没有交集，则直接追加
-            self._area.append([x2_min, y2_min, x2_max, y2_max])
+                intersecting_indices.append(i)
 
+        # 合并所有交集区域
+        for i in reversed(intersecting_indices):
+            area1 = self._area.pop(i)
+            new_region = self._union(area1, *new_region)
+        # 将合并后的区域加入结果列表
+        self._area.append(new_region)
+
+        print('after_add', self._area)
         # 如果这个dirty_system不是默认实例,则需要将self.widget.dirty_system为脏
         # 这是因为需要传递脏信息,否则会导致dirty_system的脏区域只作用于局部,不会影响到默认dirty_system
         self.dirty = True
@@ -99,9 +109,9 @@ class MergeRegionSystem(DirtySystem):
         """检查两个区域是否有重叠"""
         x1_min, y1_min, x1_max, y1_max = area1
         # 检查是否有交集
-        # 扩展1个像素的判断范围,允许相邻合并
-        return not (x1_min > x2_max + 1 or x2_min > x1_max + 1 or 
-                    y1_min > y2_max + 1 or y2_min > y1_max + 1)
+        margin = 1  # 设置允许合并的最大边距
+        return not (x1_min > x2_max + margin or x2_min > x1_max + margin or 
+                    y1_min > y2_max + margin or y2_min > y1_max + margin)
 
     def _union(self, area1, x2_min, y2_min, x2_max, y2_max) -> list:
         """合并脏区域"""
