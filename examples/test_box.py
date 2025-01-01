@@ -56,7 +56,7 @@ display = Display(240, 240,output=output,
                   show_fps = True,
                   soft_timer = True,
                   partly_refresh = False,
-                  log_level = 2
+                  log_level = 3
 )
 # 创建垂直布局容器
 main_box =GridBox(rows=6,cols=6)

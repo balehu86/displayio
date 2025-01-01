@@ -86,15 +86,12 @@ class MergeRegionSystem(DirtySystem):
         new_region = [x2, y2, x2_max, y2_max]  # 新区域
 
         # 查找所有与新区域相交的区域
-        intersecting_indices = []
-        for i, area1 in enumerate(self._area): # 如果发现交集，则合并
-            if self._intersects(area1, x2, y2, x2_max, y2_max):
-                intersecting_indices.append(i)
+        # 从后向前遍历以安全地进行列表修改
+        for i in range(len(self._area) - 1, -1, -1):
+            if self._intersects(self._area[i], x2, y2, x2_max, y2_max):
+                area1 = self._area.pop(i)
+                new_region = self._union(area1, *new_region)
 
-        # 合并所有交集区域
-        for i in reversed(intersecting_indices):
-            area1 = self._area.pop(i)
-            new_region = self._union(area1, *new_region)
         # 将合并后的区域加入结果列表
         self._area.append(new_region)
 
