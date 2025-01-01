@@ -48,7 +48,6 @@ output.fill(0)
 touchs=TouchPin(12,target_position=[0,0])
 # 创建显示器
 display = Display(240, 240,output=output,inputs=[touchs],
-                  thread=False,
                   fps = 30,
                   show_fps = False
 )

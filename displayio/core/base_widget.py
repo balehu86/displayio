@@ -180,12 +180,8 @@ class BaseWidget(Color, Style):
         # 尝试捕获
         # 如果事件未被捕获，传递给子组件
         if self.catch(event):
-            self.handle(event)
-        else:
-            for child in self.children: # 传递
-                if event.is_handled(): # 已被捕获
-                    break
-                else: # 未处理
+            if not self.handle(event):
+                for child in self.children: # 传递
                     child.bubble(event)
 
     def catch(self, event) -> bool:
@@ -213,6 +209,7 @@ class BaseWidget(Color, Style):
             for callback_func in self.event_listener[event.type]:
                 callback_func(widget=self,event=event)
                 event.handle()
+            return True
     
     def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器"""

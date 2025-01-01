@@ -45,7 +45,6 @@ time.sleep(1)
 """演示标签和按钮的使用"""
 # 创建显示器
 display = Display(240, 240,output=output,
-                  thread=False,
                   fps = 30,
                   show_fps = True,
                   partly_refresh = False

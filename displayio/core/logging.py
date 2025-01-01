@@ -19,8 +19,17 @@ _level_dict = {
 }
 
 class Logger:
+
+    CRITICAL = 5
+    ERROR = 4
+    WARNING = 3
+    INFO = 2
+    DEBUG = 1
+    NOTSET = 0
+
     __slots__ = ('name', 'level', 'stream', 'fmt', '_initialized')
     _instance = None
+
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -30,7 +39,7 @@ class Logger:
         if hasattr(self, '_initialized'):  # 检查是否已初始化,避免覆盖参数
             return
         self.name = name or "root"
-        self.level = level if level is not None else WARNING
+        self.level = level if level is not None else INFO
         self.stream = stream if stream else sys.stderr
         self.fmt = "%(levelname)s:%(name)s:%(message)s"
         self._initialized = True
