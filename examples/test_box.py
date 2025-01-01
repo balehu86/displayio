@@ -165,7 +165,7 @@ le=Switch(11,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: 
 rt=Switch(10,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_RIGHT})
 md=Switch(9 ,mode=Switch.PULL_UP,target_widget=vbox_in_s.children[0])
 se=Switch(46,mode=Switch.PULL_UP,target_widget=button1)
-rs=Switch(3 ,mode=Switch.PULL_UP,target_position=[-1,-1])
+rs=Switch(3 ,mode=Switch.PULL_UP,target_position=[0,0])
 
 encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
 display.add_input_device(up,dw,le,rt,md,se,rs)#,encoder)

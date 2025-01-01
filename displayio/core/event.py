@@ -1,25 +1,5 @@
 # ./core/event.py
 
-class PhysicalEventType:
-    """物理设备事件类型枚举"""
-    __slots__ = ()
-
-    IDLE = 0
-    # 按钮
-    PRESS = 4             # 按下
-    RELEASE = 5           # 释放
-    LONG_PRESS_RELEASE = 6 # 长按释放 
-    CLICK = 7             # 点击v
-    LONG_PRESS = 8        # 长按v
-    DOUBLE_CLICK = 9      # 双击v
-    # 旋转编码器
-    ROTATE = 17           # 旋转
-    ROTATE_LEFT = 18      # 左旋
-    ROTATE_RIGHT = 19     # 右旋
-    ROTATE_TICK = 20      # 一个tick
-    ROTATE_TICK_LEFT = 21 # 一个左旋tick
-    ROTATE_TICK_RIGHT =22 # 一个右旋tick
-
 class EventType:
     """事件类型枚举"""
     __slots__ = ()
@@ -28,39 +8,39 @@ class EventType:
     IDLE = 0
 
     # 触摸相关事件
-    TOUCH_START = 1       # 触摸开始
-    TOUCH_MOVE = 2        # 触摸移动
-    TOUCH_END = 3         # 触摸结束
+    TOUCH_START = 'TOUCH_START'  # 触摸开始
+    TOUCH_MOVE = 'TOUCH_MOVE'    # 触摸移动
+    TOUCH_END = 'TOUCH_END'      # 触摸结束
     # 按键相关事件
-    PRESS = 4             # 按下
-    RELEASE = 5           # 释放
-    LONG_PRESS_RELEASE = 6 # 长按释放 
-    CLICK = 7             # 点击v
-    LONG_PRESS = 8        # 长按v
-    DOUBLE_CLICK = 9      # 双击v
+    PRESS = 'PRESS'       # 按下
+    RELEASE = 'RELEASE'   # 释放
+    LONG_PRESS_RELEASE = 'LONG_PRESS_RELEASE' # 长按释放 
+    CLICK = 'CLICK'       # 点击v
+    LONG_PRESS = 'LONG_PRESS'       # 长按v
+    DOUBLE_CLICK = 'DOUBLE_CLICK'   # 双击v
     # 拖动相关事件
     DRAG_START = 10       # 拖动开始,检测逻辑类似长按
     DRAG_MOVE = 11        # 拖动中
     DRAG_END = 12         # 拖动结束
     # 焦点相关事件
-    FOCUS = 13            # 获得焦点
-    UNFOCUS = 14          # 失去焦点
+    FOCUS = 'FOCUS'       # 获得焦点
+    UNFOCUS = 'UNFOCUS'   # 失去焦点
     # 值和选择相关事件
     VALUE_CHANGE = 15     # 值改变
     SELECTION_CHANGE = 16 # 选择改变
     # 旋转编码器相关事件
-    ROTATE = 17           # 旋转
-    ROTATE_LEFT = 18      # 左旋
-    ROTATE_RIGHT = 19     # 右旋
-    ROTATE_TICK = 20      # 一个tick
-    ROTATE_TICK_LEFT = 21 # 一个左旋tick
-    ROTATE_TICK_RIGHT =22 # 一个右旋tick
+    ROTATE = 'ROTATE'         # 旋转
+    ROTATE_LEFT = 'ROTATE_LEFT'      # 左旋
+    ROTATE_RIGHT = 'ROTATE_RIGHT'    # 右旋
+    ROTATE_TICK = 'ROTATE_TICK'      # 一个tick
+    ROTATE_TICK_LEFT = 'ROTATE_TICK_LEFT' # 一个左旋tick
+    ROTATE_TICK_RIGHT = 'ROTATE_TICK_RIGHT'# 一个右旋tick
     # 滚动
-    SCROLL = 23           # 滚动
-    SCROLL_UP = 23        # 向上滚动
-    SCROLL_DOWN = 24      # 向下滚动
-    SCROLL_RIGHT = 25     # 向右滚动
-    SCROLL_LEFT= 26       # 向左滚动
+    SCROLL = 'SCROLL'           # 滚动
+    SCROLL_UP = 'SCROLL_UP'     # 向上滚动
+    SCROLL_DOWN = 'SCROLL_DOWN' # 向下滚动
+    SCROLL_RIGHT = 'SCROLL_RIGHT' # 向右滚动
+    SCROLL_LEFT = 'SCROLL_LEFT' # 向左滚动
 
 
     CUSTOM = 99           # 自定义事件

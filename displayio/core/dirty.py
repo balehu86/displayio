@@ -1,3 +1,5 @@
+from .logging import logger
+
 class DirtySystem:
     """
     脏区域管理基类类,
@@ -70,24 +72,23 @@ class MergeRegionSystem(DirtySystem):
         """返回脏区域"""
         return self._area
 
-    def add(self, x2_min, y2_min, width2, height2):
+    def add(self, x2, y2, width2, height2):
         """添加脏区域"""
         # 提前检查无效区域，减少后续计算开销
-        print('before_add', self._area)
-        print('dirty system add', x2_min, y2_min, width2, height2)
+        logger.debug(f'{self.__class__.__name__} add {x2}, {y2}, {width2}, {height2}')
         width2 = width2 or 0
         height2 = height2 or 0
         if width2 <= 0 or height2 <= 0:  # 检查无效区域
             return  # 忽略无效输入
         
-        x2_max = x2_min + width2 - 1  # widget的右边界
-        y2_max = y2_min + height2 - 1 # widget的上边界
-        new_region = [x2_min, y2_min, x2_max, y2_max]  # 新区域
+        x2_max = x2 + width2 - 1  # widget的右边界
+        y2_max = y2 + height2 - 1 # widget的上边界
+        new_region = [x2, y2, x2_max, y2_max]  # 新区域
 
         # 查找所有与新区域相交的区域
         intersecting_indices = []
         for i, area1 in enumerate(self._area): # 如果发现交集，则合并
-            if self._intersects(area1, x2_min, y2_min, x2_max, y2_max):
+            if self._intersects(area1, x2, y2, x2_max, y2_max):
                 intersecting_indices.append(i)
 
         # 合并所有交集区域
@@ -97,7 +98,7 @@ class MergeRegionSystem(DirtySystem):
         # 将合并后的区域加入结果列表
         self._area.append(new_region)
 
-        print('after_add', self._area)
+        logger.debug(f'{self.__class__.__name__} after add {self.area}')
         # 如果这个dirty_system不是默认实例,则需要将self.widget.dirty_system为脏
         # 这是因为需要传递脏信息,否则会导致dirty_system的脏区域只作用于局部,不会影响到默认dirty_system
         self.dirty = True
@@ -160,17 +161,17 @@ class BoundBoxSystem(DirtySystem):
 
     def add(self, x2, y2, width2, height2):
         """添加边界框"""
-        # 提前检查无效区域，减少后续计算开销        
+        # 提前检查无效区域，减少后续计算开销
         width2 = width2 or 0
         height2 = height2 or 0
         if width2 <= 0 or height2 <= 0:
             return
-
+        logger.debug(f'{self.__class__.__name__} add {x2}, {y2}, {width2}, {height2}')
         self.min_x = min(self.min_x, x2)
         self.min_y = min(self.min_y, y2)
         self.max_x = max(self.max_x, x2 + width2 - 1)
         self.max_y = max(self.max_y, y2 + height2 - 1)
-
+        logger.debug(f'{self.__class__.__name__} after add {self.area}')
         self.dirty = True
 
         # 传递 dirty state to parent system
@@ -234,7 +235,7 @@ class GridSystem(DirtySystem):
         height2 = height2 or 0
         if width2 <= 0 or height2 <= 0:
             return
-            
+        logger.debug(f'{self.__class__.__name__} add {x2}, {y2}, {width2}, {height2}')
         # 只标记网格
         start_row, start_col = y2 // self.cell_size, x2 // self.cell_size
         end_row, end_col = (y2 + height2 - 1) // self.cell_size, (x2 + width2 - 1) // self.cell_size
@@ -246,7 +247,7 @@ class GridSystem(DirtySystem):
                     # 记录脏行和列
                     self._dirty_rows.add(row)
                     self._dirty_cols.add(col)
-
+        logger.debug(f'{self.__class__.__name__} after add {self.area}')
         self.dirty = True
         
         # 传递 dirty state to parent system

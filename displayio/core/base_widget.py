@@ -179,6 +179,7 @@ class BaseWidget(Color, Style):
         """
         # 尝试捕获
         # 如果事件未被捕获，传递给子组件
+        logger.debug(f'bubble {event.type}')
         if self.catch(event):
             if not self.handle(event):
                 for child in self.children: # 传递

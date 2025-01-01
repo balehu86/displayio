@@ -1,6 +1,7 @@
 # ./display.py
 from .core.bitmap import Bitmap
 from .core.event import Event # type hint
+from .core.logging import logger
 from .widget.widget import Widget
 from .container.container import Container # type hint
 from .input.base_input import Input # type hint
@@ -10,11 +11,11 @@ import time
 class Display:
     __slots__ = ('width', 'height', 'root', 'output', 'inputs',
                  'soft_timer', 'fps', 'show_fps', 'partly_refresh',
-                 'thread', 'loop')
+                 'loop')
 
-    def __init__(self, width:int, height:int, root:Container=None,
+    def __init__(self, width:int, height:int, root:Container=None, log_level = logger.INFO,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
-                 show_fps:bool=False, partly_refresh:bool=True, thread:bool=True):
+                 show_fps:bool=False, partly_refresh:bool=True):
         """显示器主程序
 
         Args:
@@ -27,9 +28,9 @@ class Display:
             soft_timer (bool, optional): 是否采用软件计时器调用输入设备检测. Defaults to True.
             show_fps (bool, optional): 是否print FPS 和 IPS(input per second). Defaults to False.
             partly_refresh (bool, optional): 是否开启局部刷新. Defaults to True.
-            threaded (bool, optional): 是否开启多线程将buffer写入显示器. Defaults to True.
         """
-
+        logger.setLevel(log_level)
+        logger.debug("Initializing display...")
         # 屏幕尺寸和根节点
         self.width = width
         self.height = height
@@ -44,10 +45,9 @@ class Display:
         self.show_fps = show_fps # 是否显示刷新率
         # 局部刷新
         self.partly_refresh = partly_refresh
-        # 标志是否开启多线程
-        self.thread = thread
         # 创建事件循环
         self.loop = MainLoop(self)
+        logger.debug("Display initialized.")
         
     def set_root(self, widget:Container):
         """设置根组件"""
@@ -86,8 +86,7 @@ from .utils.decorator import timeit
 class MainLoop:
     __slots__ = ('display', 'dirty_system', 'running', 'event_queue', 'task_queue',
                  'frame_interval', 'last_frame_time', 'frame_count', 'last_fps_time'
-                 'input_count', 'last_input_time', 'input_timer',
-                 'thread_dx', 'thread_dy', 'thread_width', 'thread_height', 'lock thread_running', 'thread_args', 'thread')
+                 'input_count', 'last_input_time', 'input_timer')
     
     """事件循环类，管理布局、渲染和事件处理"""
     def __init__(self, display:Display):
@@ -105,9 +104,6 @@ class MainLoop:
         self._init_fps_settings()
         # 输入检测相关初始化移到独立方法
         self._init_input_settings()
-        # 多线程相关初始化移到独立方法
-        if display.thread and display.output is not None:
-            self._init_thread_settings()
 
     def _init_fps_settings(self):
         """初始化FPS相关设置"""
@@ -122,44 +118,10 @@ class MainLoop:
         self.last_input_time = time.ticks_ms()
         if not self.display.soft_timer:
             self.input_timer = Timer(0)
-
-    def _init_thread_settings(self):
-        """初始化多线程相关设置"""
-        import _thread
-        self.thread_dx = 0
-        self.thread_dy = 0
-        self.thread_width = self.display.width
-        self.thread_height = self.display.height
-        
-        # 初始化buffer
-        init_buffer = bytes(self.display.width * self.display.height * 2)
-        
-        # 线程控制
-        self.lock = _thread.allocate_lock()
-        self.thread_running = True
-        
-        # 线程参数字典
-        self.thread_args = {
-            'buffer': init_buffer,
-            'thread_running': self.thread_running,
-            'dx': 0,
-            'dy': 0,
-            'width': self.display.width,
-            'height': self.display.height
-        }
-        
-        # 启动线程
-        self.thread = _thread.start_new_thread(
-            self.display.output._thread_refresh_wrapper,
-            (self.thread_args, self.lock))
     
     def stop(self):
         """停止事件循环"""
         self.running = False
-        if self.display.thread:
-            self.thread_running = False
-            # 等待线程自然退出
-            time.sleep_ms(50)
 
         if not self.display.soft_timer:
             self.input_timer.deinit()
@@ -173,10 +135,11 @@ class MainLoop:
         if self.display.show_fps:
             self._calculate_ips()
 
-    def process_event_queue(self):
+    def process_event(self):
         """处理待处理事件"""
         while self.event_queue:
             event = self.event_queue.popleft()
+            logger.debug(f"Processing event: {event.type}")
             if event.target_widget: # 有目标widget,则在目标widget开始冒泡
                 self.add_task(event.target_widget.bubble,one_shot=True,args=(event,))
             else:
@@ -195,7 +158,7 @@ class MainLoop:
         elapsed_time = time.ticks_diff(current_time, self.last_input_time)
         if elapsed_time >= 1000:  # 每秒计算一次
             ips = 1000 * self.input_count / elapsed_time / len(self.display.inputs)
-            print(f"IPS: {ips:.1f}")
+            logger.info(f"IPS: {ips:.1f}")
             # 重置计数器
             self.input_count = 0
             self.last_input_time = current_time
@@ -203,42 +166,22 @@ class MainLoop:
     def update_layout(self):
         """更新布局"""
         if self.dirty_system.layout_dirty:
+            logger.debug("Updating layout...")
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
         self.dirty_system.layout_dirty = False
         
-    def _update_display(self):
-        """更新显示"""
-        if self.dirty_system.dirty:
-            self._render_widget(self.display.root)
-            self.dirty_system.clear()
-
-    def _render_widget(self, widget:Container|Widget):
-        """递归渲染widget及其子组件
-                任何具有get_bitmap的组件将被视为组件树的末端
+    def _render_widget_partly(self, widget:Container|Widget):
+        """ 递归渲染widget及其子组件
+            任何具有get_bitmap的组件将被视为组件树的末端
         """
         if widget.widget_in_dirty_area():
             # 任何具有get_bitmap的组件将被视为组件树的末端
             if hasattr(widget, 'get_bitmap'):# 如果具有git_bitmap()
                 bitmap = widget.get_bitmap()
-                if self.display.thread:
-                    with self.lock:
-                        self.thread_args['buffer'] = bitmap.buffer
-                        self.thread_args['dx'] = widget.dx
-                        self.thread_args['dy'] = widget.dy
-                        self.thread_args['width'] = widget.width
-                        self.thread_args['height'] = widget.height   
-                else:
-                    self.display.output.refresh(bitmap.buffer, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
+                self.display.output.refresh(bitmap.buffer, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
             else:# 如果没有git_bitmap()
                 for child in widget.children:
-                    self._render_widget(child)
-    
-    def _update_display_fully(self):
-        """全屏刷新"""
-        if self.dirty_system.dirty:
-            self._render_widget_fully(self.display.root)
-            self.dirty_system.clear()
-            self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
+                    self._render_widget_partly(child)
 
     def _render_widget_fully(self, widget:Widget|Container):
         """绘制整个屏幕的buffer"""
@@ -251,11 +194,16 @@ class MainLoop:
                     self._render_widget_fully(child)
 
     def update_display(self):
-        # 确认 局部刷新还是全局刷新
-        if self.display.partly_refresh:
-            self._update_display()
-        else:
-            self._update_display_fully()
+        """更新显示"""
+        if self.dirty_system.dirty: # 如果有脏区域则出发刷新
+            logger.debug(f"Updating display...\n\t{self.dirty_system.__class__.__name__}\n\t{self.dirty_system.area}")
+            if self.display.partly_refresh: # 确认 局部刷新还是全局刷新
+                self._render_widget_partly(self.display.root)
+                self.dirty_system.clear()
+            else:
+                self._render_widget_fully(self.display.root)
+                self.dirty_system.clear()
+                self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
         # 帧数计数和FPS计算
         if self.display.show_fps:
             self._calculate_fps()
@@ -268,7 +216,7 @@ class MainLoop:
 
         if elapsed_time >= 1000:  # 每秒计算一次
             fps = 1000 * self.frame_count / elapsed_time
-            print(f"FPS: {fps:.1f}")
+            logger.info(f"FPS: {fps:.1f}")
             # 重置计数器
             self.frame_count = 0
             self.last_fps_time = current_time
@@ -288,12 +236,11 @@ class MainLoop:
             self._init_tasks(func) # 添加初始函数
             self._main_loop()
         except KeyboardInterrupt:
-            print("捕获到键盘中断，正在退出...")
+            logger.info("捕获到键盘中断，正在退出...")
             self.stop()
-            print("已退出。")
-        # except Exception as e:
-        #     print(f"Error in main loop: {e}")
-        #     self.stop()
+        except Exception as e:
+            logger.exception("发生异常，正在退出...", exc=e)
+            self.stop()
 
     def _init_tasks(self, func:function):
         """初始化所有任务"""
@@ -307,7 +254,7 @@ class MainLoop:
                 
         # 添加核心任务
         # 添加事件冒泡 
-        self.add_task(self.process_event_queue, period=10)
+        self.add_task(self.process_event, period=10)
         # 添加布局系统
         self.add_task(self.update_layout, period=self.frame_interval, priority=10)
         # 添加刷新系统
@@ -375,15 +322,15 @@ class Task:
         result = None  # 存储返回值
         if self.generator:
             try:
-                result = next(self.generator)  # 执行生成器的下一步
+                next(self.generator)  # 执行生成器的下一步
+                return True  # 生成器未完成，标记任务继续
             except StopIteration as e:
-                # 获取生成器的返回值
-                result = e.value
-                if self.on_complete:  # 任务完成后执行回调
+                result = e.value # 获取生成器的返回值
+                if self.on_complete: # 任务完成后执行回调
                     self.on_complete(result)
-                return False  # 生成器已完成，标记任务结束
+                return not self.one_shot  # 对于单次任务，标记结束；多次任务则标记继续
         else: # 执行普通回调
             result = self.callback(*self.args,**self.kwargs)
             if self.on_complete:  # 单次任务完成后执行回调
                 self.on_complete(result)
-        return not self.one_shot  # 对于单次任务，标记结束
+            return not self.one_shot  # 对于单次任务；标记结束；多次任务则标记继续
