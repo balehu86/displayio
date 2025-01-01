@@ -82,6 +82,7 @@ from collections import deque
 from heapq import heappush, heappop  # 用于优先级队列管理任务
 from machine import Timer # type: ignore
 from .utils.decorator import timeit
+import gc
 
 class MainLoop:
     __slots__ = ('display', 'dirty_system', 'running', 'event_queue', 'task_queue',
@@ -245,7 +246,8 @@ class MainLoop:
         """初始化所有任务"""
         # 添加初始函数
         self.add_task(func, one_shot=True)
-        
+        # 添加垃圾收集任务
+        self.add_task(gc.collect, period=10000)
         # 添加输入检测任务
         if self.display.soft_timer:
             for device in self.display.inputs:
@@ -266,12 +268,16 @@ class MainLoop:
             task = self.task_queue[0] # 查看队列中的最高优先级任务
             time_to_next_run = time.ticks_diff(task.next_run, current_time) # 计算距离下次运行的时间
             if time_to_next_run > 0:
+                # 距离下一次运行还有时间，动态休眠
+                time.sleep_ms(min(time_to_next_run, 1)) # 最多休眠1ms
                 continue
             # 移除任务并执行
             heappop(self.task_queue)
             if task.execute():  # 执行任务,任务完成返回False，未完成返回True
+                # 考虑任务执行时间，避免任务堆积
+                execution_time = time.ticks_diff(time.ticks_ms(), current_time)
                 # 更新下次运行时间
-                task.next_run = time.ticks_add(current_time, task.period)
+                task.next_run = time.ticks_add(current_time, max(task.period, execution_time))
                 heappush(self.task_queue, task)  # 重新放入队列
 
 class Task:
