@@ -75,6 +75,7 @@ class ScrollBox(Container):
         child._bitmap = Bitmap(child, transparent_color=self.transparent_color)
         # 递归设置独立的脏区域管理器
         child.set_dirty_system(self.scroll_dirty_system)
+        child.set_default_color(self.default_color)
         self.child = child
         self.children.append(child) # 因为事件传递需要，所以保留此项
         self._dirty = True

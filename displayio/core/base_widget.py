@@ -137,14 +137,16 @@ class BaseWidget(Color, Style):
         self.visibility = False
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
-            child.hide()
+            if child.visibility:
+                child.hide()
 
     def unhide(self) -> None:
         """取消隐藏部件"""
         self.visibility = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
-            child.unhide()
+            if not child.visibility:
+                child.unhide()
 
     def _get_min_size(self) -> tuple[int, int]:
         """
@@ -161,13 +163,22 @@ class BaseWidget(Color, Style):
         """向末梢传递 脏"""
         self._dirty = True
         for child in self.children:
-            child.mark_dirty()
+            if not child._dirty: # 先做个判断，减少重复修改
+                child.mark_dirty()
 
-    def set_dirty_system(self, dirty_system):
+    def set_dirty_system(self, dirty_system) -> None:
         """设置脏区域管理器"""
         self.dirty_system = dirty_system
         for child in self.children:
-            child.set_dirty_system(dirty_system)
+            if child.dirty_system is not dirty_system:
+                child.set_dirty_system(dirty_system)
+
+    def set_default_color(self, color) -> None:
+        """设置默认颜色"""
+        self.default_color = color
+        for child in self.children:
+            if child.default_color != color:
+                child.set_default_color(color)
 
     def bubble(self, event) -> None:
         """事件冒泡

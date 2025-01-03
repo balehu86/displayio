@@ -39,6 +39,7 @@ class Container(BaseWidget):
         for child in childs:
             child.parent=self
             child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
+            child.set_default_color(self.default_color)  # 设置相同的默认颜色
             heappush(self.children, child)
 
         self.mark_dirty()
