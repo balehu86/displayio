@@ -2,6 +2,7 @@
 from .core.bitmap import Bitmap
 from .core.event import Event # type hint
 from .core.logging import logger
+from .core.dirty import DirtySystem
 from .widget.widget import Widget
 from .container.container import Container # type hint
 from .input.base_input import Input # type hint
@@ -54,7 +55,10 @@ class Display:
         widget.resize(width=self.width, height=self.height, force=True)
         widget.width_resizable, widget.height_resizable = False, False
         self.root = widget
+        # 传递root的dirty_system到事件循环
         self.loop.dirty_system=widget.dirty_system
+        # 将root的dirty_system设置为全局共享实例
+        DirtySystem._instances['default'] = widget.dirty_system
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             widget._bitmap = Bitmap(widget)

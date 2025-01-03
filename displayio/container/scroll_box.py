@@ -22,7 +22,7 @@ class ScrollBox(Container):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=Container.DARK,
+                 default_color=Container.DARK,
                  transparent_color=Container.PINK,
                  color_format=Container.RGB565):
         """
@@ -42,7 +42,7 @@ class ScrollBox(Container):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         background_color = background_color,
+                         default_color = default_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
         # 预创建bitmap对象
@@ -147,7 +147,7 @@ class ScrollBox(Container):
                 self._dirty = False
             return self._bitmap
         else:
-            self._empty_bitmap.init(color=0xffff)
+            self._empty_bitmap.init(color=0x0000)
             return self._empty_bitmap
         
     @micropython.native

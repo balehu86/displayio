@@ -20,7 +20,7 @@ class GridBox(Container):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 background_color=Container.DARK,
+                 default_color=Container.DARK,
                  transparent_color=Container.PINK,
                  color_format=Container.RGB565):
         """
@@ -37,7 +37,7 @@ class GridBox(Container):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         background_color = background_color,
+                         default_color = default_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
         

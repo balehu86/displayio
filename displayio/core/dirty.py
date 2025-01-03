@@ -2,16 +2,17 @@ from .logging import logger
 
 class DirtySystem:
     """
-    脏区域管理基类类,
-    采用单例模式,确保实例唯一
+    脏区域管理基类类,采用单例模式,确保实例唯一
+    只有widget需要额外创建一张屏幕外的bitmap时,才需要创建一个独立的dirty_system
+        命名为 {容器类名}_{容器实例id}  ,且需要传入widget参数
     """
     _instances = {}  # 存储所有命名实例
     __slots__ = ('name', 'dirty', 'widget', '_layout_dirty', 'initialized')
     
-    def __new__(cls, name='default', **kwargs):
+    def __new__(cls, name='default', *args,**kwargs):
         # 确保每个名称只创建一个实例
         if name not in cls._instances:
-            cls._instances[name] = super().__new__(cls)
+            cls._instances[name] = object.__new__(cls)
         return cls._instances[name]
     
     def __init__(self, name='default', widget=None):
@@ -59,6 +60,7 @@ class MergeRegionSystem(DirtySystem):
     脏区域管理类,采用区域合并算法
     精细化管理,当脏区域数量变多,性能下降明显
     """
+    _instances = {}  # 存储所有命名实例
     __slots__ = ('_area',)
     
     def __init__(self, name='default', widget=None):
@@ -145,6 +147,7 @@ class BoundBoxSystem(DirtySystem):
     边界框脏区域管理,采用包围盒算法
     适合处理单一矩形区域的大规模刷新。
     """
+    _instances = {}  # 存储所有命名实例
     __slots__ = ('min_x', 'min_y', 'max_x', 'max_y')
     
     def __init__(self, name='default', widget=None):
@@ -202,6 +205,7 @@ class GridSystem(DirtySystem):
     网格型脏区域管理,采用网格划分算法
     适合大规模屏幕划分，逐块刷新。
     """
+    _instances = {}  # 存储所有命名实例
     __slots__ = ('width', 'height', 'cell_size', 'cols', 'rows', 'grid',
                  '_dirty_rows', '_dirty_cols')
     

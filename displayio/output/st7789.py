@@ -276,23 +276,3 @@ class ST7789:
         """将位图数据刷新到显示屏"""  
         self.set_window(dx, dy, dx + width - 1, dy + height - 1)     
         self.write_data(buffer)
-
-    def _thread_refresh_wrapper(self, args, lock):
-        """线程刷新的包装器，增加线程生命周期管理"""
-        old_buffer = None
-        try:
-            while args['thread_running']:
-                # 使用实例方法和实例属性
-                if old_buffer != args['buffer']:
-                    with lock:
-                        self.set_window(
-                            args['dx'], args['dy'], 
-                            args['dx'] + args['width'] - 1, 
-                            args['dy'] + args['height'] - 1)
-                        self.write_data(args['buffer'])
-                        old_buffer = args['buffer']
-                time.sleep_ms(3)
-        except Exception as e:
-            print(f"Thread refresh error: {e}")
-        finally:
-            print("Display refresh thread terminated")

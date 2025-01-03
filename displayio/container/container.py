@@ -17,7 +17,7 @@ class Container(BaseWidget):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=BaseWidget.STATE_DEFAULT,
-                 background_color=BaseWidget.DARK,
+                 default_color=BaseWidget.DARK,
                  transparent_color=BaseWidget.PINK,
                  color_format=BaseWidget.RGB565):
         """
@@ -30,7 +30,7 @@ class Container(BaseWidget):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         background_color = background_color,
+                         default_color = default_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
         
