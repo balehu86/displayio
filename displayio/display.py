@@ -61,7 +61,7 @@ class Display:
         DirtySystem._instances['default'] = widget.dirty_system
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
-            widget._bitmap = Bitmap(widget)
+            widget._bitmap = Bitmap(widget, transparent_color=widget.transparent_color)
             widget._bitmap.init(width=self.width, height=self.height)
 
     def add_event(self, event:Event):

@@ -17,6 +17,7 @@ class Button(Label):
                  font=None,
                  font_scale=1,
                  text_color=Label.WHITE, # 文字颜色默认白色
+                 background_color=Label.Button_BLUE, # 背景颜色默认蓝色
                  align=Label.ALIGN_CENTER,  # 按钮文字默认居中
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
                  
@@ -24,7 +25,7 @@ class Button(Label):
                  rel_x=0,rel_y=0, dz=0,
                  width=None,height=None,
                  visibility=True, state=Label.STATE_DEFAULT,
-                 background_color= Label.Button_BLUE, # 默认蓝色背景
+                 default_color= Label.WHITE,
                  transparent_color=Label.PINK,
                  color_format = Label.RGB565): 
         """
@@ -37,6 +38,7 @@ class Button(Label):
                          font = font,
                          font_scale = font_scale,
                          text_color = text_color,
+                         background_color = background_color,
                          align = align,
                          padding = padding,
 
@@ -44,7 +46,7 @@ class Button(Label):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         background_color = background_color,
+                         default_color = default_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
         
@@ -74,7 +76,8 @@ class Button(Label):
         original_text_color = self.text_color
         self.text_color = style['text_color']
         # 创建文本位图
-        self._create_text_bitmap()
+        if self._text_dirty:
+            self._create_text_bitmap()
         # 计算文本位置（从Label类复用此逻辑）
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景

@@ -46,8 +46,8 @@ class ScrollBox(Container):
                          transparent_color = transparent_color,
                          color_format = color_format)
         # 预创建bitmap对象
-        self._bitmap = Bitmap(self)
-        self._empty_bitmap = Bitmap(self)
+        self._bitmap = Bitmap(self, transparent_color=transparent_color)
+        self._empty_bitmap = Bitmap(self, transparent_color=transparent_color)
         # 使用实例ID作为唯一标识
         self.child = None
         # 创建独立的脏区域管理器
@@ -72,7 +72,7 @@ class ScrollBox(Container):
         """向滚动容器中添加元素"""
         assert self.child is None, "scroll must have one child"
         child.parent = self
-        child._bitmap = Bitmap(child)
+        child._bitmap = Bitmap(child, transparent_color=self.transparent_color)
         # 递归设置独立的脏区域管理器
         child.set_dirty_system(self.scroll_dirty_system)
         self.child = child

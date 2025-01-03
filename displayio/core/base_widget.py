@@ -9,8 +9,8 @@ class BaseWidget(Color, Style):
     __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dz',
                  'width', 'height', 'visibility', 'state',
                  'width_resizable', 'height_resizable',
-                 'background_color', 'transparent_color', 'color_format',
-                 'background_color_cache', '_bitmap', '_empty_bitmap'
+                 'default_color', 'transparent_color', 'color_format',
+                 '_bitmap', '_empty_bitmap'
                  '_dirty', 'dirty_system', 'parent', 'children', 'event_listener')
     
     # widget状态枚举
@@ -29,7 +29,7 @@ class BaseWidget(Color, Style):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=STATE_DEFAULT,
-                 background_color=Color.WHITE, # 默认白色
+                 default_color=Color.DARK, # 默认白色
                  transparent_color=Color.PINK,
                  color_format=Style.RGB565):
         # 初始化时坐标，分绝对坐标和相对坐标
@@ -68,9 +68,7 @@ class BaseWidget(Color, Style):
         # 容器的子元素
         self.children = []
         # 背景色
-        self.background_color = background_color
-        # 没有缓存时应该保持为None
-        self.background_color_cache = None
+        self.default_color = default_color
         # 透明色
         self.transparent_color = transparent_color
         # event监听器注册
@@ -237,22 +235,24 @@ class BaseWidget(Color, Style):
     
     def focus(self, widget, event):
         """元素聚焦,会将元素内所有元素调暗0.1"""
-        self.background_color_cache = self.background_color
-        self.background_color = self._darken_color(self.background_color,0.9)
+        if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
+            self.background_color_cache = self.background_color
+            self.background_color= self._darken_color(self.background_color,0.9)
         self._dirty = True
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
-            child.focus()
+            child.focus(widget, event)
 
     def unfocus(self, widget, event):
         """取消元素聚焦"""
-        if self.background_color_cache is not None:
-            self.background_color = self.background_color_cache
-            self.background_color_cache = None
-            self._dirty = True
-            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+        if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
+            if self.background_color_cache is not None:
+                self.background_color = self.background_color_cache
+                self.background_color_cache = None
+        self._dirty = True
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
-            child.unfocus()
+            child.unfocus(widget, event)
 
     def _darken_color(self, color, factor):
         """将16位RGB颜色调暗
@@ -276,4 +276,4 @@ class BaseWidget(Color, Style):
         return self.dz < other.dz
     
     def __repr__(self):
-        return f'<{self.__class__.__name__} object> \n\tdz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tbackground_color: {self.background_color}'
+        return f'<{self.__class__.__name__} object> \n\tdz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tdefault_color: {self.default_color}'

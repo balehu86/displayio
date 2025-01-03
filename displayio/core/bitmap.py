@@ -24,19 +24,18 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, widget=None):
+    def __init__(self, widget=None, transparent_color=None):
         self.widget = widget
         self.width = None
         self.height = None
-        self.transparent_color = widget.transparent_color if widget else 0xf81f
+        self.transparent_color = transparent_color if transparent_color is not None else 0xf81f
         self.color_format = widget.color_format if widget else self.RGB565
-        self.color = widget.background_color if widget else 0x0000
 
         self.size_changed = False
         self.buffer = None
         self.fb = None
     
-    def init(self, width=0, height=0, transparent_color=None, color=None):
+    def init(self, width=0, height=0, color=None, transparent_color=None):
         """bitmap初始化
         Args:
             width: 宽度
@@ -57,11 +56,10 @@ class Bitmap:
             self.transparent_color = transparent_color
         
         # 检查颜色更新
-        if color is not None and not self.size_changed:
-            if self.color != color:  # 尺寸不变但颜色变化，直接填充
-                self.color = color
-                if self.fb:  # 确保已初始化FrameBuffer
-                    self.fill(color)
+        if color is not None and not self.size_changed: # 尺寸未变，传递了color，只需填充颜色
+            # 尺寸不变但颜色变化，直接填充
+            if self.fb:  # 确保已初始化FrameBuffer
+                self.fill(color)
             return
         
         # 尺寸变化或首次初始化时重新创建Framebuf
@@ -75,8 +73,6 @@ class Bitmap:
             # 初始化颜色填充，跳过纯黑色填充
             if color is not None and color != 0x0000:
                 self.fill(color)
-            elif self.color != 0x0000 and color is None:
-                self.fill(self.color)
 
     @micropython.native
     def pixel(self, x:int, y:int, color:int|None=None):

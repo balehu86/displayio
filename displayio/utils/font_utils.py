@@ -33,8 +33,8 @@ def hex_font_to_bitmap(hex_data, width=16, height=16, scale=1,
 
     bytes_per_row = width // 8 # 每行需要的字节数
     expected_data_length = height * bytes_per_row
-    bitmap = Bitmap()
-    bitmap.init(width=scaled_width, height=scaled_height, transparent_color=0x0000)
+    bitmap = Bitmap(transparent_color=0x0000)
+    bitmap.init(width=scaled_width, height=scaled_height)
     
     def draw_scaled_pixel(x, y, color):
         """在缩放后的位图上绘制像素块"""

@@ -12,7 +12,7 @@ class Widget(BaseWidget):
                  rel_x=0,rel_y=0, dz=0,
                  width=None,height=None,
                  visibility=True, state=BaseWidget.STATE_DEFAULT,
-                 background_color=BaseWidget.Label_GREEN, # 背景色（默认绿色）
+                 default_color=BaseWidget.WHITE,
                  transparent_color=BaseWidget.PINK,
                  color_format = BaseWidget.RGB565):
         """
@@ -25,12 +25,12 @@ class Widget(BaseWidget):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         background_color = background_color,
+                         default_color = default_color,
                          transparent_color = transparent_color,
                          color_format = color_format)
         
-        self._bitmap = Bitmap(self)
-        self._empty_bitmap = Bitmap(self)
+        self._bitmap = Bitmap(self, transparent_color = transparent_color)
+        self._empty_bitmap = Bitmap(self, transparent_color = transparent_color)
 
     def get_bitmap(self):
         pass
