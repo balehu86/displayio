@@ -14,10 +14,10 @@ class EventType:
     # 按键相关事件
     PRESS = 'PRESS'       # 按下
     RELEASE = 'RELEASE'   # 释放
-    LONG_PRESS_RELEASE = 'LONG_PRESS_RELEASE' # 长按释放 
-    CLICK = 'CLICK'       # 点击v
-    LONG_PRESS = 'LONG_PRESS'       # 长按v
-    DOUBLE_CLICK = 'DOUBLE_CLICK'   # 双击v
+    LONG_PRESS_RELEASE = 'LONG_PRESS_RELEASE' # 长按释放
+    CLICK = 'CLICK'       # 点击
+    LONG_PRESS = 'LONG_PRESS'       # 长按
+    DOUBLE_CLICK = 'DOUBLE_CLICK'   # 双击
     # 拖动相关事件
     DRAG_START = 10       # 拖动开始,检测逻辑类似长按
     DRAG_MOVE = 11        # 拖动中
@@ -25,6 +25,8 @@ class EventType:
     # 焦点相关事件
     FOCUS = 'FOCUS'       # 获得焦点
     UNFOCUS = 'UNFOCUS'   # 失去焦点
+    FOCUS_NEXT = 'FOCUS_NEXT' # 下一个焦点
+    FOCUS_PREV = 'FOCUS_PREV' # 上一个焦点
     # 值和选择相关事件
     VALUE_CHANGE = 15     # 值改变
     SELECTION_CHANGE = 16 # 选择改变
@@ -33,7 +35,7 @@ class EventType:
     ROTATE_LEFT = 'ROTATE_LEFT'      # 左旋
     ROTATE_RIGHT = 'ROTATE_RIGHT'    # 右旋
     ROTATE_TICK = 'ROTATE_TICK'      # 一个tick
-    ROTATE_TICK_LEFT = 'ROTATE_TICK_LEFT' # 一个左旋tick
+    ROTATE_TICK_LEFT = 'ROTATE_TICK_LEFT'  # 一个左旋tick
     ROTATE_TICK_RIGHT = 'ROTATE_TICK_RIGHT'# 一个右旋tick
     # 滚动
     SCROLL = 'SCROLL'           # 滚动
@@ -72,7 +74,7 @@ class Event:
             raise ValueError("事件必须指定目标位置或目标组件")
         self.target_widget = target_widget   # 事件目标对象
         self.target_position = target_position    # 事件目标位置
-        self.data = data or {}              # 事件相关数据
+        self.data = data             # 事件相关数据
         self.timestamp = timestamp                   # 事件发生时间戳
         self.priority = 10  # 事件优先级
         self.status_code = self.Initializing

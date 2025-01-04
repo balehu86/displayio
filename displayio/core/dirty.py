@@ -34,6 +34,11 @@ class DirtySystem:
         self.initialized = True
 
     @property
+    def area(self):
+        """返回脏区域"""
+        return None
+    
+    @property
     def layout_dirty(self):
         return self._layout_dirty
 
@@ -55,6 +60,9 @@ class DirtySystem:
         
         self.dirty = False
 
+    def __repr__(self):
+        return f'{self.__class__.__name__} \n\tname: {self.name}, area: {self.area}'
+    
 class MergeRegionSystem(DirtySystem):
     """
     脏区域管理类,采用区域合并算法
