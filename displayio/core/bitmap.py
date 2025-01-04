@@ -13,7 +13,7 @@ def _swap_rgb565(color: int) -> int:
 
 class Bitmap:
     __slots__ = ('widget', 'width', 'height', 'transparent_color', 'color_format',
-                'color', 'size_changed', 'buffer', 'fb')
+                 'size_changed', 'buffer', 'fb')
     
     # 支持的颜色格式
     MONO_VLSB = framebuf.MONO_VLSB
