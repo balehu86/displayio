@@ -74,7 +74,7 @@ class Container(BaseWidget):
 
     def update_layout(self) -> None:
         """在子类型里会重写这个方法,这里只做声明"""
-        pass
+        raise NotImplementedError("update_layout() must be implemented in subclass")
 
     def bind(self, event_type:EventType) -> None:
         """事件委托,接收事件并冒泡"""

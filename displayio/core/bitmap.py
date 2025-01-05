@@ -12,7 +12,7 @@ def _swap_rgb565(color: int) -> int:
     return ((color >> 8) | (color << 8)) & 0xFFFF
 
 class Bitmap:
-    __slots__ = ('widget', 'width', 'height', 'transparent_color', 'color_format',
+    __slots__ = ('widget', 'dx', 'dy', 'width', 'height', 'transparent_color', 'color_format',
                  'size_changed', 'buffer', 'fb')
     
     # 支持的颜色格式
@@ -26,6 +26,8 @@ class Bitmap:
 
     def __init__(self, widget=None, transparent_color=None):
         self.widget = widget
+        self.dx = None
+        self.dy = None
         self.width = None
         self.height = None
         self.transparent_color = transparent_color if transparent_color is not None else 0xf81f
@@ -35,13 +37,16 @@ class Bitmap:
         self.buffer = None
         self.fb = None
     
-    def init(self, width=0, height=0, color=None, transparent_color=None):
+    def init(self, dx=0, dy=0, width=0, height=0, color=None, transparent_color=None):
         """bitmap初始化
         Args:
             width: 宽度
             height: 高度
             transparent_color: 透明色
         """
+        self.dx = dx
+        self.dy = dy
+
         new_width = width or (self.widget.width if self.widget else 0)
         if self.width != new_width:
             self.width = new_width

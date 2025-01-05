@@ -62,7 +62,7 @@ class Display:
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             widget._bitmap = Bitmap(widget, transparent_color=widget.transparent_color)
-            widget._bitmap.init(width=self.width, height=self.height)
+            widget._bitmap.init(dx=0, dy=0, width=self.width, height=self.height)
 
     def add_event(self, event:Event):
         """添加事件到事件循环"""
@@ -179,21 +179,26 @@ class MainLoop:
         """ 递归渲染widget及其子组件
             任何具有get_bitmap的组件将被视为组件树的末端
         """
-        if widget.widget_in_dirty_area():
-            # 任何具有get_bitmap的组件将被视为组件树的末端
-            if hasattr(widget, 'get_bitmap'):# 如果具有git_bitmap()
-                bitmap = widget.get_bitmap()
-                self.display.output.refresh(bitmap.buffer, dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
-            else:# 如果没有git_bitmap()
-                for child in widget.children:
-                    self._render_widget_partly(child)
+        raise NotImplementedError('_render_widget_partly() must be implemented in subclasses.')
+        # if widget.widget_in_dirty_area():
+        #     # 任何具有get_bitmap的组件将被视为组件树的末端
+        #     if hasattr(widget, 'get_bitmap'):# 如果具有git_bitmap()
+        #         bitmap = widget.get_bitmap()
+        #         dx = widget.dx_cache if widget.dx_cache is not None else widget.dx
+        #         dy = widget.dy_cache if widget.dy_cache is not None else widget.dy
+        #         width = widget.width_cache if widget.width_cache is not None else widget.width
+        #         height = widget.height_cache if widget.height_cache is not None else widget.height
+        #         self.display.output.refresh(bitmap.buffer, dx=dx, dy=dy, width=width, height=height)
+        #     else:# 如果没有git_bitmap()
+        #         for child in widget.children:
+        #             self._render_widget_partly(child)
 
     def _render_widget_fully(self, widget:Widget|Container):
         """绘制整个屏幕的buffer"""
         if  widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
-                self.display.root._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
+                self.display.root._bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
             else:
                 for child in widget.children:
                     self._render_widget_fully(child)

@@ -126,7 +126,7 @@ class Label(Widget):
         包含背景和文本渲染
         """
         # 创建和填充新的位图
-        self._bitmap.init(color=self.background_color)
+        self._bitmap.init(dx=self.dx,dy=self.dy,color=self.background_color)
         # 绘制文字
         if self._text_dirty:
             self._create_text_bitmap()
@@ -134,21 +134,38 @@ class Label(Widget):
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
         self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
-    
-    def get_bitmap(self):
-        """
-        获取控件的位图
-        如果需要重绘，先创建新的位图
-        """
-        if self.visibility: # 未隐藏
-            if self._dirty: # 如果脏，则重绘bitmap
-                self._create_bitmap()
-                self._dirty = False
+        
+        if not self.layout_changed: # 如果布局未改变则直接返回self._bitmap
             return self._bitmap
-        else: # 隐藏
-            self._empty_bitmap.init(color=0xffff)
-            return self._empty_bitmap
-    
+        
+        # 计算当前的dx, dy, width, height
+        current_dx, current_dy, current_width, current_height = self.dx, self.dy, self.width, self.height
+        # 计算原始的dx, dy, width, height
+        original_dx = self.dx_cache if self.dx_cache is not None else current_dx
+        original_dy = self.dy_cache if self.dy_cache is not None else current_dy
+        original_width = self.width_cache if self.width_cache is not None else current_width
+        original_height = self.height_cache if self.height_cache is not None else current_height
+        # 计算包围盒bitmap的起始左上角坐标
+        bitmap_min_x = min(original_dx, current_dx)
+        bitmap_min_y = min(original_dy, current_dy)
+        # 计算原始位置的边界坐标
+        original_x_max, original_y_max = original_dx + original_width - 1, original_dy + original_height - 1
+        # 计算当前位置的边界坐标
+        current_x_max, current_y_max = current_dx + current_width - 1, current_dy + current_height - 1
+        # 计算包围盒bitmap的宽高
+        bitmap_width = max(original_x_max, current_x_max) - bitmap_min_x +1
+        bitmap_height = max(original_y_max, current_y_max) - bitmap_min_y + 1
+        # 创建包围盒bitmap
+        self._bond_bitmap.init(dx=bitmap_min_x, dy=bitmap_min_y, width=bitmap_width, height=bitmap_height, transparent_color=0x0000)
+        # 将当前self._bitmap复制到包围盒bitmap
+        self._bond_bitmap.blit(self._bitmap, dx=current_dx-bitmap_min_x, dy=current_dy-bitmap_min_y)
+        # 恢复缓存的原始dx, dy, width, height
+        self.dx_cache, self.dy_cache, self.width_cache, self.height_cache = None, None, None, None
+        self.layout_changed = False
+        # 返回包围盒bitmap
+        # print(f'bond_bitmap, dx={bitmap_min_x}, dy={bitmap_min_y}, width={bitmap_width}, height={bitmap_height}\n\tcurrent_dx={current_dx}, current_dy={current_dy}, current_width={current_width}, current_height={current_height}')
+        return self._bond_bitmap
+
     def set_text(self, text) -> None:
         """设置文本内容"""
         if self.text != text:

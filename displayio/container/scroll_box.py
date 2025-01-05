@@ -148,20 +148,20 @@ class ScrollBox(Container):
                 self._dirty = False
             return self._bitmap
         else:
-            self._empty_bitmap.init(color=0x0000)
+            self._empty_bitmap.init(dx=self.dx,dy=self.dy,color=0x0000)
             return self._empty_bitmap
         
     @micropython.native
     def _crop_bitmap(self) -> None:
         """裁剪child的完整位图的对应区域"""
-        self._bitmap.init()
+        self._bitmap.init(dx=self.dx,dy=self.dy)
         self._update_child_bitmap()
         self._bitmap.blit(self.child._bitmap, dx=(-1)*self.scroll_offset_x, dy=(-1)*self.scroll_offset_y)
 
     def _update_child_bitmap(self) -> None:
         """更新child的bitmap"""
         if self.scroll_dirty_system.dirty:
-            self.child._bitmap.init()
+            self.child._bitmap.init(dx=0,dy=0)
             self._render_child_tree(self.child) # 获取到完整的child._bitmap
             
             self._dirty = True
@@ -174,7 +174,7 @@ class ScrollBox(Container):
         if widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
-                self.child._bitmap.blit(bitmap, dx=widget.dx, dy=widget.dy)
+                self.child._bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
             else:
                 for child in widget.children:
                     self._render_child_tree(child)

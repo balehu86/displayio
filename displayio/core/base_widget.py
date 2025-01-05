@@ -6,12 +6,11 @@ from .logging import logger
 
 class BaseWidget(Color, Style):
 
-    __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dz',
-                 'width', 'height', 'visibility', 'state',
-                 'width_resizable', 'height_resizable',
-                 'default_color', 'transparent_color', 'color_format',
-                 '_bitmap', '_empty_bitmap'
-                 '_dirty', 'dirty_system', 'parent', 'children', 'event_listener')
+    __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dx', 'dy', 'dx_cache', 'dy_cache', 'dz',
+                 'width', 'height', 'width_resizable', 'height_resizable', 'width_cache', 'height_cache', 'layout_changed',
+                 'state', 'visibility', 'color_format',
+                 '_bitmap', '_empty_bitmap', '_dirty', 'dirty_system',
+                 'parent', 'children', 'default_color', 'transparent_color', 'event_listener')
     
     # widget状态枚举
     STATE_DEFAULT = 0   # 正常、释放状态
@@ -39,25 +38,31 @@ class BaseWidget(Color, Style):
         # 目标位置，由布局系统确定
         self.dx = abs_x if abs_x is not None else 0
         self.dy = abs_y if abs_y is not None else 0
+        # 缓存的位置，用来绘制widget的包围盒
+        self.dx_cache, self.dy_cache = None, None
         # 部件在z轴方向上的深度
         self.dz = dz
-        # widget 是否可见
-        self.visibility = visibility
+        # 部件的尺寸，分宽和高
         self.width, self.height = width, height
-        # widget 是否可交互，如果部件未启用，则不会处理事件
-        self.state = state
         # 若已初始化时定义宽或高，则layout布局系统无法自动设置widget的大小
         # 但是可以通过resize()手动调整大小，不受次项限制
         self.width_resizable = True if width is None else False
         self.height_resizable = True if height is None else False
+        # 缓存的尺寸，用来绘制widget的包围盒
+        self.width_cache, self.height_cache = None, None
+        self.layout_changed = False # 布局是否发生改变,用来决定绘制bitmap是否需要绘制包围盒
+        # widget 是否可交互，如果部件未启用，则不会处理事件
+        self.state = state
+        # widget 是否可见
+        self.visibility = visibility
         # 位图的色彩格式
         self.color_format = color_format
         # 缓存的位图对象
         self._bitmap = None
         self._empty_bitmap = None
-        """脏标记解释：    警告:任何具有get_bitmap的组件将被视为组件树的末端
+        """脏标记解释：    注意:任何具有get_bitmap的组件将被视为组件树的末端
         _dirty: 部件是否需要重绘,用于发起重绘,
-            在Display的事件循环render_widget()中调用get_bitmap()后取消标记。
+            在Display的事件循环render_widget()中调用get_bitmap()中取消标记。
         """
         # 绘制系统的脏标记
         self._dirty = True # 存在本地，触发触发重绘
@@ -94,9 +99,11 @@ class BaseWidget(Color, Style):
         actual_dx = self.abs_x or (dx + rel_x)
         actual_dy = self.abs_y or (dy + rel_y)
         if self.dx != actual_dx:
+            self.dx_cache = self.dx
             self.dx = actual_dx
             changed = True
         if self.dy != actual_dy:
+            self.dy_cache = self.dy
             self.dy = actual_dy
             changed = True
         
@@ -104,15 +111,18 @@ class BaseWidget(Color, Style):
         actual_width = (width-rel_x) if width is not None else 0
         actual_height = (height-rel_y) if height is not None else 0
         if self.width != actual_width:
+            self.width_cache = self.width
             self.width = actual_width
             changed = True
             self._dirty = True
         if self.height != actual_height:
+            self.height_cache = self.height
             self.height = actual_height
             changed = True
             self._dirty = True
 
         if changed: # 如果发生改变，则将原始区域和重新布局后的区域标脏
+            self.layout_changed = True
             self.dirty_system.add(original_dx, original_dy, original_width, original_height)
             self.dirty_system.add(self.dx, self.dy, self.width, self.height)
     
@@ -125,6 +135,7 @@ class BaseWidget(Color, Style):
         """
         self.width = width if (force or self.width_resizable) and width != None else self.width
         self.height = height if (force or self.height_resizable) and height != None else self.height
+        self.layout_changed = True
         self._dirty = True
         self.dirty_system.layout_dirty = True
         original_width = self.width if self.width is not None else 0

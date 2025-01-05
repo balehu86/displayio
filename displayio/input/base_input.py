@@ -24,7 +24,7 @@ class Input(EventType):
             例如：
                 data={'rotate_position': self.position}
         """
-        pass
+        raise NotImplementedError("Input子类必须实现check_input方法")
     
     def set_target_position(self, dx=-1, dy=-1):
         """设置目标位置"""
