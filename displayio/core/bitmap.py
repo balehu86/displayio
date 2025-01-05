@@ -74,6 +74,7 @@ class Bitmap:
                 buffer_size *= 2
             self.buffer = bytearray(buffer_size)
             self.fb = framebuf.FrameBuffer(self.buffer, self.width, self.height, self.color_format)
+            # self.fb = FrameBuffer(self.buffer, self.width, self.height, self.color_format)
             self.size_changed = False
             # 初始化颜色填充，跳过纯黑色填充
             if color is not None and color != 0x0000:
@@ -122,3 +123,62 @@ class Bitmap:
         
         # 使用framebuf的blit方法，传入透明色键值
         self.fb.blit(source.fb, dx, dy, key)
+
+
+class FrameBuffer:
+    def __init__(self, buffer, width, height, color_format):
+        self.buffer = buffer
+        self.width = width
+        self.height = height
+        self.color_format = color_format
+
+    @micropython.native
+    def pixel(self, x, y, color=None):
+        if x < 0 or x >= self.width or y < 0 or y >= self.height:
+            return  # Ignore pixels out of bounds
+
+        byte_index = (y * self.width + x) * 2
+
+        if color is None:
+            # Get pixel value
+            # return (self.buffer[byte_index] << 8) | self.buffer[byte_index + 1]
+            return self.buffer[byte_index] | (self.buffer[byte_index + 1] << 8)
+        else:
+            # Set pixel value
+            # self.buffer[byte_index] = (color >> 8) & 0xFF
+            # self.buffer[byte_index + 1] = color & 0xFF
+            self.buffer[byte_index] = color & 0xFF
+            self.buffer[byte_index + 1] = (color >> 8) & 0xFF
+
+    @micropython.native
+    def fill(self, color):
+        for byte_index in range(0, len(self.buffer), 2):
+            # self.buffer[byte_index] = (color >> 8) & 0xFF
+            # self.buffer[byte_index + 1] = color & 0xFF
+            self.buffer[byte_index] = color & 0xFF
+            self.buffer[byte_index + 1] = (color >> 8) & 0xFF
+
+    @micropython.native
+    def fill_rect(self, x, y, width, height, color):
+        for j in range(height):
+            for i in range(width):
+                if 0 <= x + i < self.width and 0 <= y + j < self.height:  # 边界检查
+                    byte_index = ((y + j) * self.width + (x + i)) * 2
+                    # self.buffer[byte_index] = (color >> 8) & 0xFF
+                    # self.buffer[byte_index + 1] = color & 0xFF
+                    self.buffer[byte_index] = color & 0xFF
+                    self.buffer[byte_index + 1] = (color >> 8) & 0xFF
+
+    @micropython.native
+    def blit(self, source, dx=0, dy=0, key=-1):
+        for j in range(source.height):
+            for i in range(source.width):
+                if 0 <= dx + i < self.width and 0 <= dy + j < self.height:  # 边界检查
+                    color = source.pixel(i, j)  # 获取颜色值
+                    if color != key:  # 非透明色
+                        self.pixel(dx + i, dy + j, color)
+                        byte_index = ((dy+j) * self.width + (dx+i)) * 2
+                        # self.buffer[byte_index] = (color >> 8) & 0xFF
+                        # self.buffer[byte_index + 1] = color & 0xFF
+                        self.buffer[byte_index] = color & 0xFF
+                        self.buffer[byte_index + 1] = (color >> 8) & 0xFF

@@ -298,4 +298,4 @@ class BaseWidget(Color, Style):
         return self.dz < other.dz
     
     def __repr__(self):
-        return f'<{self.__class__.__name__} object> \n\tdz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tdefault_color: {self.default_color}'
+        return f'<{self.__class__.__name__} object> \n\tdx: {self.dx}, dy: {self.dx}, dz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tdefault_color: {self.default_color}'
