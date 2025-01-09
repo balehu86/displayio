@@ -84,37 +84,13 @@ class Button(Label):
         self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
         # 恢复原来的颜色
         self.text_color = original_text_color
-
+        return self._bitmap
         if not self.layout_changed: # 如果布局未改变则直接返回self._bitmap
             return self._bitmap
-        # 计算当前的dx, dy, width, height
-        current_dx, current_dy, current_width, current_height = self.dx, self.dy, self.width, self.height
-        # 计算原始的dx, dy, width, height
-        original_dx = self.dx_cache if self.dx_cache is not None else current_dx
-        original_dy = self.dy_cache if self.dy_cache is not None else current_dy
-        original_width = self.width_cache if self.width_cache is not None else current_width
-        original_height = self.height_cache if self.height_cache is not None else current_height
-        # 计算包围盒bitmap的起始左上角坐标
-        bitmap_min_x = min(original_dx, current_dx)
-        bitmap_min_y = min(original_dy, current_dy)
-        # 计算原始位置的边界坐标
-        original_x_max, original_y_max = original_dx + original_width - 1, original_dy + original_height - 1
-        # 计算当前位置的边界坐标
-        current_x_max, current_y_max = current_dx + current_width - 1, current_dy + current_height - 1
-        # 计算包围盒bitmap的宽高
-        bitmap_width = max(original_x_max, current_x_max) - bitmap_min_x +1
-        bitmap_height = max(original_y_max, current_y_max) - bitmap_min_y + 1
-        # 创建包围盒bitmap
-        self._bond_bitmap.init(dx=bitmap_min_x, dy=bitmap_min_y, width=bitmap_width, height=bitmap_height, transparent_color=0x0000)
-        # 将当前self._bitmap复制到包围盒bitmap
-        self._bond_bitmap.blit(self._bitmap, dx=current_dx-bitmap_min_x, dy=current_dy-bitmap_min_y)
-        # 恢复缓存的原始dx, dy, width, height
-        self.dx_cache, self.dy_cache, self.width_cache, self.height_cache = None, None, None, None
-        self.layout_changed = False
-        # 返回包围盒bitmap
-        # print(f'bond_bitmap, dx={bitmap_min_x}, dy={bitmap_min_y}, width={bitmap_width}, height={bitmap_height}\n\tcurrent_dx={current_dx}, current_dy={current_dy}, current_width={current_width}, current_height={current_height}')
-        return self._bond_bitmap
-      
+        else:
+            self._create_bond_bitmap()
+            return self._bond_bitmap
+        
     def set_enabled(self, enabled:bool) -> None:
         """设置按钮是否可用"""
         new_state = self.STATE_DEFAULT if enabled else self.STATE_DISABLED

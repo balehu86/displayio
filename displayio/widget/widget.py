@@ -33,17 +33,8 @@ class Widget(BaseWidget):
         self._bond_bitmap = Bitmap(self, transparent_color = transparent_color)
         self._empty_bitmap = Bitmap(self, transparent_color = transparent_color)
 
-    def _create_bitmap(self):
-        pass
-        """
-        创建控件的位图
-        """
-
-        """先这里绘制self._bitmap, 然后根据self.dx_cache, self.dy_cache, self.width_cache, self.height_cache决定是否返回中间bitmap"""
-        
-        
-        if not self.layout_changed: # 如果布局未改变则直接返回self._bitmap
-            return self._bitmap
+    def _create_bond_bitmap(self):
+        """ 创建包围盒bitmap"""
         # 计算当前的dx, dy, width, height
         current_dx, current_dy, current_width, current_height = self.dx, self.dy, self.width, self.height
         # 计算原始的dx, dy, width, height
@@ -68,15 +59,27 @@ class Widget(BaseWidget):
         # 恢复缓存的原始dx, dy, width, height
         self.dx_cache, self.dy_cache, self.width_cache, self.height_cache = None, None, None, None
         self.layout_changed = False
-        # 返回包围盒bitmap
-        return self._bond_bitmap
     
+    def _create_bitmap(self):
+        """创建控件的位图"""
+
+        """先这里绘制self._bitmap, 然后根据self.dx_cache, self.dy_cache, self.width_cache, self.height_cache决定是否返回中间bitmap"""
+        
+        raise NotImplementedError("BaseWidget子类必须实现 _create_bitmap方法")
+        if not self.layout_changed: # 如果布局未改变则直接返回self._bitmap
+            return self._bitmap
+        else:
+            self._creat_bond_bitmap()
+            return self._bond_bitmap
+
     def get_bitmap(self):
+        # 组织bitmap
+        bitmap = self._bitmap
+        if self._dirty:
+            bitmap = self._create_bitmap()
+            self._dirty = False
+        # 返回bitmap
         if self.visibility:
-            bitmap = self._bitmap
-            if self._dirty:
-                bitmap = self._create_bitmap()
-                self._dirty = False
             return bitmap
         else:
             self._empty_bitmap.init(dx=self.dx,dy=self.dy,color=0xffff)
