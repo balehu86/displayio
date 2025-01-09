@@ -53,10 +53,10 @@ time.sleep(1)
 # 创建显示器
 display = Display(240, 240,output=output,
                   fps = 30,
-                  show_fps = True,
+                  show_fps = False,
                   soft_timer = True,
                   partly_refresh = False,
-                  log_level = 3
+                  log_level = 2
 )
 # 创建垂直布局容器
 main_box =GridBox(rows=6,cols=6)
@@ -171,10 +171,7 @@ display.add_input_device(up,dw,le,rt,md,se,rs,encoder)
 
 def click_callback(widget,event):
     print('clicked!')
-    if label2 in hbox.children:
-        hbox.remove(label2)
-    else:
-        hbox.add(label2)
+    
 def double_click_callback(widget,event):
 #     if button.state==2:
 #         button.set_enabled(True)
@@ -193,6 +190,10 @@ def long_press_release_callback(widget,event):
 def release_callback(widget,event):
     print('release!')
 def press_callback(widget,event):
+    if label2 in hbox.children:
+        hbox.remove(label2)
+    else:
+        hbox.add(label2)
     print('press!')
     
 button1.bind(EventType.PRESS, press_callback)
