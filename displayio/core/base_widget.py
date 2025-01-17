@@ -6,11 +6,11 @@ from .logging import logger
 
 class BaseWidget(Color, Style):
 
-    __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dx', 'dy', 'dx_cache', 'dy_cache', 'dz',
-                 'width', 'height', 'width_resizable', 'height_resizable', 'width_cache', 'height_cache', 'layout_changed',
+    __slots__ = ('abs_x', 'abs_y', 'rel_x', 'rel_y', 'dx', 'dy', 'dz',
+                 'width', 'height', 'width_resizable', 'height_resizable',
                  'state', 'visibility', 'color_format',
-                 '_bitmap', '_empty_bitmap', '_dirty', 'dirty_system',
-                 'parent', 'children', 'default_color', 'transparent_color', 'event_listener')
+                 '_bitmap', 'dirty_system',
+                 'parent', 'children', 'transparent_color', 'background', 'event_listener')
     
     # widget状态枚举
     STATE_DEFAULT = 0   # 正常、释放状态
@@ -28,8 +28,8 @@ class BaseWidget(Color, Style):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=STATE_DEFAULT,
-                 default_color=Color.DARK, # 默认白色
                  transparent_color=Color.PINK,
+                 background=Color.DARK,
                  color_format=Style.RGB565):
         # 初始化时坐标，分绝对坐标和相对坐标
         # 警告：若要将部件添加进flex_box，严禁初始化abs_x和abs_y
@@ -38,8 +38,6 @@ class BaseWidget(Color, Style):
         # 目标位置，由布局系统确定
         self.dx = abs_x if abs_x is not None else 0
         self.dy = abs_y if abs_y is not None else 0
-        # 缓存的位置，用来绘制widget的包围盒
-        self.dx_cache, self.dy_cache = None, None
         # 部件在z轴方向上的深度
         self.dz = dz
         # 部件的尺寸，分宽和高
@@ -48,9 +46,6 @@ class BaseWidget(Color, Style):
         # 但是可以通过resize()手动调整大小，不受次项限制
         self.width_resizable = True if width is None else False
         self.height_resizable = True if height is None else False
-        # 缓存的尺寸，用来绘制widget的包围盒
-        self.width_cache, self.height_cache = None, None
-        self.layout_changed = False # 布局是否发生改变,用来决定绘制bitmap是否需要绘制包围盒
         # widget 是否可交互，如果部件未启用，则不会处理事件
         self.state = state
         # widget 是否可见
@@ -59,23 +54,16 @@ class BaseWidget(Color, Style):
         self.color_format = color_format
         # 缓存的位图对象
         self._bitmap = None
-        self._empty_bitmap = None
-        """脏标记解释：    注意:任何具有get_bitmap的组件将被视为组件树的末端
-        _dirty: 部件是否需要重绘,用于发起重绘,
-            在Display的事件循环render_widget()中调用get_bitmap()中取消标记。
-        """
-        # 绘制系统的脏标记
-        self._dirty = True # 存在本地，触发触发重绘
         # 脏区域系统
         self.dirty_system = MergeRegionSystem()
         # 部件继承关系
         self.parent = None
         # 容器的子元素
         self.children = []
-        # 背景色
-        self.default_color = default_color
         # 透明色
         self.transparent_color = transparent_color
+        # 背景
+        self.background = Background(color=background)
         # event监听器注册
         self.event_listener = {EventType.FOCUS:[self.focus],
                                EventType.UNFOCUS:[self.unfocus]}  # 事件处理器字典
@@ -99,11 +87,9 @@ class BaseWidget(Color, Style):
         actual_dx = self.abs_x or (dx + rel_x)
         actual_dy = self.abs_y or (dy + rel_y)
         if self.dx != actual_dx:
-            self.dx_cache = self.dx
             self.dx = actual_dx
             changed = True
         if self.dy != actual_dy:
-            self.dy_cache = self.dy
             self.dy = actual_dy
             changed = True
         
@@ -111,18 +97,15 @@ class BaseWidget(Color, Style):
         actual_width = (width-rel_x) if width is not None else 0
         actual_height = (height-rel_y) if height is not None else 0
         if self.width != actual_width:
-            self.width_cache = self.width
             self.width = actual_width
             changed = True
-            self._dirty = True
+            self.dirty_system.add_widget(self)
         if self.height != actual_height:
-            self.height_cache = self.height
             self.height = actual_height
             changed = True
-            self._dirty = True
+            self.dirty_system.add_widget(self)
 
         if changed: # 如果发生改变，则将原始区域和重新布局后的区域标脏
-            self.layout_changed = True
             self.dirty_system.add(original_dx, original_dy, original_width, original_height)
             self.dirty_system.add(self.dx, self.dy, self.width, self.height)
     
@@ -135,8 +118,7 @@ class BaseWidget(Color, Style):
         """
         self.width = width if (force or self.width_resizable) and width != None else self.width
         self.height = height if (force or self.height_resizable) and height != None else self.height
-        self.layout_changed = True
-        self._dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.layout_dirty = True
         original_width = self.width if self.width is not None else 0
         original_height = self.height if self.height is not None else 0
@@ -173,8 +155,10 @@ class BaseWidget(Color, Style):
     def mark_dirty(self) -> None:
         """向末梢传递 脏"""
         self._dirty = True
+        self.dirty_system.add_widget(self)
         for child in self.children:
             if not child._dirty: # 先做个判断，减少重复修改
+            if child not in self.dirty_system.dirty_widget: # 先做个判断，减少重复修改
                 child.mark_dirty()
 
     def set_dirty_system(self, dirty_system) -> None:
@@ -185,11 +169,10 @@ class BaseWidget(Color, Style):
                 child.set_dirty_system(dirty_system)
 
     def set_default_color(self, color) -> None:
-        """设置默认颜色"""
-        self.default_color = color
-        for child in self.children:
-            if child.default_color != color:
-                child.set_default_color(color)
+    def set_background(self, color=None, pic=None) -> None:
+        """设置背景"""
+        self.background=Background(color=color, pic=pic)
+        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
     def bubble(self, event) -> None:
         """事件冒泡
@@ -298,4 +281,5 @@ class BaseWidget(Color, Style):
         return self.dz < other.dz
     
     def __repr__(self):
-        return f'<{self.__class__.__name__} object> \n\tdx: {self.dx}, dy: {self.dx}, dz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}, \n\tdefault_color: {self.default_color}'
+    # def __repr__(self):
+    #     return f'<{self.__class__.__name__} object> \n\tdx: {self.dx}, dy: {self.dx}, dz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}'
