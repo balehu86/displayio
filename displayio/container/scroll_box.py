@@ -2,7 +2,7 @@
 from .container import Container
 from ..core.bitmap import Bitmap
 from ..core.event import EventType
-from ..core.dirty import MergeRegionSystem, BoundBoxSystem
+from ..core.dirty import DirtySystem, MergeRegionSystem, BoundBoxSystem
 from ..widget.widget import Widget # type hint
 
 import micropython # type: ignore
@@ -12,18 +12,19 @@ class ScrollBox(Container):
     ScrollBox滚动容器类
     继承自Container
     """
-    __slots__ = ('scroll_dirty_system', 'child'
+    __slots__ = ('_empty_bitmap',
+                 'scroll_dirty_system', 'child'
                  'scroll_offset_x', 'scroll_offset_y',
                  'is_scrollable_x', 'is_scrollable_y',
                  'scroll_range_x', 'scroll_range_y')
 
-    def __init__(self,                 
+    def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 default_color=Container.DARK,
                  transparent_color=Container.PINK,
+                 background=Container.DARK,
                  color_format=Container.RGB565):
         """
         初始化ScrollBox容器, 此容器的children唯一, 且是一个其他类型的容器.
@@ -42,8 +43,8 @@ class ScrollBox(Container):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         default_color = default_color,
                          transparent_color = transparent_color,
+                         background = background,
                          color_format = color_format)
         # 预创建bitmap对象
         self._bitmap = Bitmap(self, transparent_color=transparent_color)
@@ -68,29 +69,23 @@ class ScrollBox(Container):
                                EventType.SCROLL_LEFT:[self.scroll],
                                EventType.SCROLL_RIGHT:[self.scroll]}
 
-    def add(self, child:Container) -> None:
-        """向滚动容器中添加元素"""
-        assert self.child is None, "scroll must have one child"
-        child.parent = self
-        child._bitmap = Bitmap(child, transparent_color=self.transparent_color)
-        # 递归设置独立的脏区域管理器
-        child.set_dirty_system(self.scroll_dirty_system)
-        child.set_default_color(self.default_color)
+    def set_root(self, child:Container=None) -> None:
         self.child = child
-        self.children.append(child) # 因为事件传递需要，所以保留此项
-        self._dirty = True
-        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        self.dirty_system.layout_dirty = True
 
-    def remove(self, child:Container=None):
-        """从滚动容器中移除元素"""
-        if child == self.child or child == None:
+        if child is not None:
+            child.parent = self
+            child._bitmap = Bitmap(child, transparent_color=self.transparent_color)
+            # 递归设置独立的脏区域管理器
+            child.set_dirty_system(self.scroll_dirty_system)
+            self.children.append(child) # 因为事件传递需要，所以保留此项
+            self.dirty_system.layout_dirty = True
+        else:
             self.child._bitmap=None
             self.children.clear() # 因为事件传递需要，所以保留此项
             self.child.parent = None
             # 恢复默认的脏区域管理器
-            self.child.set_dirty_system(MergeRegionSystem())
-            self.child = None
+            self.child.set_dirty_system(DirtySystem(name='default'))
+
         self.dirty_system.layout_dirty = True
 
     @micropython.native
