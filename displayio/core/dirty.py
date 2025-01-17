@@ -24,8 +24,6 @@ class DirtySystem:
             raise ValueError('dirty_system初始化错误,\n\t默认dirty_system禁止关键字参数: widget')
         # 管理器的名称,默认为default
         self.name = name
-        # 绘制系统的脏标记,用来出发遍历组件树刷新
-        self.dirty = False
         # 引用Widget(那些维护自己独立的bitmap(同时也会使用独立的脏系统)的widget,例如scroll_box)
         self.widget=widget if name != 'default' else None
         # 布局系统脏标记，用来触发重新计算布局。布局系统的尺寸位置重分配总是从根节点开始。
@@ -40,6 +38,11 @@ class DirtySystem:
         """返回脏区域"""
         raise NotImplementedError('脏区域基类未实现 area 属性')
     
+    @property
+    def dirty(self):
+        """绘制系统的脏标记,用来出发遍历组件树刷新"""
+        raise NotImplementedError('脏区域基类未实现 dirty 属性')
+
     def add_widget(self, widget):
         self.dirty_widget.add(widget)
 
@@ -69,18 +72,25 @@ class MergeRegionSystem(DirtySystem):
     精细化管理,当脏区域数量变多,性能下降明显
     """
     _instances = {}  # 存储所有命名实例
-    __slots__ = ('_area',)
+    __slots__ = ('area',)
     
     def __init__(self, name='default', widget=None):
         # 绘制系统的脏区域,用来触发组件刷新
         super().__init__(name, widget)
         # 绘制系统的脏区域,用来触发组件刷新
-        self._area = []
+        self.area = []
 
     @property
-    def area(self):
-        """返回脏区域"""
-        return self._area
+    def dirty(self):
+        """绘制系统的脏标记,用来出发遍历组件树刷新"""
+        if len(self.area) != 0:
+            return True
+        for name, dirty_system in self._instances.items():
+            if name == self.name:
+                continue
+            if dirty_system.dirty:
+                return True
+        return False
 
     def add(self, x2, y2, width2, height2):
         """添加脏区域"""
@@ -97,18 +107,17 @@ class MergeRegionSystem(DirtySystem):
 
         # 查找所有与新区域相交的区域
         # 从后向前遍历以安全地进行列表修改
-        for i in range(len(self._area) - 1, -1, -1):
-            if self._intersects(self._area[i], x2, y2, x2_max, y2_max):
-                area1 = self._area.pop(i)
+        for i in range(len(self.area) - 1, -1, -1):
+            if self._intersects(self.area[i], x2, y2, x2_max, y2_max):
+                area1 = self.area.pop(i)
                 new_region = self._union(area1, *new_region)
 
         # 将合并后的区域加入结果列表
-        self._area.append(new_region)
+        self.area.append(new_region)
 
         logger.debug(f'{self.__class__.__name__} after add {self.area}')
         # 如果这个dirty_system不是默认实例,则需要将self.widget.dirty_system为脏
         # 这是因为需要传递脏信息,否则会导致dirty_system的脏区域只作用于局部,不会影响到默认dirty_system
-        self.dirty = True
         if self.widget:
             parent_system = self.widget.dirty_system
             parent_system.add(self.widget.dx, self.widget.dy, self.widget.width, self.widget.height)
@@ -129,15 +138,7 @@ class MergeRegionSystem(DirtySystem):
 
     def clear(self):
         """重置脏区域"""
-        if self.name == "default":
-            for name, system in self._instances.items():
-                if name != 'default':
-                    system.clear()
-
-        if not self.dirty:  # 如果没有脏区域，直接退出
-            return
-        self._area.clear()
-        self.dirty = False
+        self.area.clear()
 
 class BoundBoxSystem(DirtySystem):
     """
@@ -155,6 +156,18 @@ class BoundBoxSystem(DirtySystem):
     @property
     def area(self):
         return [[self.min_x, self.min_y, self.max_x, self.max_y]]
+    
+    @property
+    def dirty(self):
+        """绘制系统的脏标记,用来出发遍历组件树刷新"""
+        if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:
+            return True
+        for name, dirty_system in self._instances.items():
+            if name == self.name:
+                continue
+            if dirty_system.dirty:
+                return True
+        return False
 
     def add(self, x2, y2, width2, height2):
         """添加边界框"""
@@ -169,7 +182,6 @@ class BoundBoxSystem(DirtySystem):
         self.max_x = max(self.max_x, x2 + width2 - 1)
         self.max_y = max(self.max_y, y2 + height2 - 1)
         logger.debug(f'{self.__class__.__name__} after add {self.area}')
-        self.dirty = True
 
         # 传递 dirty state to parent system
         if self.widget:
@@ -178,14 +190,6 @@ class BoundBoxSystem(DirtySystem):
 
     def clear(self):
         """重置边界框"""
-        if self.name == "default":
-            for name, system in self._instances.items():
-                if name != 'default':
-                    system.clear()
-
-        if not self.dirty:  # 如果没有脏区域，直接退出
-            return
         self.min_x, self.min_y = 0, 0
         self.max_x, self.max_y = 0, 0
-        self.dirty = False
 
