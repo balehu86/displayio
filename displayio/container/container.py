@@ -17,8 +17,8 @@ class Container(BaseWidget):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=BaseWidget.STATE_DEFAULT,
-                 default_color=BaseWidget.DARK,
                  transparent_color=BaseWidget.PINK,
+                 background=BaseWidget.DARK,
                  color_format=BaseWidget.RGB565):
         """
         初始化按钮控件
@@ -30,8 +30,8 @@ class Container(BaseWidget):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         default_color = default_color,
                          transparent_color = transparent_color,
+                         background = background,
                          color_format = color_format)
         
     def add(self, *childs: BaseWidget|'Container') -> None:
@@ -39,7 +39,6 @@ class Container(BaseWidget):
         for child in childs:
             child.parent=self
             child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
-            child.set_default_color(self.default_color)  # 设置相同的默认颜色
             heappush(self.children, child)
 
         self.mark_dirty()
@@ -52,7 +51,7 @@ class Container(BaseWidget):
                 child.parent = None
                 child.set_dirty_system(DirtySystem(name='default'))
                 self.children.remove(child)
-        self.mark_dirty()
+
         self.dirty_system.layout_dirty = True
 
     def clear(self) -> None:
@@ -62,7 +61,6 @@ class Container(BaseWidget):
             child.set_dirty_system(DirtySystem(name='default'))
         self.children.clear()
 
-        self.mark_dirty()
         self.dirty_system.layout_dirty = True
 
     def layout(self, dx=0, dy=0, width=None, height=None) -> None:

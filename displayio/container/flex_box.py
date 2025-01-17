@@ -17,8 +17,8 @@ class FlexBox(Container):
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
                  visibility=True, state=Container.STATE_DEFAULT,
-                 default_color=Container.DARK,
                  transparent_color=Container.PINK,
+                 background=Container.DARK,
                  color_format=Container.RGB565):
         """
         初始化FlexBox容器
@@ -33,8 +33,8 @@ class FlexBox(Container):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         default_color = default_color,
                          transparent_color = transparent_color,
+                         background = background,
                          color_format = color_format)
         
         self.direction = direction
