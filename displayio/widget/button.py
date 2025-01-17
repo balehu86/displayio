@@ -17,7 +17,6 @@ class Button(Label):
                  font=None,
                  font_scale=1,
                  text_color=Label.WHITE, # 文字颜色默认白色
-                 background_color=Label.Button_BLUE, # 背景颜色默认蓝色
                  align=Label.ALIGN_CENTER,  # 按钮文字默认居中
                  padding=(5, 3, 5, 3),  # 按钮默认较大内边距
                  
@@ -25,8 +24,8 @@ class Button(Label):
                  rel_x=0,rel_y=0, dz=0,
                  width=None,height=None,
                  visibility=True, state=Label.STATE_DEFAULT,
-                 default_color= Label.WHITE,
                  transparent_color=Label.PINK,
+                 background=Label.Button_BLUE, # 背景颜色默认蓝色
                  color_format = Label.RGB565): 
         """
         初始化按钮控件
@@ -38,7 +37,6 @@ class Button(Label):
                          font = font,
                          font_scale = font_scale,
                          text_color = text_color,
-                         background_color = background_color,
                          align = align,
                          padding = padding,
 
@@ -46,8 +44,8 @@ class Button(Label):
                          rel_x = rel_x, rel_y = rel_y, dz = dz,
                          width = width, height = height,
                          visibility = visibility, state = state,
-                         default_color = default_color,
                          transparent_color = transparent_color,
+                         background = background,
                          color_format = color_format)
         
         # 设置状态对应色彩样式
@@ -62,7 +60,7 @@ class Button(Label):
                                }
         
     @micropython.native
-    def _create_bitmap(self) -> None:
+    def draw(self) -> None:
         """
         创建按钮位图
         添加边框和状态效果
@@ -85,11 +83,6 @@ class Button(Label):
         # 恢复原来的颜色
         self.text_color = original_text_color
         return self._bitmap
-        if not self.layout_changed: # 如果布局未改变则直接返回self._bitmap
-            return self._bitmap
-        else:
-            self._create_bond_bitmap()
-            return self._bond_bitmap
         
     def set_enabled(self, enabled:bool) -> None:
         """设置按钮是否可用"""
@@ -129,9 +122,9 @@ class Button(Label):
     def set_styles(self):
         # 状态对应的样式
         self.styles = {
-            self.STATE_DEFAULT: {'background_color': self.background_color,
+            self.STATE_DEFAULT: {'background_color': self.background.color,
                                  'text_color':       self.text_color},
-            self.STATE_PRESSED: {'background_color': self._darken_color(self.background_color, 0.7),
+            self.STATE_PRESSED: {'background_color': self._darken_color(self.background.color, 0.7),
                                  'text_color':       self.text_color},
             self.STATE_DISABLED: {'background_color': Label.GREY,
                                   'text_color':       Label.DARK_GREY}}
