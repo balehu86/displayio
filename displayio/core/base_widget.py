@@ -1,5 +1,6 @@
 # ./core/widget.py
 from .style import Color, Style
+from .background import Background
 from .dirty import MergeRegionSystem
 from .event import EventType
 from .logging import logger
@@ -154,10 +155,8 @@ class BaseWidget(Color, Style):
 
     def mark_dirty(self) -> None:
         """向末梢传递 脏"""
-        self._dirty = True
         self.dirty_system.add_widget(self)
         for child in self.children:
-            if not child._dirty: # 先做个判断，减少重复修改
             if child not in self.dirty_system.dirty_widget: # 先做个判断，减少重复修改
                 child.mark_dirty()
 
@@ -168,7 +167,6 @@ class BaseWidget(Color, Style):
             if child.dirty_system is not dirty_system:
                 child.set_dirty_system(dirty_system)
 
-    def set_default_color(self, color) -> None:
     def set_background(self, color=None, pic=None) -> None:
         """设置背景"""
         self.background=Background(color=color, pic=pic)
@@ -234,16 +232,21 @@ class BaseWidget(Color, Style):
         if self.parent is not None:
             return self.parent.index(self)
 
-    def widget_in_dirty_area(self):
+    def widget_in_dirty_area(self, area):
         """检查widget是否和脏区域有交集"""
-        return self.dirty_system.intersects(self.dx,self.dy,self.width,self.height)
+        x1_min, y1_min, x1_max, y1_max = area
+
+        x2_max, y2_max = self.dx + self.width - 1, self.dy + self.height - 1
+        
+        return not (x1_min > x2_max or self.dx > x1_max or 
+                    y1_min > y2_max or self.dy > y1_max)
     
     def focus(self, widget, event):
         """元素聚焦,会将元素内所有元素调暗0.1"""
         if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
-            self.background_color_cache = self.background_color
-            self.background_color= self._darken_color(self.background_color,0.9)
-        self._dirty = True
+            self.background_color_cache = self.background.color
+            self.background.color= self._darken_color(self.background.color,0.9)
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
             child.focus(widget, event)
@@ -252,9 +255,9 @@ class BaseWidget(Color, Style):
         """取消元素聚焦"""
         if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
             if self.background_color_cache is not None:
-                self.background_color = self.background_color_cache
+                self.background.color = self.background_color_cache
                 self.background_color_cache = None
-        self._dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
             child.unfocus(widget, event)
@@ -280,6 +283,5 @@ class BaseWidget(Color, Style):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
     
-    def __repr__(self):
     # def __repr__(self):
     #     return f'<{self.__class__.__name__} object> \n\tdx: {self.dx}, dy: {self.dx}, dz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}'
