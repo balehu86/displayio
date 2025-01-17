@@ -32,11 +32,6 @@ class DirtySystem:
         self.dirty_widget = set()
         # 标记默认的管理器已初始化,防止重复实例
         self.initialized = True
-
-    @property
-    def area(self):
-        """返回脏区域"""
-        raise NotImplementedError('脏区域基类未实现 area 属性')
     
     @property
     def dirty(self):
@@ -71,7 +66,6 @@ class MergeRegionSystem(DirtySystem):
     脏区域管理类,采用区域合并算法
     精细化管理,当脏区域数量变多,性能下降明显
     """
-    _instances = {}  # 存储所有命名实例
     __slots__ = ('area',)
     
     def __init__(self, name='default', widget=None):
@@ -145,7 +139,6 @@ class BoundBoxSystem(DirtySystem):
     边界框脏区域管理,采用包围盒算法
     适合处理单一矩形区域的大规模刷新。
     """
-    _instances = {}  # 存储所有命名实例
     __slots__ = ('min_x', 'min_y', 'max_x', 'max_y')
     
     def __init__(self, name='default', widget=None):

@@ -41,7 +41,6 @@ class Container(BaseWidget):
             child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
             heappush(self.children, child)
 
-        self.mark_dirty()
         self.dirty_system.layout_dirty = True
 
     def remove(self, *childs: BaseWidget|'Container') -> None:

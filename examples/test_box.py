@@ -91,7 +91,7 @@ label1 = Label(
     font=font,
     font_scale=3,
     align=Label.ALIGN_CENTER,
-    background_color=0xcdb0,
+    background=0xcdb0,
 #     width=40
 )
 label2 = Label(
@@ -109,7 +109,7 @@ label3 = Label(
     text="3",
     font=font,
     font_scale = 3,
-    background_color=0x0099,
+    background=0x0099,
     rel_x=20,
     rel_y=20
 )
@@ -119,7 +119,7 @@ label4 = Label(
     font_scale = 3,
     align=Label.ALIGN_CENTER,
     width=40,
-    background_color=0x4480,
+    background=0x4480,
 )
 
 label5 = Label(
@@ -148,10 +148,10 @@ fbox.add(label5)
 main_box.add(button1, row=2, col=3, col_span=3)
 
 
-gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=0,col=0)
-gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=0,col=1,col_span=2)
-gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=1,col=0,row_span=2)
-gbox_in_g.add(Label(text='#', font=font, background_color=random.getrandbits(16)), row=1,col=1,row_span=2,col_span=2)
+gbox_in_g.add(Label(text='#', font=font, background=random.getrandbits(16)), row=0,col=0)
+gbox_in_g.add(Label(text='#', font=font, background=random.getrandbits(16)), row=0,col=1,col_span=2)
+gbox_in_g.add(Label(text='#', font=font, background=random.getrandbits(16)), row=1,col=0,row_span=2)
+gbox_in_g.add(Label(text='#', font=font, background=random.getrandbits(16)), row=1,col=1,row_span=2,col_span=2)
 
 for w in range(10):
     vbox_in_s.add(Button(text=str(w)*5,
