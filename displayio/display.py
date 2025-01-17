@@ -89,7 +89,7 @@ from .utils.decorator import timeit
 import gc
 
 class MainLoop:
-    __slots__ = ('display', 'dirty_system', 'running', 'event_queue', 'task_queue',
+    __slots__ = ('display', 'dirty_system', 'dirty_bitmap', 'running', 'event_queue', 'task_queue',
                  'frame_interval', 'last_frame_time', 'frame_count', 'last_fps_time'
                  'input_count', 'last_input_time', 'input_timer')
     
@@ -98,6 +98,7 @@ class MainLoop:
         self.display = display
         # 脏区域全局共享实例
         self.dirty_system = None
+        self.dirty_bitmap = Bitmap()
         # 标记是否运行
         self.running = False
         # 事件队列，最多存10个事件
@@ -127,7 +128,6 @@ class MainLoop:
     def stop(self):
         """停止事件循环"""
         self.running = False
-
         if not self.display.soft_timer:
             self.input_timer.deinit()
         
@@ -175,7 +175,7 @@ class MainLoop:
             self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
             self.dirty_system.layout_dirty = False
         
-    def _render_widget_partly(self, widget:Container|Widget):
+    def _render_widget(self, widget:Container|Widget, area):
         """ 递归渲染widget及其子组件
             任何具有get_bitmap的组件将被视为组件树的末端
         """
@@ -198,21 +198,42 @@ class MainLoop:
         if  widget.widget_in_dirty_area():
             if hasattr(widget, 'get_bitmap'):
                 bitmap = widget.get_bitmap()
-                self.display.root._bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
-            else:
+                self.dirty_bitmap.blit(bitmap, dx=bitmap.dx-area[0], dy=bitmap.dy-area[1])
+                raise ValueError('需要处理bitmap偏位')
+            else: # 容器节点
+                # if widget.background.pic is not None:
+                #     self.dirty_bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
+                #     raise ValueError
+                # else:
+                #     self.dirty_bitmap.fill_rect(widget.background.color)
                 for child in widget.children:
-                    self._render_widget_fully(child)
+                    self._render_widget(child, area)
 
     def update_display(self):
         """更新显示"""
         if self.dirty_system.dirty: # 如果有脏区域则出发刷新
-            logger.debug(f"Updating display...\n\t{self.dirty_system.__class__.__name__}\n\t{self.dirty_system.area}")
-            if self.display.partly_refresh: # 确认 局部刷新还是全局刷新
-                self._render_widget_partly(self.display.root)
-            else:
-                self._render_widget_fully(self.display.root)
+            # 先重绘 脏widget的bitmap
+            for _, system in self.dirty_system._instances.items():
+                for dirty_widget in system.dirty_widget:
+                    if hasattr(dirty_widget, 'draw'):
+                        dirty_widget.draw()
+                # 清空dirty_system.dirty_widget
+                self.dirty_system.clear()
+
+            for dirty_area in self.dirty_system.area:
+                # 先初始化dirty_bitmap
+                dx, dy = dirty_area[0], dirty_area[1]
+                width, height = dirty_area[2]-dx+1, dirty_area[3]-dy+1
+                self.dirty_bitmap.init(dx=dx, dy=dy, width=width, height=height)
+                self._render_widget(self.display.root, dirty_area)
+
+                if self.display.partly_refresh: # 如果局部刷新
+                    self.display.output.refresh(self.dirty_bitmap.buffer, dx=dx, dy=dy, width=width, height=height)
+            if not self.display.partly_refresh: # 如果全局刷新
                 self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
+            
             self.dirty_system.clear()
+
         # 帧数计数和FPS计算
         if self.display.show_fps:
             self._calculate_fps()
