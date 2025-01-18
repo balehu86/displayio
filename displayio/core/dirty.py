@@ -82,8 +82,8 @@ class MergeRegionSystem(DirtySystem):
         """绘制系统的脏标记,用来出发遍历组件树刷新"""
         if len(self.area) != 0:
             return True
-        for name, dirty_system in self._instances.items():
-            if name == self.name:
+        for dirty_system in self._instances.values():
+            if dirty_system is self:
                 continue
             if dirty_system.dirty:
                 return True
@@ -161,8 +161,8 @@ class BoundBoxSystem(DirtySystem):
         """绘制系统的脏标记,用来出发遍历组件树刷新"""
         if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:
             return True
-        for name, dirty_system in self._instances.items():
-            if name == self.name:
+        for dirty_system in self._instances.values():
+            if dirty_system is self:
                 continue
             if dirty_system.dirty:
                 return True
