@@ -30,7 +30,7 @@ class Bitmap:
         self.dy = None
         self.width = None
         self.height = None
-        self.transparent_color = transparent_color if transparent_color is not None else 0xf81f
+        self.transparent_color = transparent_color if transparent_color is not None else 0xf81f # trans color 可能为0x0000
         self.color_format = widget.color_format if widget else self.RGB565
 
         self.size_changed = False
@@ -40,6 +40,8 @@ class Bitmap:
     def init(self, dx=0, dy=0, width=0, height=0, color=None, transparent_color=None):
         """bitmap初始化
         Args:
+            dx: bitmap的目标位置
+            dy: bitmap的目标位置
             width: 宽度
             height: 高度
             transparent_color: 透明色
