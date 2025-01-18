@@ -60,15 +60,7 @@ class Bitmap:
         if transparent_color is not None: # 设置透明色
             self.transparent_color = transparent_color
         
-        # 检查颜色更新
-        if color is not None and not self.size_changed: # 尺寸未变，传递了color，只需填充颜色
-            # 尺寸不变但颜色变化，直接填充
-            if self.fb:  # 确保已初始化FrameBuffer
-                self.fill(color)
-            return
-        
-        # 尺寸变化或首次初始化时重新创建Framebuf
-        if self.size_changed:
+        if self.size_changed: # 尺寸变化
             buffer_size = self.width * self.height
             if self.color_format == self.RGB565:
                 buffer_size *= 2
@@ -79,6 +71,10 @@ class Bitmap:
             # 初始化颜色填充，跳过纯黑色填充
             if color is not None and color != 0x0000:
                 self.fill(color)
+        elif color is not None: # 尺寸未变，传递了color，只需填充颜色
+            if self.fb:  # 确保已初始化FrameBuffer
+                self.fill(color)
+            return
 
     @micropython.native
     def pixel(self, x:int, y:int, color:int|None=None):
