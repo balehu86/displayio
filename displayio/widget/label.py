@@ -73,7 +73,7 @@ class Label(Widget):
         self._text_dirty = True
 
     @micropython.native
-    def _create_text_bitmap(self) -> None:
+    def _draw_text_bitmap(self) -> None:
         """
         创建控件文本渲染的位图
         """
@@ -89,11 +89,11 @@ class Label(Widget):
             if char in self.font:
                 char_bitmap = hex_font_to_bitmap(
                     self.font[bytes(char,'ascii')], self.font_width, self.font_height,
-                    foreground=self.text_color, rle=self.font_rle, scale=self.font_scale)
+                    foreground=self.get_text_color, rle=self.font_rle, scale=self.font_scale)
             else:
                 char_bitmap = hex_font_to_bitmap(
                     self.font_default, self.font_width, self.font_height,
-                    foreground=self.text_color, rle=self.font_rle, scale=self.font_scale)
+                    foreground=self.get_text_color, rle=self.font_rle, scale=self.font_scale)
             # 将字符位图复制到主位图
             x = text_dx + i * self.font_width * self.font_scale
             self._text_bitmap.blit(char_bitmap, dx=x, dy=0)
@@ -125,13 +125,13 @@ class Label(Widget):
         """
         # 创建和填充新的位图
         if self.background.color is not None:
-            self._bitmap.init(dx=self.dx,dy=self.dy,color=self.background.color)
+            self._bitmap.init(dx=self.dx,dy=self.dy,color=self.get_background_color)
         else:
             self._bitmap.init(dx=self.dx,dy=self.dy)
             self._bitmap.blit(self.background.pic, dx=0,dy=0)
         # 绘制文字
         if self._text_dirty:
-            self._create_text_bitmap()
+            self._draw_text_bitmap()
         # 计算文本位置
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
@@ -142,13 +142,13 @@ class Label(Widget):
         if self.text != text:
             self.text = text
             self.text_width = self.font_width * len(text) * self.font_scale
-            self._dirty = True
+            self.dirty_system.add_widget(self)
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-            self._text_bitmap = Bitmap(transparent_color=0x0000)
     def set_text_color(self, text_color) -> None:
         """设置文本和背景颜色"""
         self.text_color = text_color
-        self._dirty = True
+        self._text_dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_font(self, font) -> None:
         """设置字体"""
@@ -159,16 +159,31 @@ class Label(Widget):
         self.font_rle = font[b'RLE'][0]
         self.text_width = self.font_width * len(self.text) * self.font_scale
         self.text_height = self.font_height * self.font_scale
-        self._dirty = True
+        self._text_dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        self._text_bitmap = Bitmap(transparent_color=0x0000)
     def set_align(self, align) -> None:
         """设置文本对齐"""
         self.align = align
-        self._dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_padding(self, padding) -> None:
         """设置文本边距"""
         self.padding = padding
-        self._dirty = True
+        self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+
+    @property    
+    def get_background_color(self):
+        if self.state == self.STATE_DEFAULT:
+            return self.background.color
+        if self.state == self.STATE_FOCUSED:
+            return self._darken_color(self.background.color, 0.7)
+        if self.state == self.STATE_DISABLED:
+            return Label.GREY
+        
+    @property
+    def get_text_color(self):
+        if self.state == self.STATE_DISABLED:
+            return Label.DARK_GREY
+        return self.text_color

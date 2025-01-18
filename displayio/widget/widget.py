@@ -46,3 +46,11 @@ class Widget(BaseWidget):
         else:
             self._empty_bitmap.init(dx=self.dx,dy=self.dy,color=0xffff)
             return self._empty_bitmap
+        
+    @property    
+    def get_background_color(self):
+        if self.state == self.STATE_FOCUSED:
+            return self._darken_color(self.background.color, 0.9)
+        if self.state == self.STATE_DISABLED:
+            return BaseWidget.GREY
+        return self.background.color

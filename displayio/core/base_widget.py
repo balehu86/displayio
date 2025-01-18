@@ -243,9 +243,6 @@ class BaseWidget(Color, Style):
     
     def focus(self, widget, event):
         """元素聚焦,会将元素内所有元素调暗0.1"""
-        if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
-            self.background_color_cache = self.background.color
-            self.background.color= self._darken_color(self.background.color,0.9)
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
@@ -253,10 +250,6 @@ class BaseWidget(Color, Style):
 
     def unfocus(self, widget, event):
         """取消元素聚焦"""
-        if hasattr(self, 'background_color') and self.state != self.STATE_DISABLED:
-            if self.background_color_cache is not None:
-                self.background.color = self.background_color_cache
-                self.background_color_cache = None
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
@@ -283,5 +276,3 @@ class BaseWidget(Color, Style):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
     
-    # def __repr__(self):
-    #     return f'<{self.__class__.__name__} object> \n\tdx: {self.dx}, dy: {self.dx}, dz: {self.dz}, \n\twidth: {self.width}, height: {self.height}, \n\tvisibility: {self.visibility}, state: {self.state}'

@@ -74,8 +74,8 @@ class Bitmap:
             if color is not None and color != 0x0000:
                 self.fill(color)
         elif color is not None: # 尺寸未变，传递了color，只需填充颜色
-            if self.fb:  # 确保已初始化FrameBuffer
-                self.fill(color)
+            # if self.fb:  # 确保已初始化FrameBuffer
+            self.fill(color)
             return
 
     @micropython.native
