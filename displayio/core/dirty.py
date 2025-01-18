@@ -7,7 +7,7 @@ class DirtySystem:
         命名为 {容器类名}_{容器实例id}  ,且需要传入widget参数
     """
     _instances = {}  # 存储所有命名实例
-    __slots__ = ('name', 'dirty', 'widget', '_layout_dirty', 'initialized')
+    __slots__ = ('name', 'dirty_widget', 'widget', '_layout_dirty', 'initialized')
     
     def __new__(cls, name='default', *args,**kwargs):
         # 确保每个名称只创建一个实例
@@ -35,9 +35,28 @@ class DirtySystem:
     
     @property
     def dirty(self):
-        """绘制系统的脏标记,用来出发遍历组件树刷新"""
-        raise NotImplementedError('脏区域基类未实现 dirty 属性')
+        """绘制系统的脏标记,用来出发遍历组件树刷新
+        脏区域基类的dirty属性:
+        - 默认实例(name='default'): 检查自身和所有其他实例的脏状态
+        - 其他实例: 只检查自己的脏状态
+        """
+        if self.name == 'default':
+            # 默认实例需要检查所有其他实例
+            for dirty_system in self._instances.values():
+                if dirty_system is self:
+                    continue
+                if dirty_system.dirty:  # 这里的递归是安全的,因为其他实例只检查自己
+                    return True
+            # 如果其他实例都不脏,才检查自己
+            return self._check_self_dirty()
+        else:
+            # 非默认实例只检查自己
+            return self._check_self_dirty()
 
+    def _check_self_dirty(self):
+        """检查自身的脏状态"""
+        raise NotImplementedError('脏区域基类未实现 _check_self_dirty 方法')
+    
     def add_widget(self, widget):
         self.dirty_widget.add(widget)
 
@@ -77,17 +96,8 @@ class MergeRegionSystem(DirtySystem):
         # 绘制系统的脏区域,用来触发组件刷新
         self.area = []
 
-    @property
-    def dirty(self):
-        """绘制系统的脏标记,用来出发遍历组件树刷新"""
-        if len(self.area) != 0:
-            return True
-        for dirty_system in self._instances.values():
-            if dirty_system is self:
-                continue
-            if dirty_system.dirty:
-                return True
-        return False
+    def _check_self_dirty(self):
+        return len(self.area) != 0
 
     def add(self, x2, y2, width2, height2):
         """添加脏区域"""
@@ -150,23 +160,14 @@ class BoundBoxSystem(DirtySystem):
         self.max_x, self.max_y = 0, 0
         self._area = [[0,0,0,0]]
 
+    def _check_self_dirty(self):
+        return self.max_x - self.min_x > 0 or self.max_y - self.min_y > 0
+    
     @property
     def area(self):
         if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:
             self._area[0][0], self._area[0][1], self._area[0][2], self._area[0][3] = self.min_x, self.min_y, self.max_x, self.max_y
         return self._area
-    
-    @property
-    def dirty(self):
-        """绘制系统的脏标记,用来出发遍历组件树刷新"""
-        if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:
-            return True
-        for dirty_system in self._instances.values():
-            if dirty_system is self:
-                continue
-            if dirty_system.dirty:
-                return True
-        return False
 
     def add(self, x2, y2, width2, height2):
         """添加边界框"""
