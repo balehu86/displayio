@@ -57,7 +57,7 @@ class Bitmap:
             self.height = new_height
             self.size_changed = True
 
-        if transparent_color is not None:
+        if transparent_color is not None: # 设置透明色
             self.transparent_color = transparent_color
         
         # 检查颜色更新
