@@ -41,6 +41,9 @@ class DirtySystem:
     def add_widget(self, widget):
         self.dirty_widget.add(widget)
 
+    def clear_widget(self):
+        self.dirty_widget.clear()
+
     @property
     def layout_dirty(self):
         return self._layout_dirty
@@ -145,10 +148,13 @@ class BoundBoxSystem(DirtySystem):
         super().__init__(name, widget)
         self.min_x, self.min_y = 0, 0
         self.max_x, self.max_y = 0, 0
+        self._area = [[0,0,0,0]]
 
     @property
     def area(self):
-        return [[self.min_x, self.min_y, self.max_x, self.max_y]]
+        if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:
+            self._area[0][0], self._area[0][1], self._area[0][2], self._area[0][3] = self.min_x, self.min_y, self.max_x, self.max_y
+        return self._area
     
     @property
     def dirty(self):
@@ -185,4 +191,5 @@ class BoundBoxSystem(DirtySystem):
         """重置边界框"""
         self.min_x, self.min_y = 0, 0
         self.max_x, self.max_y = 0, 0
+        self._area[0][0], self._area[0][1], self._area[0][2], self._area[0][3] = 0,0,0,0
 
