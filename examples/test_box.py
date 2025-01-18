@@ -80,7 +80,7 @@ main_box.add(gbox_in_g,row=3,col=3,row_span=3,col_span=3)
 vbox_in_s=FlexBox(direction=Style.VERTICAL,width=100,
                 height=300,
                 spacing=10)
-sbox.add(vbox_in_s)
+sbox.set_root(vbox_in_s)
 
 # # 设置根控件并刷新
 display.set_root(main_box)
@@ -157,7 +157,7 @@ for w in range(10):
     vbox_in_s.add(Button(text=str(w)*5,
                         font=font,
                          height = 20,
-                        background_color=random.getrandbits(16)))
+                        background=random.getrandbits(16)))
 # 添加输入设备   
 up=Switch(13,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_UP})
 dw=Switch(12,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: EventType.SCROLL_DOWN})
