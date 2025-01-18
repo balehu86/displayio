@@ -136,7 +136,6 @@ class Label(Widget):
         text_x, text_y = self._calculate_text_position()
         # 将文本bitmap绘制到背景
         self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
-        return self._bitmap
 
     def set_text(self, text) -> None:
         """设置文本内容"""
