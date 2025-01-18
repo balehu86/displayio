@@ -183,13 +183,12 @@ class MainLoop:
             if hasattr(widget, 'get_bitmap'): # 叶子widget
                 bitmap = widget.get_bitmap()
                 self.dirty_bitmap.blit(bitmap, dx=bitmap.dx-area[0], dy=bitmap.dy-area[1])
-                # raise ValueError('需要处理bitmap偏位')
             else: # 容器节点
-                # if widget.background.pic is not None:
-                #     self.dirty_bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
-                #     raise ValueError
-                # else:
-                #     self.dirty_bitmap.fill(widget.background.color)
+                if widget.background.color is not None:
+                    self.dirty_bitmap.fill(widget.background.color)
+                else:
+                    self.dirty_bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
+                    raise ValueError
                 for child in widget.children:
                     self._render_widget(child, area)
 
