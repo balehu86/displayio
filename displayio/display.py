@@ -179,33 +179,17 @@ class MainLoop:
         """ 递归渲染widget及其子组件
             任何具有get_bitmap的组件将被视为组件树的末端
         """
-        raise NotImplementedError('_render_widget_partly() must be implemented in subclasses.')
-        # if widget.widget_in_dirty_area():
-        #     # 任何具有get_bitmap的组件将被视为组件树的末端
-        #     if hasattr(widget, 'get_bitmap'):# 如果具有git_bitmap()
-        #         bitmap = widget.get_bitmap()
-        #         dx = widget.dx_cache if widget.dx_cache is not None else widget.dx
-        #         dy = widget.dy_cache if widget.dy_cache is not None else widget.dy
-        #         width = widget.width_cache if widget.width_cache is not None else widget.width
-        #         height = widget.height_cache if widget.height_cache is not None else widget.height
-        #         self.display.output.refresh(bitmap.buffer, dx=dx, dy=dy, width=width, height=height)
-        #     else:# 如果没有git_bitmap()
-        #         for child in widget.children:
-        #             self._render_widget_partly(child)
-
-    def _render_widget_fully(self, widget:Widget|Container):
-        """绘制整个屏幕的buffer"""
-        if  widget.widget_in_dirty_area():
-            if hasattr(widget, 'get_bitmap'):
+        if widget.widget_in_dirty_area(area):
+            if hasattr(widget, 'get_bitmap'): # 叶子widget
                 bitmap = widget.get_bitmap()
                 self.dirty_bitmap.blit(bitmap, dx=bitmap.dx-area[0], dy=bitmap.dy-area[1])
-                raise ValueError('需要处理bitmap偏位')
+                # raise ValueError('需要处理bitmap偏位')
             else: # 容器节点
                 # if widget.background.pic is not None:
                 #     self.dirty_bitmap.blit(bitmap, dx=bitmap.dx, dy=bitmap.dy)
                 #     raise ValueError
                 # else:
-                #     self.dirty_bitmap.fill_rect(widget.background.color)
+                #     self.dirty_bitmap.fill(widget.background.color)
                 for child in widget.children:
                     self._render_widget(child, area)
 
@@ -218,8 +202,7 @@ class MainLoop:
                     if hasattr(dirty_widget, 'draw'):
                         dirty_widget.draw()
                 # 清空dirty_system.dirty_widget
-                self.dirty_system.clear()
-
+                self.dirty_system.clear_widget()
             for dirty_area in self.dirty_system.area:
                 # 先初始化dirty_bitmap
                 dx, dy = dirty_area[0], dirty_area[1]
@@ -229,6 +212,8 @@ class MainLoop:
 
                 if self.display.partly_refresh: # 如果局部刷新
                     self.display.output.refresh(self.dirty_bitmap.buffer, dx=dx, dy=dy, width=width, height=height)
+                else:
+                    self.display.root._bitmap.blit(self.dirty_bitmap, dx=self.dirty_bitmap.dx, dy=self.dirty_bitmap.dy)
             if not self.display.partly_refresh: # 如果全局刷新
                 self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
             
