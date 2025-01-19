@@ -58,7 +58,11 @@ class DirtySystem:
         raise NotImplementedError('脏区域基类未实现 _check_self_dirty 方法')
     
     def add_widget(self, widget):
-        self.dirty_widget.add(widget)
+        if self.name == 'default':
+            self.dirty_widget.add(widget)
+        else:
+            self.dirty_widget.add(widget)
+            self._instances['default'].dirty_widget.add(self.widget)
 
     def clear_widget(self):
         self.dirty_widget.clear()

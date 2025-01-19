@@ -62,7 +62,7 @@ class Display:
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             widget._bitmap = Bitmap(widget, transparent_color=widget.transparent_color)
-            widget._bitmap.init(dx=0, dy=0, width=self.width, height=self.height)
+            widget._bitmap.init(dx=0, dy=0)#, width=self.width, height=self.height)
 
     def add_event(self, event:Event):
         """添加事件到事件循环"""
@@ -196,12 +196,17 @@ class MainLoop:
         """更新显示"""
         if self.dirty_system.dirty: # 如果有脏区域则出发刷新
             # 先重绘 脏widget的bitmap
-            for _, system in self.dirty_system._instances.items():
-                for dirty_widget in system.dirty_widget:
-                    if hasattr(dirty_widget, 'draw'):
-                        dirty_widget.draw()
-                # 清空dirty_system.dirty_widget
-                self.dirty_system.clear_widget()
+            # for _, system in self.dirty_system._instances.items():
+            #     for dirty_widget in system.dirty_widget:
+            #         if hasattr(dirty_widget, 'draw'):
+            #             dirty_widget.draw()
+            #     # 清空dirty_system.dirty_widget
+            #     system.clear_widget()
+            for dirty_widget in self.dirty_system.dirty_widget:
+                if hasattr(dirty_widget, 'draw'):
+                    dirty_widget.draw()
+            self.dirty_system.clear_widget()
+
             for dirty_area in self.dirty_system.area:
                 # 先初始化dirty_bitmap
                 dx, dy = dirty_area[0], dirty_area[1]
