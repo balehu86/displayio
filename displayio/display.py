@@ -14,9 +14,10 @@ class Display:
                  'soft_timer', 'fps', 'show_fps', 'partly_refresh',
                  'loop')
 
-    def __init__(self, width:int=0, height:int=0, root:Container=None, log_level = logger.INFO,
+    def __init__(self, log_level = logger.INFO, config_file:str=None,
+                 width:int=0, height:int=0, root:Container=None, 
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
-                 show_fps:bool=False, partly_refresh:bool=True, config_file:str=None):
+                 show_fps:bool=False, partly_refresh:bool=True, ):
         """显示器主程序
 
         Args:
@@ -29,6 +30,7 @@ class Display:
             soft_timer (bool, optional): 是否采用软件计时器调用输入设备检测. Defaults to True.
             show_fps (bool, optional): 是否print FPS 和 IPS(input per second). Defaults to False.
             partly_refresh (bool, optional): 是否开启局部刷新. Defaults to True.
+            config_file (str, optional): display实例初始化配置json文件的目录. Defaults to None.
         """
         logger.setLevel(log_level)
         logger.debug("Initializing display...")
