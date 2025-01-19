@@ -115,14 +115,13 @@ class BaseWidget(Color, Style):
             width (_type_, optional): _description_. Defaults to None.
             height (_type_, optional): _description_. Defaults to None.
         """
+        original_width = 0 if self.width is None else self.width
+        original_height = 0 if self.height is None else self.height
         self.width = width if (force or self.width_resizable) and width != None else self.width
         self.height = height if (force or self.height_resizable) and height != None else self.height
-        self.dirty_system.add_widget(self)
         self.dirty_system.layout_dirty = True
-        original_width = self.width if self.width is not None else 0
-        original_height = self.height if self.height is not None else 0
-        self.dirty_system.add(self.dx, self.dy, original_width, original_height)
-        self.dirty_system.add(self.dx, self.dy, self.width, self.height)
+        self.dirty_system.add_widget(self)
+        self.dirty_system.add(self.dx, self.dy, max(original_width,self.width), max(original_height,self.height))
 
     def hide(self) -> None:
         """隐藏部件"""
@@ -145,9 +144,8 @@ class BaseWidget(Color, Style):
         计算元素尺寸用。
         容器会重写这个方法，用来迭代嵌套子元素的尺寸
         """
-        # 考虑自身的固定尺寸,如果固定尺寸则取self的尺寸，否则取0
-        width = self.width if not self.width_resizable else 0
-        height = self.height if not self.height_resizable else 0
+        width = 0 if self.width_resizable else self.width
+        height = 0 if self.height_resizable else self.height
 
         return width+self.rel_x, height+self.rel_y
 
@@ -178,7 +176,6 @@ class BaseWidget(Color, Style):
         """
         # 尝试捕获
         # 如果事件未被捕获，传递给子组件
-        logger.debug(f'bubble {event.type}')
         if self.catch(event):
             if not self.handle(event):
                 for child in self.children: # 传递
@@ -191,18 +188,14 @@ class BaseWidget(Color, Style):
         # 如果部件未启用，则不会处理事件
         if self.state == self.STATE_DISABLED:
             return False
-        # 当 target_widget 不为 None 时，仅检查其是否为 self
-        if event.target_widget is not None:
-            if event.target_widget is not self:
-                return False
-        # 当 target_widget 为 None 且 target_position 不为 None 时，根据位置判断
-        elif event.target_position is not None:
+        if event.target_widget is self:
+            return True
+        if event.target_position is not None:
             x, y = event.target_position
-            if not (self.dx <= x < self.dx + self.width and 
-                    self.dy <= y < self.dy + self.height):
-                return False
-        return True
-
+            return (self.dx <= x < self.dx + self.width and 
+                    self.dy <= y < self.dy + self.height)
+        return False
+        
     def handle(self, event) -> None:
         """处理事件"""
         if event.type in self.event_listener:

@@ -136,11 +136,29 @@ class Label(Widget):
         # 将文本bitmap绘制到背景
         self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
 
-    def set_text(self, text) -> None:
+    def set_text(self, text=None, color=None, font=None, font_scale=None) -> None:
         """设置文本内容"""
-        if self.text != text:
+        changed = False
+        if text is not None and self.text != text:
             self.text = text
-            self.text_width = self.font_width * len(text) * self.font_scale
+            changed = True
+        if color is not None and self.text_color != color:
+            self.text_color = color
+            changed = True
+        if font is not None and self.font is not font:
+            self.font = font
+            self.font_width = font[b'WIDTH'][0]
+            self.font_height = font[b'HEIGHT'][0]
+            self.font_default = font[b'DEFAULT']
+            self.font_rle = font[b'RLE'][0]
+            changed = True
+        if font_scale != self.font_scale:
+            self.font_scale = font_scale
+            changed = True
+        if changed:
+            self._text_dirty = True
+            self.text_width = self.font_width * len(self.text) * self.font_scale
+            self.text_height = self.font_height * self.font_scale
             self.dirty_system.add_widget(self)
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_align(self, align) -> None:

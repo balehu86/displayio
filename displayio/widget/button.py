@@ -55,23 +55,6 @@ class Button(Label):
                                EventType.LONG_PRESS_RELEASE:[self.long_press_release],
                                EventType.DOUBLE_CLICK:[self.release],
                                }
-        
-    @micropython.native
-    def draw(self) -> None:
-        """
-        创建按钮位图
-        添加边框和状态效果
-        """
-        # 创建和填充新的位图
-        self._bitmap.init(dx=self.dx,dy=self.dy,color=self.get_background_color)
-        # 绘制文本部分,创建文本位图
-        if self._text_dirty:
-            self._draw_text_bitmap()
-        # 计算文本位置（从Label类复用此逻辑）
-        text_x, text_y = self._calculate_text_position()
-        
-        # 将文本bitmap绘制到背景
-        self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
 
     def set_state(self, state) -> None:
         if self.state != state:
