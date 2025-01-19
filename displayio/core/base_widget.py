@@ -233,11 +233,11 @@ class BaseWidget(Color, Style):
     def widget_in_dirty_area(self, area) -> bool:
         """检查widget是否和脏区域有交集"""
         x1_min, y1_min, x1_max, y1_max = area
-
-        x2_max, y2_max = self.dx + self.width - 1, self.dy + self.height - 1
+        x2_min, y2_min = self.dx, self.dy
+        x2_max, y2_max = x2_min + self.width - 1, y2_min + self.height - 1
         
-        return not (x1_min > x2_max or self.dx > x1_max or 
-                    y1_min > y2_max or self.dy > y1_max)
+        return not (x1_min > x2_max or x2_min > x1_max or 
+                    y1_min > y2_max or y2_min > y1_max)
     
     def focus(self, widget, event) -> None:
         """元素聚焦,会将元素内所有元素调暗0.1"""
