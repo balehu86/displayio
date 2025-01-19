@@ -110,7 +110,7 @@ class BaseWidget(Color, Style):
             self.dirty_system.add(original_dx, original_dy, original_width, original_height)
             self.dirty_system.add(self.dx, self.dy, self.width, self.height)
     
-    def resize(self, width=None, height=None, force=False):
+    def resize(self, width=None, height=None, force=False) -> None:
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
         Args:
@@ -232,7 +232,7 @@ class BaseWidget(Color, Style):
         if self.parent is not None:
             return self.parent.index(self)
 
-    def widget_in_dirty_area(self, area):
+    def widget_in_dirty_area(self, area) -> bool:
         """检查widget是否和脏区域有交集"""
         x1_min, y1_min, x1_max, y1_max = area
 
@@ -241,7 +241,7 @@ class BaseWidget(Color, Style):
         return not (x1_min > x2_max or self.dx > x1_max or 
                     y1_min > y2_max or self.dy > y1_max)
     
-    def focus(self, widget, event):
+    def focus(self, widget, event) -> None:
         """元素聚焦,会将元素内所有元素调暗0.1"""
         self.state = self.STATE_FOCUSED
         self.dirty_system.add_widget(self)
@@ -249,7 +249,7 @@ class BaseWidget(Color, Style):
         for child in self.children:
             child.focus(widget, event)
 
-    def unfocus(self, widget, event):
+    def unfocus(self, widget, event) -> None:
         """取消元素聚焦"""
         self.state = self.STATE_DEFAULT
         self.dirty_system.add_widget(self)
@@ -257,7 +257,7 @@ class BaseWidget(Color, Style):
         for child in self.children:
             child.unfocus(widget, event)
 
-    def _darken_color(self, color, factor):
+    def _darken_color(self, color, factor) -> int:
         """将16位RGB颜色调暗
         参数:
             color: 原始颜色(16位RGB)

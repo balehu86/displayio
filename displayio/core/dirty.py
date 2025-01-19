@@ -58,6 +58,7 @@ class DirtySystem:
         raise NotImplementedError('脏区域基类未实现 _check_self_dirty 方法')
     
     def add_widget(self, widget):
+        """添加脏widget至脏系统,只有widget.layout方法和需要强制刷新的widget会被添加"""
         if self.name == 'default':
             self.dirty_widget.add(widget)
         else:
@@ -65,6 +66,7 @@ class DirtySystem:
             self._instances['default'].dirty_widget.add(self.widget)
 
     def clear_widget(self):
+        """清空dirty_widget,只清空脏系统自己的"""
         self.dirty_widget.clear()
 
     @property
@@ -75,10 +77,6 @@ class DirtySystem:
     def layout_dirty(self, value):
         """设置 layout_dirty 属性，并同步到默认实例"""
         self._layout_dirty = value
-        # 如果当前实例不是默认实例且被赋值为True，则更新默认实例
-        if value and self.widget:
-            parent_system = self.widget.dirty_system
-            parent_system.layout_dirty = True
 
     def clear(self):
         """重置脏区域"""
@@ -156,7 +154,7 @@ class BoundBoxSystem(DirtySystem):
     边界框脏区域管理,采用包围盒算法
     适合处理单一矩形区域的大规模刷新。
     """
-    __slots__ = ('min_x', 'min_y', 'max_x', 'max_y')
+    __slots__ = ('min_x', 'min_y', 'max_x', 'max_y', '_area')
     
     def __init__(self, name='default', widget=None):
         super().__init__(name, widget)

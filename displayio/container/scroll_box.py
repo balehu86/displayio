@@ -12,7 +12,7 @@ class ScrollBox(Container):
     ScrollBox滚动容器类
     继承自Container
     """
-    __slots__ = ('_empty_bitmap',
+    __slots__ = ('_empty_bitmap', 'dirty_bitmap', '_empty_bitmap',
                  'scroll_dirty_system', 'child'
                  'scroll_offset_x', 'scroll_offset_y',
                  'is_scrollable_x', 'is_scrollable_y',

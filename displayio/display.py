@@ -62,7 +62,7 @@ class Display:
         # 如果局部刷新,在root 部件创建一个全屏framebuff。
         if not self.partly_refresh:
             widget._bitmap = Bitmap(widget, transparent_color=widget.transparent_color)
-            widget._bitmap.init(dx=0, dy=0)#, width=self.width, height=self.height)
+            widget._bitmap.init(dx=0, dy=0)
 
     def add_event(self, event:Event):
         """添加事件到事件循环"""
@@ -97,7 +97,7 @@ class MainLoop:
     def __init__(self, display:Display):
         self.display = display
         # 脏区域全局共享实例
-        self.dirty_system = None
+        self.dirty_system:DirtySystem = None
         self.dirty_bitmap = Bitmap()
         # 标记是否运行
         self.running = False
@@ -169,16 +169,19 @@ class MainLoop:
             self.last_input_time = current_time
 
     def update_layout(self):
-        """更新布局"""
-        if self.dirty_system.layout_dirty:
-            logger.debug("Updating layout...")
-            self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
-            self.dirty_system.layout_dirty = False
+        """更新布局.在这一步,Widget会被添加进脏系统的dirty_widget"""
+        for system in self.dirty_system._instances.values():
+            if system.layout_dirty:
+                logger.debug(f"Updating {system.name} layout...")
+                if system.name == 'default':
+                    self.display.root.layout(dx=0, dy=0, width=self.display.width, height=self.display.height)
+                else:
+                    widget = system.widget
+                    widget.layout(dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
+                system.layout_dirty = False
         
     def _render_widget(self, widget:Container|Widget, area):
-        """ 递归渲染widget及其子组件
-            任何具有get_bitmap的组件将被视为组件树的末端
-        """
+        """ 递归渲染widget及其子组件,任何具有get_bitmap的组件将被视为组件树的末端"""
         if widget.widget_in_dirty_area(area):
             if hasattr(widget, 'get_bitmap'): # 叶子widget
                 bitmap = widget.get_bitmap()
@@ -193,15 +196,14 @@ class MainLoop:
                     self._render_widget(child, area)
 
     def update_display(self):
-        """更新显示"""
+        """更新显示
+        绘制系统解释：
+            每个独立绘制系统(update_display类似方法)只绘制自己的脏系统的dirty_widget,
+                需要保留独立绘制系统的(例如scroll_box)需要实现自己的绘制方法(scroll_box.update_child_bitamp).
+                同时,独立的绘制系统也只处理自己独立的脏系统的dirty_widget绘制
+        """
         if self.dirty_system.dirty: # 如果有脏区域则出发刷新
             # 先重绘 脏widget的bitmap
-            # for _, system in self.dirty_system._instances.items():
-            #     for dirty_widget in system.dirty_widget:
-            #         if hasattr(dirty_widget, 'draw'):
-            #             dirty_widget.draw()
-            #     # 清空dirty_system.dirty_widget
-            #     system.clear_widget()
             for dirty_widget in self.dirty_system.dirty_widget:
                 if hasattr(dirty_widget, 'draw'):
                     dirty_widget.draw()
