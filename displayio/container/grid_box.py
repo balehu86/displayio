@@ -134,6 +134,9 @@ class GridBox(Container):
         更新容器的布局
         处理子元素的位置和大小
         """
+        if not self.children:
+            return
+
         cell_width = (self.width - (self.cols - 1) * self.col_spacing) // self.cols
         cell_height = (self.height - (self.rows - 1) * self.row_spacing) // self.rows
         for child in self.children:
