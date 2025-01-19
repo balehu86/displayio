@@ -220,20 +220,6 @@ class BaseWidget(Color, Style):
             elif callback_func in self.event_listener[event_type]:
                 self.event_listener[event_type].remove(callback_func)
 
-    def index(self) -> int:
-        """返回部件在父容器中的位置,从0开始"""
-        if self.parent is not None:
-            return self.parent.index(self)
-
-    def widget_in_dirty_area(self, area) -> bool:
-        """检查widget是否和脏区域有交集"""
-        x1_min, y1_min, x1_max, y1_max = area
-        x2_min, y2_min = self.dx, self.dy
-        x2_max, y2_max = x2_min + self.width - 1, y2_min + self.height - 1
-        
-        return not (x1_min > x2_max or x2_min > x1_max or 
-                    y1_min > y2_max or y2_min > y1_max)
-    
     def focus(self, widget=None, event=None) -> None:
         """元素聚焦,会将元素内所有元素调暗0.1"""
         if self.state == self.STATE_DEFAULT:
@@ -272,6 +258,11 @@ class BaseWidget(Color, Style):
                 if child.state != self.STATE_DEFAULT:
                     child.disable(child, event)
 
+    def index(self) -> int:
+        """返回部件在父容器中的位置,从0开始"""
+        if self.parent is not None:
+            return self.parent.index(self)
+
     def _darken_color(self, color, factor) -> int:
         """将16位RGB颜色调暗
         参数:
@@ -288,7 +279,16 @@ class BaseWidget(Color, Style):
         b = int(b * factor)
         # 重新组装颜色
         return (r << 11) | (g << 5) | b
-    
+
+    def widget_in_dirty_area(self, area) -> bool:
+        """检查widget是否和脏区域有交集"""
+        x1_min, y1_min, x1_max, y1_max = area
+        x2_min, y2_min = self.dx, self.dy
+        x2_max, y2_max = x2_min + self.width - 1, y2_min + self.height - 1
+        
+        return not (x1_min > x2_max or x2_min > x1_max or 
+                    y1_min > y2_max or y2_min > y1_max)
+
     def __lt__(self, other):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
