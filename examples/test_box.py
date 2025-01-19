@@ -106,6 +106,7 @@ label3 = Label(
     text="3",
     font=font,
     font_scale = 3,
+#     align=Label.ALIGN_BOTTOM,
     background=0x0099,
     rel_x=20,
     rel_y=20

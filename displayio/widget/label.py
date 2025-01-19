@@ -103,7 +103,7 @@ class Label(Widget):
         根据文本对齐方式计算文本位图位置
         """ 
         text_x = self.padding[0]  # 默认左对齐
-        text_y = (self.height - self.font_height) // 2  # 默认垂直居中
+        text_y = (self.height - self.text_height) // 2  # 默认垂直居中
         
         if self.align == self.ALIGN_CENTER:
             text_x = (self.width - self.text_width) // 2
@@ -174,12 +174,11 @@ class Label(Widget):
 
     @property    
     def get_background_color(self):
-        if self.state == self.STATE_DEFAULT:
-            return self.background.color
         if self.state == self.STATE_FOCUSED:
             return self._darken_color(self.background.color, 0.7)
         if self.state == self.STATE_DISABLED:
             return Label.GREY
+        return self.background.color
         
     @property
     def get_text_color(self):
