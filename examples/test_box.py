@@ -166,8 +166,8 @@ rt=Switch(10,mode=Switch.PULL_UP,target_widget=sbox,event_map={EventType.PRESS: 
 md=Switch(9 ,mode=Switch.PULL_UP,target_widget=vbox_in_s.children[0])
 se=Switch(46,mode=Switch.PULL_UP,target_widget=button1)
 rs=Switch(3 ,mode=Switch.PULL_UP,target_widget=gbox_in_g,event_map={EventType.LONG_PRESS: EventType.FOCUS, EventType.LONG_PRESS_RELEASE: EventType.UNFOCUS})
-encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
-display.add_input_device(up,dw,le,rt,md,se,rs,encoder)
+# encoder = RotaryEncoder(pin_a=6, pin_b=7,strict=True,target_widget=sbox)
+display.add_input_device(up,dw,le,rt,md,se,rs)#,encoder)
 
 def click_callback(widget,event):
     print('clicked!')
@@ -207,5 +207,4 @@ button1.bind(EventType.LONG_PRESS_RELEASE, long_press_release_callback)
 
 def main():
     pass
-
 display.run(main)
