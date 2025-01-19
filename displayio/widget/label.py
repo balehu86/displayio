@@ -52,8 +52,7 @@ class Label(Widget):
         # 字体数据
         if font is None:
             raise ValueError("label.font is not specified!")
-        else:
-            self.font = font
+        self.font = font
         self.font_scale = font_scale
         self.font_width = font[b'WIDTH'][0]
         self.font_height = font[b'HEIGHT'][0]
@@ -124,11 +123,11 @@ class Label(Widget):
         包含背景和文本渲染
         """
         # 创建和填充新的位图
-        if self.background.color is not None:
-            self._bitmap.init(dx=self.dx,dy=self.dy,color=self.get_background_color)
-        else:
+        if self.background.color is None:
             self._bitmap.init(dx=self.dx,dy=self.dy)
             self._bitmap.blit(self.background.pic, dx=0,dy=0)
+        else:
+            self._bitmap.init(dx=self.dx,dy=self.dy,color=self.get_background_color)
         # 绘制文字
         if self._text_dirty:
             self._draw_text_bitmap()
