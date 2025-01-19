@@ -1,6 +1,5 @@
 # ./core/widget.py
-from .style import Color, Style
-from .background import Background
+from .style import Color, Style, Background
 from .dirty import MergeRegionSystem
 from .event import EventType
 from .logging import logger
@@ -67,14 +66,13 @@ class BaseWidget(Color, Style):
         self.background = Background(color=background)
         # event监听器注册
         self.event_listener = {EventType.FOCUS:[self.focus],
-                               EventType.UNFOCUS:[self.unfocus]}  # 事件处理器字典
+                               EventType.UNFOCUS:[self.unfocus]}
             
     def layout(self, dx, dy, width=None, height=None) -> None:
         """
         布局函数,设置控件的位置和大小,由父容器调用
         此函数从root开始,一层层调用
         在容器中次函数会被容器重写,用来迭代布局容器中的子元素
-        如果位置或大小发生变化，标记需要重绘
         """
         # 将初始区域记录
         original_dx, original_dy = self.dx, self.dy
