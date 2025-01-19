@@ -143,24 +143,6 @@ class Label(Widget):
             self.text_width = self.font_width * len(text) * self.font_scale
             self.dirty_system.add_widget(self)
             self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    def set_text_color(self, text_color) -> None:
-        """设置文本和背景颜色"""
-        self.text_color = text_color
-        self._text_dirty = True
-        self.dirty_system.add_widget(self)
-        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    def set_font(self, font) -> None:
-        """设置字体"""
-        self.font = font
-        self.font_width = font[b'WIDTH'][0]
-        self.font_height = font[b'HEIGHT'][0]
-        self.font_default = font[b'DEFAULT']
-        self.font_rle = font[b'RLE'][0]
-        self.text_width = self.font_width * len(self.text) * self.font_scale
-        self.text_height = self.font_height * self.font_scale
-        self._text_dirty = True
-        self.dirty_system.add_widget(self)
-        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
     def set_align(self, align) -> None:
         """设置文本对齐"""
         self.align = align
