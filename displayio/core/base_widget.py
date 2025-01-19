@@ -66,7 +66,9 @@ class BaseWidget(Color, Style):
         self.background = Background(color=background)
         # event监听器注册
         self.event_listener = {EventType.FOCUS:[self.focus],
-                               EventType.UNFOCUS:[self.unfocus]}
+                               EventType.UNFOCUS:[self.unfocus],
+                               EventType.ENABLE:[self.enable],
+                               EventType.DISABLE:[self.disable]}
             
     def layout(self, dx, dy, width=None, height=None) -> None:
         """
@@ -232,21 +234,43 @@ class BaseWidget(Color, Style):
         return not (x1_min > x2_max or x2_min > x1_max or 
                     y1_min > y2_max or y2_min > y1_max)
     
-    def focus(self, widget, event) -> None:
+    def focus(self, widget=None, event=None) -> None:
         """元素聚焦,会将元素内所有元素调暗0.1"""
-        self.state = self.STATE_FOCUSED
-        self.dirty_system.add_widget(self)
-        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        for child in self.children:
-            child.focus(widget, event)
+        if self.state == self.STATE_DEFAULT:
+            self.state = self.STATE_FOCUSED
+            self.dirty_system.add_widget(self)
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+            for child in self.children:
+                if child.state != self.STATE_FOCUSED:
+                    child.focus(child, event)
 
-    def unfocus(self, widget, event) -> None:
+    def unfocus(self, widget=None, event=None) -> None:
         """取消元素聚焦"""
-        self.state = self.STATE_DEFAULT
-        self.dirty_system.add_widget(self)
-        self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-        for child in self.children:
-            child.unfocus(widget, event)
+        if self.state == self.STATE_FOCUSED:
+            self.state = self.STATE_DEFAULT
+            self.dirty_system.add_widget(self)
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+            for child in self.children:
+                if child.state != self.STATE_DEFAULT:
+                    child.unfocus(child, event)
+
+    def disable(self, widget=None, event=None) -> None:
+        if self.state == self.STATE_DEFAULT:
+            self.state = self.STATE_DISABLED
+            self.dirty_system.add_widget(self)
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+            for child in self.children:
+                if child.state != self.STATE_DISABLED:
+                    child.disable(child, event)
+
+    def enable(self, widget=None, event=None) -> None:
+        if self.state == self.STATE_DISABLED:
+            self.state = self.STATE_DEFAULT
+            self.dirty_system.add_widget(self)
+            self.dirty_system.add(self.dx,self.dy,self.width,self.height)
+            for child in self.children:
+                if child.state != self.STATE_DEFAULT:
+                    child.disable(child, event)
 
     def _darken_color(self, color, factor) -> int:
         """将16位RGB颜色调暗

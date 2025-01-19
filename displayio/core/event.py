@@ -19,9 +19,9 @@ class EventType:
     LONG_PRESS = 'LONG_PRESS'       # 长按
     DOUBLE_CLICK = 'DOUBLE_CLICK'   # 双击
     # 拖动相关事件
-    DRAG_START = 10       # 拖动开始,检测逻辑类似长按
-    DRAG_MOVE = 11        # 拖动中
-    DRAG_END = 12         # 拖动结束
+    DRAG_START = 'DRAG_START'  # 拖动开始,检测逻辑类似长按
+    DRAG_MOVE = 'DRAG_MOVE'    # 拖动中
+    DRAG_END = 'DRAG_END'      # 拖动结束
     # 焦点相关事件
     FOCUS = 'FOCUS'       # 获得焦点
     UNFOCUS = 'UNFOCUS'   # 失去焦点
@@ -43,7 +43,9 @@ class EventType:
     SCROLL_DOWN = 'SCROLL_DOWN'   # 向下滚动
     SCROLL_RIGHT = 'SCROLL_RIGHT' # 向右滚动
     SCROLL_LEFT = 'SCROLL_LEFT'   # 向左滚动
-
+    # 禁用启用
+    ENABLE = 'ENABLE'   # 启用
+    DISABLE = 'DISABLE' # 禁用
 
     CUSTOM = 99           # 自定义事件
 """
