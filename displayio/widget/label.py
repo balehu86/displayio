@@ -12,7 +12,7 @@ class Label(Widget):
     用于显示文本内容，支持自定义颜色、对齐方式等
     """
     __slots__ = ('font', 'font_scale', 'font_width', 'font_height', 'font_default', 'font_rle',
-                 'text','text_width','text_height', 'text_color', 'background_color_cache',
+                 'text','text_width','text_height', 'text_color',
                  'align', 'padding','_text_bitmap')
 
     def __init__(self, 
@@ -65,7 +65,7 @@ class Label(Widget):
         self.text_height = self.font_height * font_scale
             
         self.text_color = text_color
-        self.background_color_cache = None
+
         self.align = align
         self.padding = padding
         # 文字位图缓存
