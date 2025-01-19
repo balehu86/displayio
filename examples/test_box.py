@@ -17,7 +17,7 @@ f = open("/font_16x16.db", "r+b")
 font=btree.open(f)
 
 
-# output
+# device
 from displayio.output.st7789 import ST7789
 from displayio.input.touchpin import TouchPin
 from displayio.input.encoder import RotaryEncoder
@@ -28,13 +28,10 @@ import machine # type: ignore
 import random
 
 # init SPI 接口
-spi = machine.SPI(1, baudrate=80000000, phase=1, polarity=1,\
-                  sck=machine.Pin(41), mosi=machine.Pin(40))
+spi = machine.SPI(1, baudrate=80000000, phase=1, polarity=1,sck=machine.Pin(41), mosi=machine.Pin(40))
 print("SPI 初始化成功")
 # 初始化 ST7789 显示屏
-output = ST7789(spi,
-                reset = machine.Pin(39, machine.Pin.OUT),
-                dc = machine.Pin(38, machine.Pin.OUT))
+output = ST7789(spi,reset = machine.Pin(39, machine.Pin.OUT),dc = machine.Pin(38, machine.Pin.OUT))
 print("ST7789 显示屏初始化")
 # 初始化显示屏
 output.init()
@@ -47,27 +44,26 @@ output.fill_rect(0,0,80,240,0xf800)
 output.fill_rect(80,0,80,240,0x07e0)
 # 蓝色
 output.fill_rect(160,0,80,240,0x001f)
-time.sleep(1)
+time.sleep_ms(500)
 
 ############演示标签和按钮的使用################################
 # 创建显示器
-display = Display(240, 240,output=output,
-                  fps = 30,
-                  show_fps = False,
-                  soft_timer = True,
-                  partly_refresh = False,
-                  log_level = 2
-)
+display = Display(log_level=2,output=output,config_file='/config.json')
 # 创建垂直布局容器
 main_box =GridBox(rows=6,cols=6)
 
 sbox=ScrollBox()
 main_box.add(sbox,row=0,col=0,row_span=2,col_span=2)
 
-vbox=FlexBox(direction=Style.VERTICAL,rel_x = 5, rel_y = 10, align=Style.ALIGN_CENTER)
+vbox=FlexBox(direction=Style.VERTICAL,
+             rel_x = 5,
+             rel_y = 10,
+             align=Style.ALIGN_CENTER)
 main_box.add(vbox,row=2,col=0,row_span=4,col_span=2)
 
-hbox = FlexBox(direction=Style.HORIZONTAL,spacing = 10,reverse = True)
+hbox = FlexBox(direction=Style.HORIZONTAL,
+               spacing = 10,
+               reverse = True)
 main_box.add(hbox,row=0,col=2,row_span=2,col_span=4)
 
 fbox = FreeBox()
@@ -77,9 +73,10 @@ gbox_in_g=GridBox(rows=3,cols=3)
 main_box.add(gbox_in_g,row=3,col=3,row_span=3,col_span=3)
 
 
-vbox_in_s=FlexBox(direction=Style.VERTICAL,width=100,
-                height=300,
-                spacing=10)
+vbox_in_s=FlexBox(direction=Style.VERTICAL,
+                  width=100,
+                  height=300,
+                  spacing=10)
 sbox.set_root(vbox_in_s)
 
 # # 设置根控件并刷新

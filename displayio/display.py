@@ -14,9 +14,9 @@ class Display:
                  'soft_timer', 'fps', 'show_fps', 'partly_refresh',
                  'loop')
 
-    def __init__(self, width:int, height:int, root:Container=None, log_level = logger.INFO,
+    def __init__(self, width:int=0, height:int=0, root:Container=None, log_level = logger.INFO,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
-                 show_fps:bool=False, partly_refresh:bool=True):
+                 show_fps:bool=False, partly_refresh:bool=True, config_file:str=None):
         """显示器主程序
 
         Args:
@@ -48,6 +48,14 @@ class Display:
         self.partly_refresh = partly_refresh
         # 创建事件循环
         self.loop = MainLoop(self)
+        # 设置文件
+        if config_file is not None:
+            import json
+            f=open(config_file, 'r')
+            config=json.load(f)
+            for key, value in config.items():
+                setattr(self, key, value)
+            f.close()
         logger.debug("Display initialized.")
         
     def set_root(self, widget:Container):

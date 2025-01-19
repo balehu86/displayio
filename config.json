@@ -1,0 +1,8 @@
+{
+    "width":240,
+    "height":240,
+    "fps": 30,
+    "show_fps": false,
+    "soft_timer": true,
+    "partly_refresh": false
+}
