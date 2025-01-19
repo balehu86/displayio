@@ -30,7 +30,7 @@ class Bitmap:
         self.dy = None
         self.width = None
         self.height = None
-        self.transparent_color = transparent_color if transparent_color is not None else 0xf81f # trans color 可能为0x0000
+        self.transparent_color = 0xf81f if transparent_color is None else transparent_color # trans color 可能为0x0000
         self.color_format = widget.color_format if widget else self.RGB565
 
         self.size_changed = False
@@ -44,6 +44,7 @@ class Bitmap:
             dy: bitmap的目标位置
             width: 宽度
             height: 高度
+            color: 需要填充的颜色
             transparent_color: 透明色
         """
         self.dx = dx
@@ -76,7 +77,6 @@ class Bitmap:
         elif color is not None: # 尺寸未变，传递了color，只需填充颜色
             # if self.fb:  # 确保已初始化FrameBuffer
             self.fill(color)
-            return
 
     @micropython.native
     def pixel(self, x:int, y:int, color:int|None=None):
