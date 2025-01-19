@@ -243,6 +243,7 @@ class BaseWidget(Color, Style):
     
     def focus(self, widget, event):
         """元素聚焦,会将元素内所有元素调暗0.1"""
+        self.state = self.STATE_FOCUSED
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:
@@ -250,6 +251,7 @@ class BaseWidget(Color, Style):
 
     def unfocus(self, widget, event):
         """取消元素聚焦"""
+        self.state = self.STATE_DEFAULT
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
         for child in self.children:

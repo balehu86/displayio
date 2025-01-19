@@ -69,6 +69,7 @@ class Button(Label):
             self._draw_text_bitmap()
         # 计算文本位置（从Label类复用此逻辑）
         text_x, text_y = self._calculate_text_position()
+        
         # 将文本bitmap绘制到背景
         self._bitmap.blit(self._text_bitmap, dx=text_x, dy=text_y)
 
@@ -89,9 +90,9 @@ class Button(Label):
         self.set_state(self.STATE_DEFAULT)
 
     @property    
-    def background_color(self):
+    def get_background_color(self):
         if self.state == self.STATE_FOCUSED:
-            return self._darken_color(self.background.color, 0.7)
+            return self._darken_color(self.background.color, 0.9)
         if self.state == self.STATE_PRESSED:
             return self._darken_color(self.background.color, 0.7)
         if self.state == self.STATE_DISABLED:
