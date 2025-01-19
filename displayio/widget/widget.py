@@ -5,7 +5,7 @@ class Widget(BaseWidget):
     """
     控件基类
     """
-    __slots__ = ('_empty_bitmap')
+    __slots__ = ('_empty_bitmap',)
     
     def __init__(self,
                  abs_x=None, abs_y=None,
@@ -34,9 +34,6 @@ class Widget(BaseWidget):
 
     def draw(self):
         """创建控件的位图"""
-
-        """先这里绘制self._bitmap, 然后根据self.dx_cache, self.dy_cache, self.width_cache, self.height_cache决定是否返回中间bitmap"""
-        
         raise NotImplementedError("BaseWidget子类必须实现 _create_bitmap方法")
 
     def get_bitmap(self):
