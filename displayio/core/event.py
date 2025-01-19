@@ -28,21 +28,21 @@ class EventType:
     FOCUS_NEXT = 'FOCUS_NEXT' # 下一个焦点
     FOCUS_PREV = 'FOCUS_PREV' # 上一个焦点
     # 值和选择相关事件
-    VALUE_CHANGE = 15     # 值改变
-    SELECTION_CHANGE = 16 # 选择改变
+    VALUE_CHANGE = 'value_change'         # 值改变
+    SELECTION_CHANGE = 'selection_change' # 选择改变
     # 旋转编码器相关事件
     ROTATE = 'ROTATE'         # 旋转
     ROTATE_LEFT = 'ROTATE_LEFT'      # 左旋
     ROTATE_RIGHT = 'ROTATE_RIGHT'    # 右旋
-    ROTATE_TICK = 'ROTATE_TICK'      # 一个tick
+    ROTATE_TICK = 'ROTATE_TICK'   # 一个tick
     ROTATE_TICK_LEFT = 'ROTATE_TICK_LEFT'  # 一个左旋tick
     ROTATE_TICK_RIGHT = 'ROTATE_TICK_RIGHT'# 一个右旋tick
     # 滚动
-    SCROLL = 'SCROLL'           # 滚动
-    SCROLL_UP = 'SCROLL_UP'     # 向上滚动
-    SCROLL_DOWN = 'SCROLL_DOWN' # 向下滚动
+    SCROLL = 'SCROLL'             # 滚动
+    SCROLL_UP = 'SCROLL_UP'       # 向上滚动
+    SCROLL_DOWN = 'SCROLL_DOWN'   # 向下滚动
     SCROLL_RIGHT = 'SCROLL_RIGHT' # 向右滚动
-    SCROLL_LEFT = 'SCROLL_LEFT' # 向左滚动
+    SCROLL_LEFT = 'SCROLL_LEFT'   # 向左滚动
 
 
     CUSTOM = 99           # 自定义事件
@@ -68,15 +68,15 @@ class Event:
     Timed_Out = 999   # 超时
 
     """事件基类"""
-    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None, timestamp=0):
+    def __init__(self, event_type: EventType, data=None, target_position=None, target_widget=None, timestamp=0, priority=10):
         self.type: EventType = event_type    # 事件类型
-        if target_position is None and target_widget is None:
-            raise ValueError("事件必须指定目标位置或目标组件")
-        self.target_widget = target_widget   # 事件目标对象
-        self.target_position = target_position    # 事件目标位置
-        self.data = data             # 事件相关数据
-        self.timestamp = timestamp                   # 事件发生时间戳
-        self.priority = 10  # 事件优先级
+        if target_position is target_widget: # 如果同时为None
+            raise ValueError("事件必须至少指定目标位置或目标组件的一个")
+        self.target_widget = target_widget     # 事件目标对象
+        self.target_position = target_position # 事件目标位置
+        self.data = data           # 事件相关数据
+        self.timestamp = timestamp # 事件发生时间戳
+        self.priority =  priority  # 事件优先级
         self.status_code = self.Initializing
 
     def is_handled(self) -> bool:
