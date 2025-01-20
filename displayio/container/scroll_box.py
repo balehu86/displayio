@@ -16,9 +16,12 @@ class ScrollBox(Container):
                  'scroll_dirty_system', 'child'
                  'scroll_offset_x', 'scroll_offset_y',
                  'is_scrollable_x', 'is_scrollable_y',
-                 'scroll_range_x', 'scroll_range_y')
+                 'scroll_range_x', 'scroll_range_y',
+                 'scroll_step','scroll_step_x','scroll_step_y')
 
     def __init__(self,
+                 scroll_step=None,scroll_step_x=10,scroll_step_y=10,
+
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,
                  width=None, height=None,
@@ -55,6 +58,12 @@ class ScrollBox(Container):
         # 创建独立的脏区域管理器
         self.scroll_dirty_system = BoundBoxSystem(name=f'ScrollBox_{id(self)}',widget=self)
         # 滚动相关的属性
+        # 每次滚动的像素个数
+        self.scroll_step_x = scroll_step_x
+        self.scroll_step_y = scroll_step_y
+        if scroll_step is not None:
+            self.scroll_step_x = scroll_step
+            self.scroll_step_y = scroll_step
         # 记录滚动的当前偏移量
         self.scroll_offset_x = 0
         self.scroll_offset_y = 0
@@ -121,20 +130,16 @@ class ScrollBox(Container):
         self.child.layout(dx=0, dy=0, width=actual_width, height=actual_height)
 
     def scroll(self, widget, event) -> None:
-        """
-        滚动方法, x和y为滚动的增量
-        """
-        one_shot_offset_x = 10
-        one_shot_offset_y = 10 
+        """滚动方法, x和y为滚动的增量"""
         # 限制水平滚动和垂直滚动
         if event.type == EventType.SCROLL_UP:
-            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + one_shot_offset_x)) if self.is_scrollable_x else 0
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x + self.scroll_step_x)) if self.is_scrollable_x else 0
         if event.type == EventType.SCROLL_DOWN:
-            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x - one_shot_offset_x)) if self.is_scrollable_x else 0
+            self.scroll_offset_x = max(0, min(self.scroll_range_x, self.scroll_offset_x - self.scroll_step_x)) if self.is_scrollable_x else 0
         if event.type == EventType.SCROLL_RIGHT:
-            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + one_shot_offset_y)) if self.is_scrollable_y else 0
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + self.scroll_step_y)) if self.is_scrollable_y else 0
         if event.type == EventType.SCROLL_LEFT:
-            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - one_shot_offset_y)) if self.is_scrollable_y else 0
+            self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - self.scroll_step_y)) if self.is_scrollable_y else 0
 
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)

@@ -178,11 +178,13 @@ def double_click_callback(widget,event):
     print('double click!')
 def long_press_callback(widget,event):
     print('long press!')
+    
 #     if label3.visibility:
 #         label3.hide()
 #     else:
 #         label3.unhide()
-    label5.set_color(text_color=random.getrandbits(16),background_color=random.getrandbits(16))
+#     label5.set_text(color=random.getrandbits(16))
+#     label5.set_background(color=random.getrandbits(16))
 def long_press_release_callback(widget,event):
     print('long press released!')
 def release_callback(widget,event):
