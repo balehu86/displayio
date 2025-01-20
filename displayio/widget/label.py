@@ -151,7 +151,7 @@ class Label(Widget):
             self.font_default = font[b'DEFAULT']
             self.font_rle = font[b'RLE'][0]
             changed = True
-        if font_scale != self.font_scale:
+        if font_scale is not None and font_scale != self.font_scale:
             self.font_scale = font_scale
             changed = True
         if changed:

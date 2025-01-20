@@ -15,9 +15,9 @@ class Display:
                  'loop')
 
     def __init__(self, log_level = logger.INFO, config_file:str=None,
-                 width:int=0, height:int=0, root:Container=None, show_dirty_are:bool=True,
+                 width:int=0, height:int=0, root:Container=None, show_dirty_are:bool=False,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
-                 show_fps:bool=False, partly_refresh:bool=True, ):
+                 show_fps:bool=False, partly_refresh:bool=False, ):
         """显示器主程序
 
         Args:
@@ -231,6 +231,7 @@ class MainLoop:
                         self.display.root._bitmap.fill_rect(dx,dy,width,height,0xf81f)
                 if not self.display.partly_refresh: # 全局刷新
                     self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
+                time.sleep_ms(500)
 
             # 绘制和刷新
             for dirty_area in self.dirty_system.area:

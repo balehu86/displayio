@@ -38,7 +38,7 @@ class Container(BaseWidget):
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
-            self.dirty_system.add(child)
+            self.dirty_system.add_widget(child)
             child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
             heappush(self.children, child)
 
