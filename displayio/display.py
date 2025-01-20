@@ -11,13 +11,13 @@ import time
 
 class Display:
     __slots__ = ('width', 'height', 'root', 'output', 'inputs',
-                 'soft_timer', 'fps', 'show_fps', 'partly_refresh',
+                 'soft_timer', 'fps', 'show_fps', 'partly_refresh', 'show_dirty_are',
                  'loop')
 
     def __init__(self, log_level = logger.INFO, config_file:str=None,
                  width:int=0, height:int=0, root:Container=None, show_dirty_are:bool=False,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
-                 show_fps:bool=False, partly_refresh:bool=False, ):
+                 show_fps:bool=False, partly_refresh:bool=False):
         """显示器主程序
 
         Args:
@@ -49,8 +49,6 @@ class Display:
         self.show_dirty_area = show_dirty_are
         # 局部刷新
         self.partly_refresh = partly_refresh
-        # 创建事件循环
-        self.loop = MainLoop(self)
         # 设置文件
         if config_file is not None:
             import json
@@ -59,6 +57,8 @@ class Display:
             for key, value in config.items():
                 setattr(self, key, value)
             f.close()
+        # 创建事件循环
+        self.loop = MainLoop(self)
         logger.debug("Display initialized.")
 
     def set_root(self, widget:Container):
