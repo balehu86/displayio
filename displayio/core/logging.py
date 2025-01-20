@@ -34,7 +34,7 @@ class Logger:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self, name=None, level=None, stream=None):
         if hasattr(self, '_initialized'):  # 检查是否已初始化,避免覆盖参数
             return
@@ -61,7 +61,6 @@ class Logger:
         except KeyError as e:
             return f"LOG FORMAT ERROR: {e}"
 
-    
     def log(self, level, msg, *args):
         if self.isEnabledFor(level):
             if args:

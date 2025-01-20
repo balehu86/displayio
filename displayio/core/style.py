@@ -43,7 +43,7 @@ class Style:
     ALIGN_BOTTOM = 'bottom'
     ALIGN_START = 'start'
     ALIGN_END = 'end'
-    
+
     # 方向
     HORIZONTAL = 'horizontal'
     VERTICAL = 'vertical'

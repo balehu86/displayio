@@ -14,7 +14,7 @@ def _swap_rgb565(color: int) -> int:
 class Bitmap:
     __slots__ = ('widget', 'dx', 'dy', 'width', 'height', 'transparent_color', 'color_format',
                  'size_changed', 'buffer', 'fb')
-    
+
     # 支持的颜色格式
     MONO_VLSB = framebuf.MONO_VLSB
     MONO_HLSB = framebuf.MONO_HLSB
@@ -36,7 +36,7 @@ class Bitmap:
         self.size_changed = False
         self.buffer = None
         self.fb = None
-    
+
     def init(self, dx=0, dy=0, width=0, height=0, color=None, transparent_color=None):
         """bitmap初始化
         Args:
@@ -62,7 +62,7 @@ class Bitmap:
 
         if transparent_color is not None: # 设置透明色
             self.transparent_color = transparent_color
-        
+
         if self.size_changed: # 尺寸变化
             buffer_size = self.width * self.height
             if self.color_format == self.RGB565:
@@ -84,11 +84,11 @@ class Bitmap:
         # 若超出位图范围，直接返回
         if not (0 <= x < self.width and 0 <= y < self.height):
             return
-        
+
         if color is None:
             value = self.fb.pixel(x, y)
             return _swap_rgb565(value) if self.color_format == self.RGB565 else value
-        
+
         # 设置像素时转换颜色 
         if self.color_format == self.RGB565:
             color = _swap_rgb565(color)    
@@ -108,7 +108,7 @@ class Bitmap:
         if self.color_format == self.RGB565:  
             color = _swap_rgb565(color)
         self.fb.fill(color)
- 
+
     @micropython.native
     def blit(self, source:'Bitmap', dx:int=0, dy:int=0):
         """将源bitmap复制到当前bitmap,使用framebuf的透明色机制"""
@@ -118,7 +118,7 @@ class Bitmap:
             key = _swap_rgb565(key) if source.transparent_color != -1 else -1
         elif self.color_format != self.RGB565 and source.color_format == self.RGB565:
             key = _swap_rgb565(key) if source.transparent_color != -1 else -1
-        
+
         # 使用framebuf的blit方法，传入透明色键值
         self.fb.blit(source.fb, dx, dy, key)
 

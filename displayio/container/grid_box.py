@@ -11,7 +11,7 @@ class GridBox(Container):
     """
     __slots__ = ('rows', 'cols', 'row_spacing', 'col_spacing',
                  'cells','allow_overlap', 'merged_cells', 'child_posi')
-    
+
     def __init__(self,
                  rows, cols, row_spacing=0, col_spacing=0,
                  allow_overlap:bool=True,
@@ -40,7 +40,7 @@ class GridBox(Container):
                          transparent_color = transparent_color,
                          background = background,
                          color_format = color_format)
-        
+
         # 格子布局的行列数
         self.rows = rows
         self.cols = cols
@@ -82,7 +82,7 @@ class GridBox(Container):
                         self.cells[r][c] = widget
             else:
                 raise ValueError('此网格容器不允许重叠,目标区域已存在其它widget')
-            
+
         # 将widget添加到指定位置
         # 覆盖顺序可以用widget.dz属性确定
         self.child_posi[widget] = (row, col)
@@ -100,7 +100,7 @@ class GridBox(Container):
                 for c in range(col, col + col_span):
                     if self.cells[r][c] == widget:
                         self.cells[r][c] = None
-        
+
         self.child_posi.pop(widget, None)
         super().remove(widget)
 
@@ -147,7 +147,7 @@ class GridBox(Container):
 
             actual_width = cell_width * col_span + self.col_spacing * (col_span - 1) if child.width_resizable else  child_min_width
             actual_height = cell_height * row_span + self.row_spacing * (row_span - 1) if child.height_resizable else child_min_height
-            
+
             # 更新子部件位置和大小
             dx = self.dx + col * (cell_width + self.col_spacing)
             dy = self.dy + row * (cell_height + self.row_spacing)

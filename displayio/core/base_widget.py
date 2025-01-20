@@ -11,7 +11,7 @@ class BaseWidget(Color, Style):
                  'state', 'visibility', 'color_format',
                  '_bitmap', 'dirty_system',
                  'parent', 'children', 'transparent_color', 'background', 'event_listener')
-    
+
     # widget状态枚举
     STATE_DEFAULT = 0   # 正常、释放状态
     STATE_CHECKED = 1   # 切换或选中状态
@@ -69,7 +69,7 @@ class BaseWidget(Color, Style):
                                EventType.UNFOCUS:[self.unfocus],
                                EventType.ENABLE:[self.enable],
                                EventType.DISABLE:[self.disable]}
-            
+
     def layout(self, dx, dy, width=None, height=None) -> None:
         """
         布局函数,设置控件的位置和大小,由父容器调用
@@ -93,7 +93,7 @@ class BaseWidget(Color, Style):
         if self.dy != actual_dy:
             self.dy = actual_dy
             changed = True
-        
+
         # 处理尺寸
         actual_width = (width-rel_x) if width is not None else 0
         actual_height = (height-rel_y) if height is not None else 0
@@ -109,7 +109,7 @@ class BaseWidget(Color, Style):
         if changed: # 如果发生改变，则将原始区域和重新布局后的区域标脏
             self.dirty_system.add(original_dx, original_dy, original_width, original_height)
             self.dirty_system.add(self.dx, self.dy, self.width, self.height)
-    
+
     def resize(self, width=None, height=None, force=False) -> None:
         """重新设置尺寸，会考虑部件是否可以被重新设置新的尺寸，这取决于部件初始化时是否设置有初始值
 
@@ -197,7 +197,7 @@ class BaseWidget(Color, Style):
             return (self.dx <= x < self.dx + self.width and 
                     self.dy <= y < self.dy + self.height)
         return False
-        
+
     def handle(self, event) -> None:
         """处理事件"""
         if event.type in self.event_listener:
@@ -205,7 +205,7 @@ class BaseWidget(Color, Style):
                 callback_func(widget=self,event=event)
                 event.handle()
             return True
-    
+
     def bind(self, event_type, callback_func: function) -> None:
         """绑定事件处理器"""
         if event_type not in self.event_listener:
@@ -285,11 +285,10 @@ class BaseWidget(Color, Style):
         x1_min, y1_min, x1_max, y1_max = area
         x2_min, y2_min = self.dx, self.dy
         x2_max, y2_max = x2_min + self.width - 1, y2_min + self.height - 1
-        
+
         return not (x1_min > x2_max or x2_min > x1_max or 
                     y1_min > y2_max or y2_min > y1_max)
 
     def __lt__(self, other):
         """比较图层，按优先级排序。"""
         return self.dz < other.dz
-    

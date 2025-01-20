@@ -84,11 +84,11 @@ class Event:
     def is_handled(self) -> bool:
         """ 返回event是否已被处理 """
         return self.status_code == self.Completed
-        
+
     def is_catched(self) -> bool:
         """返回event是否被捕获"""
         return self.status_code == self.Processing
-    
+
     def handle(self) -> None:
         """将事件标记为已完成"""
         self.status_code = self.Completed
@@ -96,7 +96,7 @@ class Event:
     def catch(self) -> None:
         """将事件标记为已捕获"""
         self.status_code = self.Processing
-    
+
     def __lt__(self, other):
         """比较任务，优先按时间排序；时间相同时按优先级排序。"""
         if self.timestamp == other.timestamp:

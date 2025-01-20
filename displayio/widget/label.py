@@ -32,7 +32,7 @@ class Label(Widget):
                  color_format = Widget.RGB565):
         """
         初始化标签控件
-        
+
         继承Widget所有参数,额外添加:
             text: 显示的文本内容
             font: 字体数据对象，包含点阵信息
@@ -48,7 +48,7 @@ class Label(Widget):
                          transparent_color = transparent_color,
                          background = background,
                          color_format = color_format)
-        
+
         # 字体数据
         if font is None:
             raise ValueError("label.font is not specified!")
@@ -62,7 +62,6 @@ class Label(Widget):
         self.text = text
         self.text_width = self.font_width * len(text) * font_scale
         self.text_height = self.font_height * font_scale
-            
         self.text_color = text_color
 
         self.align = align
@@ -96,7 +95,7 @@ class Label(Widget):
             # 将字符位图复制到主位图
             x = text_dx + i * self.font_width * self.font_scale
             self._text_bitmap.blit(char_bitmap, dx=x, dy=0)
-        
+
     @micropython.native
     def _calculate_text_position(self) -> tuple[int, int]:
         """
@@ -104,18 +103,18 @@ class Label(Widget):
         """ 
         text_x = self.padding[0]  # 默认左对齐
         text_y = (self.height - self.text_height) // 2  # 默认垂直居中
-        
+
         if self.align == self.ALIGN_CENTER:
             text_x = (self.width - self.text_width) // 2
         elif self.align == self.ALIGN_RIGHT:
             text_x = self.width - self.text_width - self.padding[2]
-            
+
         if self.align == self.ALIGN_TOP:
             text_y = self.padding[1]
         elif self.align == self.ALIGN_BOTTOM:
             text_y = self.height - self.text_height - self.padding[3]
         return text_x, text_y
-    
+
     @micropython.native
     def draw(self) -> None:
         """
@@ -172,14 +171,14 @@ class Label(Widget):
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
-    @property    
+    @property
     def get_background_color(self):
         if self.state == self.STATE_FOCUSED:
             return self._darken_color(self.background.color, 0.7)
         if self.state == self.STATE_DISABLED:
             return Label.GREY
         return self.background.color
-        
+
     @property
     def get_text_color(self):
         if self.state == self.STATE_DISABLED:

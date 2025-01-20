@@ -8,13 +8,13 @@ class DirtySystem:
     """
     _instances = {}  # 存储所有命名实例
     __slots__ = ('name', 'dirty_widget', 'widget', '_layout_dirty', 'initialized')
-    
+
     def __new__(cls, name='default', *args,**kwargs):
         # 确保每个名称只创建一个实例
         if name not in cls._instances:
             cls._instances[name] = object.__new__(cls)
         return cls._instances[name]
-    
+
     def __init__(self, name='default', widget=None):
         if hasattr(self, 'initialized'):  # 检查是否已初始化,避免覆盖参数
             return
@@ -32,7 +32,7 @@ class DirtySystem:
         self.dirty_widget = set()
         # 标记默认的管理器已初始化,防止重复实例
         self.initialized = True
-    
+
     @property
     def dirty(self):
         """绘制系统的脏标记,用来出发遍历组件树刷新
@@ -56,7 +56,7 @@ class DirtySystem:
     def _check_self_dirty(self):
         """检查自身的脏状态"""
         raise NotImplementedError('脏区域基类未实现 _check_self_dirty 方法')
-    
+
     def add_widget(self, widget):
         """添加脏widget至脏系统,只有widget.layout方法和需要强制刷新的widget会被添加"""
         if self.name == 'default':
@@ -84,14 +84,14 @@ class DirtySystem:
 
     def __repr__(self):
         return f'{self.__class__.__name__} \n\tname: {self.name}, area: {self.area}\n\tdirty_widget: {self.dirty_widget}'
-    
+
 class MergeRegionSystem(DirtySystem):
     """
     脏区域管理类,采用区域合并算法
     精细化管理,当脏区域数量变多,性能下降明显
     """
     __slots__ = ('area',)
-    
+
     def __init__(self, name='default', widget=None):
         # 绘制系统的脏区域,用来触发组件刷新
         super().__init__(name, widget)
@@ -155,7 +155,7 @@ class BoundBoxSystem(DirtySystem):
     适合处理单一矩形区域的大规模刷新。
     """
     __slots__ = ('min_x', 'min_y', 'max_x', 'max_y', '_area')
-    
+
     def __init__(self, name='default', widget=None):
         super().__init__(name, widget)
         self.min_x, self.min_y = 0, 0
@@ -164,7 +164,7 @@ class BoundBoxSystem(DirtySystem):
 
     def _check_self_dirty(self):
         return self.max_x - self.min_x > 0 or self.max_y - self.min_y > 0
-    
+
     @property
     def area(self):
         if self.max_x-self.min_x > 0 or self.max_y-self.min_y > 0:

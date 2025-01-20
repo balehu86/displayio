@@ -119,7 +119,7 @@ class ScrollBox(Container):
         actual_height = self.height if self.child.height_resizable else self.child.height
         # 根据滚动偏移量调整布局
         self.child.layout(dx=0, dy=0, width=actual_width, height=actual_height)
-                
+
     def scroll(self, widget, event) -> None:
         """
         滚动方法, x和y为滚动的增量
@@ -133,7 +133,7 @@ class ScrollBox(Container):
             self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y + 5)) if self.is_scrollable_y else 0
         if event.type == EventType.SCROLL_LEFT:
             self.scroll_offset_y = max(0, min(self.scroll_range_y, self.scroll_offset_y - 5)) if self.is_scrollable_y else 0
-        
+
         self.dirty_system.add_widget(self)
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
 
@@ -145,7 +145,7 @@ class ScrollBox(Container):
         else:
             self._empty_bitmap.init(dx=self.dx,dy=self.dy,color=0x0000)
             return self._empty_bitmap
-        
+
     @micropython.native
     def draw(self) -> None:
         """裁剪child的完整位图的对应区域"""
@@ -170,7 +170,7 @@ class ScrollBox(Container):
             self.dirty_bitmap.init(dx=dx, dy=dy, width=width, height=height)
             self._render_child_tree(self.child, dirty_area) # 获取到完整的child._bitmap
             self.child._bitmap.blit(self.dirty_bitmap, dx=self.dirty_bitmap.dx, dy=self.dirty_bitmap.dy)
-        
+
         self.scroll_dirty_system.clear()
 
     def _render_child_tree(self, widget:Widget, area):
@@ -192,7 +192,7 @@ class ScrollBox(Container):
         """重写 隐藏部件方法"""
         self.visibility = False
         self.dirty_system.add(self.dx,self.dy,self.width,self.height)
-    
+
     def unhide(self):
         """重写 取消隐藏部件"""
         self.visibility = True
@@ -201,4 +201,3 @@ class ScrollBox(Container):
     def set_dirty_system(self, dirty_system:MergeRegionSystem):
         """重写set_dirty_system,以适应scroll_box"""
         self.dirty_system = dirty_system
-    

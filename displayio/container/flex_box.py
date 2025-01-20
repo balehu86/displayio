@@ -36,12 +36,12 @@ class FlexBox(Container):
                          transparent_color = transparent_color,
                          background = background,
                          color_format = color_format)
-        
+
         self.direction = direction
         self.spacing = spacing
         self.align = align
         self.reverse = reverse
-        
+
     @micropython.native
     def _get_min_size(self) -> tuple[int, int]:
         """
@@ -160,7 +160,7 @@ class FlexBox(Container):
                 dx -= (actual_width + self.spacing)
             # 应用布局
             child.layout(dx = dx, dy = dy,
-                         width = actual_width, height = actual_height)           
+                         width = actual_width, height = actual_height)
             if not self.reverse:
                 dx += actual_width + self.spacing
 

@@ -4,5 +4,6 @@
     "fps": 30,
     "show_fps": false,
     "soft_timer": true,
-    "partly_refresh": false
+    "partly_refresh": false,
+    "show_dirty_area": true
 }

@@ -11,7 +11,7 @@ class Container(BaseWidget):
     继承自BaseWidget
     """
     __slots__ = ()
-    
+
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0, rel_y=0, dz=0,
@@ -22,7 +22,7 @@ class Container(BaseWidget):
                  color_format=BaseWidget.RGB565):
         """
         初始化按钮控件
-        
+
         继承BaseWidget的所有参数,额外添加:
             pass
         """
@@ -33,11 +33,12 @@ class Container(BaseWidget):
                          transparent_color = transparent_color,
                          background = background,
                          color_format = color_format)
-        
+
     def add(self, *childs: BaseWidget|'Container') -> None:
         """向容器中添加元素"""
         for child in childs:
             child.parent=self
+            self.dirty_system.add(child)
             child.set_dirty_system(self.dirty_system)  # 设置相同的脏区域管理器
             heappush(self.children, child)
 

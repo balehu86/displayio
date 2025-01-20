@@ -6,7 +6,7 @@ class Widget(BaseWidget):
     控件基类
     """
     __slots__ = ('_empty_bitmap',)
-    
+
     def __init__(self,
                  abs_x=None, abs_y=None,
                  rel_x=0,rel_y=0, dz=0,
@@ -17,7 +17,7 @@ class Widget(BaseWidget):
                  color_format = BaseWidget.RGB565):
         """
         初始化控件基类
-        
+
         继承BaseWidget所有参数,额外添加:
             pass
         """
@@ -28,7 +28,7 @@ class Widget(BaseWidget):
                          transparent_color = transparent_color,
                          background = background,
                          color_format = color_format)
-        
+
         self._bitmap = Bitmap(self, transparent_color = transparent_color)
         self._empty_bitmap = Bitmap(self, transparent_color = transparent_color)
 
@@ -43,8 +43,8 @@ class Widget(BaseWidget):
         else:
             self._empty_bitmap.init(dx=self.dx,dy=self.dy,color=0xffff)
             return self._empty_bitmap
-        
-    @property    
+
+    @property
     def get_background_color(self):
         if self.state == self.STATE_FOCUSED:
             return self._darken_color(self.background.color, 0.9)

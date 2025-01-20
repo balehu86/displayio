@@ -15,7 +15,7 @@ class Display:
                  'loop')
 
     def __init__(self, log_level = logger.INFO, config_file:str=None,
-                 width:int=0, height:int=0, root:Container=None, 
+                 width:int=0, height:int=0, root:Container=None, show_dirty_are:bool=True,
                  output=None, inputs=[], fps:int=0, soft_timer:bool=True,
                  show_fps:bool=False, partly_refresh:bool=True, ):
         """显示器主程序
@@ -46,6 +46,7 @@ class Display:
         # 刷新频率和出否在命令行输出fps信息
         self.fps = fps # 默认0，不限制刷新频率
         self.show_fps = show_fps # 是否显示刷新率
+        self.show_dirty_area = show_dirty_are
         # 局部刷新
         self.partly_refresh = partly_refresh
         # 创建事件循环
@@ -59,7 +60,7 @@ class Display:
                 setattr(self, key, value)
             f.close()
         logger.debug("Display initialized.")
-        
+
     def set_root(self, widget:Container):
         """设置根组件"""
         widget.resize(width=self.width, height=self.height, force=True)
@@ -85,7 +86,7 @@ class Display:
     def run(self,func:function):
         """启动显示循环"""
         self.loop.run(func)
-        
+
     def stop(self):
         """停止显示循环和线程"""
         # 停止事件循环
@@ -102,7 +103,7 @@ class MainLoop:
     __slots__ = ('display', 'dirty_system', 'dirty_bitmap', 'running', 'event_queue', 'task_queue',
                  'frame_interval', 'last_frame_time', 'frame_count', 'last_fps_time'
                  'input_count', 'last_input_time', 'input_timer')
-    
+
     """事件循环类，管理布局、渲染和事件处理"""
     def __init__(self, display:Display):
         self.display = display
@@ -127,20 +128,20 @@ class MainLoop:
         self.last_frame_time = time.ticks_ms()
         self.frame_count = 0
         self.last_fps_time = time.ticks_ms()
-        
+
     def _init_input_settings(self):
         """初始化输入检测相关设置"""
         self.input_count = 0
         self.last_input_time = time.ticks_ms()
         if not self.display.soft_timer:
             self.input_timer = Timer(0)
-    
+
     def stop(self):
         """停止事件循环"""
         self.running = False
         if not self.display.soft_timer:
             self.input_timer.deinit()
-        
+
     def _post_event(self, event:Event=None):
         """添加事件到队列"""
         if event is not None:
@@ -189,7 +190,7 @@ class MainLoop:
                     widget = system.widget
                     widget.layout(dx=widget.dx, dy=widget.dy, width=widget.width, height=widget.height)
                 system.layout_dirty = False
-        
+
     def _render_widget(self, widget:Container|Widget, area):
         """ 递归渲染widget及其子组件,任何具有get_bitmap的组件将被视为组件树的末端"""
         if widget.widget_in_dirty_area(area):
@@ -219,20 +220,33 @@ class MainLoop:
                     dirty_widget.draw()
             self.dirty_system.clear_widget()
 
+            # 如果显示脏区域
+            if self.display.show_dirty_area:
+                for dirty_area in self.dirty_system.area:
+                    dx, dy = dirty_area[0], dirty_area[1]
+                    width, height = dirty_area[2]-dx+1, dirty_area[3]-dy+1
+                    if self.display.partly_refresh: # 如果局部刷新
+                        self.display.output.fill_rect(dx,dy,width,height,0xf81f)
+                    else: # 如果全局刷新
+                        self.display.root._bitmap.fill_rect(dx,dy,width,height,0xf81f)
+                if not self.display.partly_refresh: # 全局刷新
+                    self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
+
+            # 绘制和刷新
             for dirty_area in self.dirty_system.area:
                 # 先初始化dirty_bitmap
                 dx, dy = dirty_area[0], dirty_area[1]
                 width, height = dirty_area[2]-dx+1, dirty_area[3]-dy+1
                 self.dirty_bitmap.init(dx=dx, dy=dy, width=width, height=height)
                 self._render_widget(self.display.root, dirty_area)
-
                 if self.display.partly_refresh: # 如果局部刷新
                     self.display.output.refresh(self.dirty_bitmap.buffer, dx=dx, dy=dy, width=width, height=height)
                 else:
                     self.display.root._bitmap.blit(self.dirty_bitmap, dx=self.dirty_bitmap.dx, dy=self.dirty_bitmap.dy)
             if not self.display.partly_refresh: # 如果全局刷新
                 self.display.output.refresh(self.display.root._bitmap.buffer, dx=0, dy=0, width=self.display.width, height=self.display.height)
-            
+
+            # 绘制刷新完后，清除脏区域
             self.dirty_system.clear()
 
         # 帧数计数和FPS计算
@@ -283,7 +297,7 @@ class MainLoop:
         if self.display.soft_timer:
             for device in self.display.inputs:
                 self.add_task(device.check_input, period=2, priority=1, on_complete=self._post_event)
-                
+
         # 添加核心任务
         # 添加事件冒泡 
         self.add_task(self.process_event, period=10)
@@ -314,12 +328,11 @@ class MainLoop:
 class Task:
     """表示一个任务"""
     __slots__ = ('generator', 'callback', 'period', 'priority', 'one_shot', 'on_complete', 'args', 'kwargs', 'next_run')
-    
+
     def __init__(self, callback,
                  period=0, priority=10,
                  one_shot=False, on_complete=None,
                  args=(), kwargs={}):
-        
         """
         Args:
             callback (function): 任务回调
@@ -350,7 +363,7 @@ class Task:
         if self.next_run == other.next_run:
             return self.priority < other.priority
         return self.next_run < other.next_run
-    
+
     def execute(self) -> bool:
         """执行任务,任务是否需要继续执行。True表示继续,False表示结束"""
         if self.generator:
