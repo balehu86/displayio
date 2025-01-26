@@ -24,13 +24,13 @@ class Bitmap:
     GS4_HMSB = framebuf.GS4_HMSB
     GS8 = framebuf.GS8
 
-    def __init__(self, widget=None, transparent_color=None):
+    def __init__(self, widget=None, transparent_color=0xf81f):
         self.widget = widget
         self.dx = None
         self.dy = None
         self.width = None
         self.height = None
-        self.transparent_color = 0xf81f if transparent_color is None else transparent_color # trans color 可能为0x0000
+        self.transparent_color = transparent_color
         self.color_format = widget.color_format if widget else self.RGB565
 
         self.size_changed = False
