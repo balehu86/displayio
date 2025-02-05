@@ -7,6 +7,16 @@
 
 此库的语法使用类似于 [Beeware Toga](https://github.com/beeware/toga.git) 项目。同时参考了部分kivy项目和css特性。
 
+## 计划
+- [ ] 将bitmap.py模块重写为C模块，用以提升大量性能
+- [ ] 完善帧率的计算方法，当前采用动态刷新(只有需要刷新的时候才刷新屏幕)
+- [ ] 统一方法和变量的命名风格
+- [ ] 完成动画效果
+- [ ] 添加更多的显示部件
+- [ ] 添加更多的输入输出驱动
+- [ ] 完善文档和说明
+- [ ] 优化性能
+
 ### 支持的输入输出设备
 * st7789显示 (仅240*240受测试)
 * 旋转编码器
@@ -22,7 +32,7 @@
 * grid (网格布局，类似于excel表格，一个格子一个坑，一个子元素可以占用多个坑，达到**合并网格**的效果)
 * scroll (滚动窗口容器，最特殊的一个容器，此容器也是一个**可显示的元素(能被绘制并显示到屏幕上的元素)**，实现窗口滚动的效果用来显示远大于容器尺寸的显示区域)
 
-the display is dynamical, so show_fps is not correct.
+the display is dynamical, so the show_fps is not correct.
 you can specify the fps in init of display.
 
 ┌ └ ┐ ┘ ─ │ ├ ┤ ┬ ┴ ┼
