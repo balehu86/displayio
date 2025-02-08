@@ -26,10 +26,10 @@ class Bitmap:
 
     def __init__(self, widget=None, transparent_color=0xf81f):
         self.widget = widget
-        self.dx = None
-        self.dy = None
-        self.width = None
-        self.height = None
+        self.dx = 0
+        self.dy = 0
+        self.width = 0
+        self.height = 0
         self.transparent_color = transparent_color
         self.color_format = widget.color_format if widget else self.RGB565
 
