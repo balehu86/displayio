@@ -1,29 +1,3 @@
-/*
- * This file is part of the MicroPython project, http://micropython.org/
- *
- * The MIT License (MIT)
- *
- * Copyright (c) 2016 Damien P. George
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
-
 #include <stdio.h>
 #include <string.h>
 
@@ -38,6 +12,11 @@ typedef struct _mp_obj_framebuf_t {
     void *buf;
     uint16_t width, height, stride;
     uint8_t format;
+    mp_obj_t widget;  // Store widget object
+    mp_obj_t transparent_color;  // Store transparent color
+    bool buffer_allocated;  // Track if we allocated the buffer
+    uint16_t dx;  // Add dx field
+    uint16_t dy;  // Add dy field
 } mp_obj_framebuf_t;
 
 #if !MICROPY_ENABLE_DYNRUNTIME
@@ -243,12 +222,6 @@ static inline void setpixel(const mp_obj_framebuf_t *fb, unsigned int x, unsigne
     formats[fb->format].setpixel(fb, x, y, col);
 }
 
-static void setpixel_checked(const mp_obj_framebuf_t *fb, mp_int_t x, mp_int_t y, mp_int_t col, mp_int_t mask) {
-    if (mask && 0 <= x && x < fb->width && 0 <= y && y < fb->height) {
-        setpixel(fb, x, y, col);
-    }
-}
-
 static inline uint32_t getpixel(const mp_obj_framebuf_t *fb, unsigned int x, unsigned int y) {
     return formats[fb->format].getpixel(fb, x, y);
 }
@@ -269,66 +242,30 @@ static void fill_rect(const mp_obj_framebuf_t *fb, int x, int y, int w, int h, u
 }
 
 static mp_obj_t framebuf_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args_in) {
-    mp_arg_check_num(n_args, n_kw, 4, 5, false);
-
-    mp_int_t width = mp_obj_get_int(args_in[1]);
-    mp_int_t height = mp_obj_get_int(args_in[2]);
-    mp_int_t format = mp_obj_get_int(args_in[3]);
-    mp_int_t stride = n_args >= 5 ? mp_obj_get_int(args_in[4]) : width;
-
-    if (width < 1 || height < 1 || width > 0xffff || height > 0xffff || stride > 0xffff || stride < width) {
-        mp_raise_ValueError(NULL);
-    }
-
-    size_t bpp = 1;
-    size_t height_required = height;
-    size_t width_required = width;
-    size_t strides_required = height - 1;
-
-    switch (format) {
-        case FRAMEBUF_MVLSB:
-            height_required = (height + 7) & ~7;
-            strides_required = height_required - 8;
-            break;
-        case FRAMEBUF_MHLSB:
-        case FRAMEBUF_MHMSB:
-            stride = (stride + 7) & ~7;
-            width_required = (width + 7) & ~7;
-            break;
-        case FRAMEBUF_GS2_HMSB:
-            stride = (stride + 3) & ~3;
-            width_required = (width + 3) & ~3;
-            bpp = 2;
-            break;
-        case FRAMEBUF_GS4_HMSB:
-            stride = (stride + 1) & ~1;
-            width_required = (width + 1) & ~1;
-            bpp = 4;
-            break;
-        case FRAMEBUF_GS8:
-            bpp = 8;
-            break;
-        case FRAMEBUF_RGB565:
-            bpp = 16;
-            break;
-        default:
-            mp_raise_ValueError(MP_ERROR_TEXT("invalid format"));
-    }
-
-    mp_buffer_info_t bufinfo;
-    mp_get_buffer_raise(args_in[0], &bufinfo, MP_BUFFER_WRITE);
-
-    if ((strides_required * stride + (height_required - strides_required) * width_required) * bpp / 8 > bufinfo.len) {
-        mp_raise_ValueError(NULL);
-    }
+    enum { ARG_widget, ARG_transparent_color };
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_widget, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_transparent_color, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+    };
+    
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all_kw_array(n_args, n_kw, args_in, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
     mp_obj_framebuf_t *o = mp_obj_malloc(mp_obj_framebuf_t, type);
-    o->buf_obj = args_in[0];
-    o->buf = bufinfo.buf;
-    o->width = width;
-    o->height = height;
-    o->format = format;
-    o->stride = stride;
+    o->widget = args[ARG_widget].u_obj;
+    o->transparent_color = args[ARG_transparent_color].u_obj;
+    o->buf = NULL;
+    o->width = 0;
+    o->height = 0;
+    o->stride = 0;
+    if (args[ARG_widget].u_obj != mp_const_none) {
+        mp_obj_t color_format_int_obj = mp_obj_get_attr(args[ARG_widget].u_obj, MP_QSTR_color_format);
+        o->color_format = mp_obj_get_int(color_format_int_obj)
+    }
+    o->format = FRAMEBUF_RGB565;  // Default format
+    o->buffer_allocated = false;
+    o->dx = MP_OBJ_NEW_SMALL_INT(0);  // Initialize dx
+    o->dy = MP_OBJ_NEW_SMALL_INT(0);  // Initialize dy
 
     return MP_OBJ_FROM_PTR(o);
 }
@@ -339,10 +276,76 @@ static void framebuf_args(const mp_obj_t *args_in, mp_int_t *args_out, int n) {
     }
 }
 
-static mp_int_t framebuf_get_buffer(mp_obj_t self_in, mp_buffer_info_t *bufinfo, mp_uint_t flags) {
-    mp_obj_framebuf_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_get_buffer(self->buf_obj, bufinfo, flags) ? 0 : 1;
+static mp_obj_t framebuf_init(size_t n_args, const mp_obj_t *args_in, mp_map_t *kw_args) {
+    enum { ARG_dx, ARG_dy, ARG_width, ARG_height, ARG_color, ARG_transparent_color };
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_dx, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_dy, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_width, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_height, MP_ARG_INT, {.u_int = 0} },
+        { MP_QSTR_color, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_transparent_color, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+    };
+
+    // 获取 self 参数
+    mp_obj_framebuf_t *self = MP_OBJ_TO_PTR(args_in[0]);
+    // 解析其余参数
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(n_args - 1, args_in + 1, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+    // 更新dx和dy
+    self->dx = args[ARG_dx].u_int;
+    self->dy = args[ARG_dy].u_int;
+
+    // Get dimensions from widget if available and width/height not specified
+    mp_int_t new_width = args[ARG_width].u_int;
+    mp_int_t new_height = args[ARG_height].u_int;
+    
+    if (self->widget != mp_const_none) {
+        if (new_width == 0) {
+            new_width = mp_obj_get_int(mp_obj_dict_get(MP_OBJ_TO_PTR(self->widget), MP_ROM_QSTR(MP_QSTR_width)));
+        }
+        if (new_height == 0) {
+            new_height = mp_obj_get_int(mp_obj_dict_get(MP_OBJ_TO_PTR(self->widget), MP_ROM_QSTR(MP_QSTR_height)));
+        }
+    }
+
+    // Update transparent color if provided
+    if (args[ARG_transparent_color].u_obj != mp_const_none) {
+        self->transparent_color = args[ARG_transparent_color].u_obj;
+    }
+
+    // Check if buffer needs to be reallocated
+    bool size_changed = (self->width != new_width || self->height != new_height);
+    
+    if (size_changed) {
+        // Free old buffer if it exists
+        if (self->buffer_allocated && self->buf != NULL) {
+            m_free(self->buf);
+        }
+
+        // Allocate new buffer
+        size_t buf_size = new_width * new_height * 2;  // RGB565 format
+        self->buf = m_malloc(buf_size);
+        self->buffer_allocated = true;
+        self->width = new_width;
+        self->height = new_height;
+        self->stride = new_width;
+        // Fill with color if provided
+        if (args[ARG_color].u_obj != mp_const_none) {
+            mp_int_t color = mp_obj_get_int(args[ARG_color].u_obj);
+            if (color != 0x0000) {
+                fill_rect(self, 0, 0, self->width, self->height, color);
+            }
+        }
+    }
+    else if (args[ARG_color].u_obj != mp_const_none) {
+        mp_int_t color = mp_obj_get_int(args[ARG_color].u_obj);
+        fill_rect(self, 0, 0, self->width, self->height, color);
+    }
+
+    return mp_const_none;
 }
+static MP_DEFINE_CONST_FUN_OBJ_KW(framebuf_init_obj, 1, framebuf_init);
 
 static mp_obj_t framebuf_fill(mp_obj_t self_in, mp_obj_t col_in) {
     mp_obj_framebuf_t *self = MP_OBJ_TO_PTR(self_in);
@@ -477,8 +480,52 @@ static mp_obj_t framebuf_scroll(mp_obj_t self_in, mp_obj_t xstep_in, mp_obj_t ys
 }
 static MP_DEFINE_CONST_FUN_OBJ_3(framebuf_scroll_obj, framebuf_scroll);
 
+static mp_obj_t framebuf_attr(mp_obj_t self_in, qstr attr, mp_obj_t *value) {
+    color_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    // dx
+    if (attr == MP_QSTR_dx) {
+        if (value == NULL) {
+            // getter
+            return mp_obj_new_int(self->dx);
+        } else {
+            // setter
+            self->color = mp_obj_get_int(*value);
+            return MP_OBJ_NULL;
+        }
+    }
+    // dy
+    if (attr == MP_QSTR_dy) {
+        if (value == NULL) {
+            // getter
+            return mp_obj_new_int(self->dy);
+        } else {
+            // setter
+            self->color = mp_obj_get_int(*value);
+            return MP_OBJ_NULL;
+        }
+    }
+    // buffer
+    if (attr == MP_QSTR_buffer) {
+        if (value == NULL) {
+            // getter
+            if (self->buf == NULL) {
+                return mp_const_none;
+            }
+            // 创建一个新的 bytearray 对象
+            size_t buf_size = self->width * self->height;
+            if (self->format == FRAMEBUF_RGB565) {
+                buf_size *= 2;
+            }
+            return mp_obj_new_bytearray_by_ref(buf_size, self->buf);
+        }
+    }
+    
+    return MP_OBJ_NULL; // 属性不存在
+}
+
 #if !MICROPY_ENABLE_DYNRUNTIME
 static const mp_rom_map_elem_t framebuf_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&framebuf_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&framebuf_fill_obj) },
     { MP_ROM_QSTR(MP_QSTR_fill_rect), MP_ROM_PTR(&framebuf_fill_rect_obj) },
     { MP_ROM_QSTR(MP_QSTR_pixel), MP_ROM_PTR(&framebuf_pixel_obj) },
@@ -492,7 +539,7 @@ static MP_DEFINE_CONST_OBJ_TYPE(
     MP_QSTR_FrameBuffer,
     MP_TYPE_FLAG_NONE,
     make_new, framebuf_make_new,
-    buffer, framebuf_get_buffer,
+    attr, framebuf_attr,
     locals_dict, &framebuf_locals_dict
     );
 #endif

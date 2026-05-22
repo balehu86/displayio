@@ -61,7 +61,7 @@ YELLOW = const(0xFFE0)
 WHITE = const(0xFFFF)
 
 _ENCODE_PIXEL = ">H"     # 大端模式
-_ENCODE_PIXEL_SWAPPED = const("<H")# 小端模式
+_ENCODE_PIXEL_SWAPPED = "<H" # 小端模式
 _ENCODE_POS = ">HH"
 _ENCODE_POS_SWAPPED = "<HH"
 # _DECODE_PIXEL = ">BBB"
